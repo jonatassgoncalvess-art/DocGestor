@@ -1049,9 +1049,28 @@ function saveSystemEmailConfig() {
   alert("Configuracao de e-mail salva. Verifique o dominio antes de liberar envios reais.");
 }
 
-function testSystemEmailConfig() {
-  systemEmailConfig.lastTest = new Date().toLocaleString("pt-BR");
-  alert(`Teste de envio registrado para ${systemEmailConfig.address}. No envio real, o disparo sera feito pelo backend.`);
+async function testSystemEmailConfig() {
+  try {
+    const response = await fetch("/api/enviar-email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        to: "jonatass.goncalvess@gmail.com",
+        subject: "Teste DocGestor",
+        html: "<p>Funcionou! Este e-mail foi enviado pela Vercel + Resend.</p>",
+      }),
+    });
+
+    const result = await response.json();
+    console.log(result);
+    systemEmailConfig.lastTest = new Date().toLocaleString("pt-BR");
+    alert(result.success ? "E-mail enviado!" : "Erro ao enviar e-mail");
+  } catch (error) {
+    console.error(error);
+    alert("Erro ao enviar e-mail");
+  }
 }
 
 function verifySystemEmailDomain() {
