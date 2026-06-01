@@ -996,8 +996,8 @@ if (userList) {
 
 const systemEmailConfig = {
   name: "DocGestor by Carminatti",
-  address: "onboarding@resend.dev",
-  domain: "resend.dev",
+  address: "docgestor@systemdirect.org",
+  domain: "systemdirect.org",
   provider: "Resend",
   host: "api.resend.com",
   port: "",
@@ -1018,11 +1018,15 @@ function loadSystemEmailConfig() {
   try {
     const saved = JSON.parse(localStorage.getItem(SYSTEM_EMAIL_CONFIG_KEY) || "null");
     if (saved) Object.assign(systemEmailConfig, saved);
-    if (!saved || (saved.address === "avisos@docgestor.com.br" && saved.provider === "SMTP")) {
+    if (
+      !saved ||
+      (saved.address === "avisos@docgestor.com.br" && saved.provider === "SMTP") ||
+      (saved.address === "onboarding@resend.dev" && saved.provider === "Resend")
+    ) {
       Object.assign(systemEmailConfig, {
         name: "DocGestor by Carminatti",
-        address: "onboarding@resend.dev",
-        domain: "resend.dev",
+        address: "docgestor@systemdirect.org",
+        domain: "systemdirect.org",
         provider: "Resend",
         host: "api.resend.com",
         port: "",

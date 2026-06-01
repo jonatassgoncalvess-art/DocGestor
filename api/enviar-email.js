@@ -25,7 +25,7 @@ export default async function handler(request, response) {
     const configuredFrom = cleanFromEmail ? `${cleanFromName || "DocGestor"} <${cleanFromEmail}>` : "";
 
     const result = await resend.emails.send({
-      from: configuredFrom || process.env.RESEND_FROM_EMAIL || "DocGestor <onboarding@resend.dev>",
+      from: configuredFrom || process.env.RESEND_FROM_EMAIL || "DocGestor by Carminatti <docgestor@systemdirect.org>",
       to: [recipient],
       subject: subject || "Teste de envio do DocGestor",
       html: html || "<p>Funcionou! O DocGestor ja consegue enviar e-mails.</p>",
