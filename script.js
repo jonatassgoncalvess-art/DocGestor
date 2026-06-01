@@ -1006,10 +1006,36 @@ const systemEmailConfig = {
   lastTest: "",
 };
 
+const SYSTEM_EMAIL_CONFIG_KEY = "docgestor.systemEmailConfig";
+
 function systemEmailStatusClass(status) {
   if (status === "Validado") return "green";
   if (status === "Falhou") return "red";
   return "yellow";
+}
+
+function loadSystemEmailConfig() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SYSTEM_EMAIL_CONFIG_KEY) || "null");
+    if (saved) Object.assign(systemEmailConfig, saved);
+  } catch (error) {
+    console.warn("Nao foi possivel carregar a configuracao de e-mail.", error);
+  }
+}
+
+function persistSystemEmailConfig() {
+  const safeConfig = {
+    name: systemEmailConfig.name,
+    address: systemEmailConfig.address,
+    domain: systemEmailConfig.domain,
+    provider: systemEmailConfig.provider,
+    host: systemEmailConfig.host,
+    port: systemEmailConfig.port,
+    user: systemEmailConfig.user,
+    status: systemEmailConfig.status,
+    lastTest: systemEmailConfig.lastTest,
+  };
+  localStorage.setItem(SYSTEM_EMAIL_CONFIG_KEY, JSON.stringify(safeConfig));
 }
 
 function updateSystemEmailDns() {
@@ -1045,6 +1071,7 @@ function saveSystemEmailConfig() {
   systemEmailConfig.port = field("system-email-port").value;
   systemEmailConfig.user = field("system-email-user").value;
   systemEmailConfig.status = "Aguardando validacao";
+  persistSystemEmailConfig();
   renderSystemEmailConfig();
   alert("Configuracao de e-mail salva. Verifique o dominio antes de liberar envios reais.");
 }
@@ -1077,16 +1104,18 @@ async function testSystemEmailConfig() {
     const result = await response.json();
     console.log(result);
     systemEmailConfig.lastTest = new Date().toLocaleString("pt-BR");
+    persistSystemEmailConfig();
     if (result.success) closeModal("system-email-test-modal");
-    alert(result.success ? "E-mail enviado!" : "Erro ao enviar e-mail");
+    alert(result.success ? "E-mail enviado!" : `Erro ao enviar e-mail: ${result.error || "verifique a configuracao do provedor"}`);
   } catch (error) {
     console.error(error);
-    alert("Erro ao enviar e-mail");
+    alert(`Erro ao enviar e-mail: ${error.message}`);
   }
 }
 
 function verifySystemEmailDomain() {
   systemEmailConfig.status = field("system-email-domain").value ? "Validado" : "Falhou";
+  persistSystemEmailConfig();
   renderSystemEmailConfig();
 }
 
@@ -1099,7 +1128,10 @@ field("system-email-test-form")?.addEventListener("submit", (event) => {
   testSystemEmailConfig();
 });
 field("system-email-verify")?.addEventListener("click", verifySystemEmailDomain);
-if (field("system-email-name")) renderSystemEmailConfig();
+if (field("system-email-name")) {
+  loadSystemEmailConfig();
+  renderSystemEmailConfig();
+}
 
 const sendRecipients = [
   {

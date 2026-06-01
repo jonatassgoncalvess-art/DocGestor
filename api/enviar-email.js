@@ -9,10 +9,13 @@ export default async function handler(request, response) {
 
   try {
     const { to, subject, html } = request.body;
+    if (!to) {
+      return response.status(400).json({ success: false, error: "Informe o e-mail destinatario." });
+    }
 
     const result = await resend.emails.send({
-      from: "DocGestor <onboarding@resend.dev>",
-      to: [to || "jonatass.goncalvess@gmail.com"],
+      from: process.env.RESEND_FROM_EMAIL || "DocGestor <onboarding@resend.dev>",
+      to: [to],
       subject: subject || "Teste de envio do DocGestor",
       html: html || "<p>Funcionou! O DocGestor ja consegue enviar e-mails.</p>",
     });
