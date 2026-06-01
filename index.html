@@ -74,6 +74,7 @@
               <strong>01.4 Envios</strong>
               <button class="admin-link" data-admin-target="email-sistema">01.4.1 E-mail do Sistema</button>
               <button class="admin-link" data-admin-target="envios-admin">01.4.2 E-mails por Modulo</button>
+              <button class="admin-link" data-admin-target="historico-alertas">01.4.3 Historico de Alertas</button>
             </div>
           </div>
           <button class="nav-item" data-view="dashboard" data-permission-view="dashboard">
@@ -373,6 +374,26 @@
                 <section class="panel">
                   <div class="list-head"><h3>Destinatarios por modulo</h3><span id="send-recipient-count">0 itens</span></div>
                   <div class="crud-list" id="send-recipient-list"></div>
+                </section>
+              </section>
+
+              <section class="admin-panel" id="admin-historico-alertas">
+                <div class="section-title">
+                  <div>
+                    <p class="eyebrow">01.4.3 Historico de Alertas</p>
+                    <h2>Status dos e-mails enviados pelo Resend</h2>
+                  </div>
+                  <button class="primary" id="alert-history-refresh" type="button">Atualizar historico</button>
+                </div>
+                <section class="panel">
+                  <div class="list-head">
+                    <h3>Alertas enviados</h3>
+                    <span id="alert-history-count">0 itens</span>
+                  </div>
+                  <div class="alert-history-summary" id="alert-history-summary">
+                    <span>Use atualizar historico para buscar os envios diretamente no Resend.</span>
+                  </div>
+                  <div class="crud-list alert-history-list" id="alert-history-list"></div>
                 </section>
               </section>
             </div>
@@ -1667,9 +1688,9 @@
       </section>
     </div>
 
-    <script src="supabase-config.js?v=20260601-systemdirect"></script>
-    <script src="database.js?v=20260601-systemdirect"></script>
-    <script src="script.js?v=20260601-systemdirect"></script>
+    <script src="supabase-config.js?v=20260601-alert-history"></script>
+    <script src="database.js?v=20260601-alert-history"></script>
+    <script src="script.js?v=20260601-alert-history"></script>
   </body>
 </html>
 

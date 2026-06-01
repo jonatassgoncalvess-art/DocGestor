@@ -1340,6 +1340,34 @@ button {
   border-color: #ead36a;
 }
 
+.alert-history-summary {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 10px;
+}
+
+.alert-history-summary span {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  padding: 8px 10px;
+}
+
+.alert-history-summary strong {
+  color: var(--ink);
+}
+
+.alert-history-list article > div:last-child {
+  align-items: flex-end;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .reserve-result.warning strong {
   color: var(--yellow);
 }

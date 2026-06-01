@@ -673,7 +673,7 @@ function applyAccessControl() {
   document.querySelectorAll('[data-admin-target="tipos-licencas"], [data-admin-target="documentos-ambientais"], [data-admin-target="modelos-checklist"]').forEach((element) => {
     element.hidden = !canAccess("adminEnvironmental");
   });
-  document.querySelectorAll('[data-admin-target="email-sistema"], [data-admin-target="envios-admin"]').forEach((element) => {
+  document.querySelectorAll('[data-admin-target="email-sistema"], [data-admin-target="envios-admin"], [data-admin-target="historico-alertas"]').forEach((element) => {
     element.hidden = !canAccess("admin");
   });
   const label = field("current-user-label");
@@ -1328,6 +1328,115 @@ field("send-recipient-list")?.addEventListener("click", (event) => {
 });
 
 renderSendRecipients();
+
+const alertHistoryStatusLabels = {
+  sent: "Enviado",
+  delivered: "Entregue",
+  delivery_delayed: "Entrega atrasada",
+  complained: "Marcado como spam",
+  bounced: "Devolvido",
+  opened: "Aberto",
+  clicked: "Clicado",
+};
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function alertHistoryStatusClass(status) {
+  if (["delivered", "opened", "clicked"].includes(status)) return "green";
+  if (["bounced", "complained"].includes(status)) return "red";
+  if (status === "delivery_delayed") return "yellow";
+  return "";
+}
+
+function formatAlertHistoryDate(value) {
+  if (!value) return "Nao informado";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function renderAlertHistory(items = []) {
+  const list = field("alert-history-list");
+  const count = field("alert-history-count");
+  const summary = field("alert-history-summary");
+  if (!list || !count || !summary) return;
+
+  count.textContent = `${items.length} itens`;
+  if (!items.length) {
+    summary.innerHTML = "<span>Nenhum envio encontrado no Resend para a chave configurada.</span>";
+    list.innerHTML = "";
+    return;
+  }
+
+  const totals = items.reduce((acc, item) => {
+    const status = item.last_event || "sent";
+    acc[status] = (acc[status] || 0) + 1;
+    return acc;
+  }, {});
+
+  summary.innerHTML = Object.entries(totals)
+    .map(([status, total]) => `<span><strong>${total}</strong> ${escapeHtml(alertHistoryStatusLabels[status] || status)}</span>`)
+    .join("");
+
+  list.innerHTML = items
+    .map((item) => {
+      const status = item.last_event || "sent";
+      const recipients = Array.isArray(item.to) ? item.to.join(", ") : item.to || "Nao informado";
+      return `
+        <article>
+          <div>
+            <strong>${escapeHtml(item.subject || "Sem assunto")}</strong>
+            <span>${escapeHtml(recipients)}</span>
+          </div>
+          <div>
+            <strong>${escapeHtml(item.from || "Remetente nao informado")}</strong>
+            <span>Enviado em ${escapeHtml(formatAlertHistoryDate(item.created_at))}</span>
+            <span>ID Resend: ${escapeHtml(item.id || "Nao informado")}</span>
+          </div>
+          <div>
+            <span class="pill ${alertHistoryStatusClass(status)}">${escapeHtml(alertHistoryStatusLabels[status] || status)}</span>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+}
+
+async function loadAlertHistory() {
+  const button = field("alert-history-refresh");
+  const summary = field("alert-history-summary");
+  if (button) button.disabled = true;
+  if (summary) summary.innerHTML = "<span>Buscando historico no Resend...</span>";
+  try {
+    const response = await fetch("/api/historico-alertas");
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || "Nao foi possivel carregar o historico.");
+    }
+    renderAlertHistory(result.emails || []);
+  } catch (error) {
+    console.error(error);
+    if (summary) summary.innerHTML = `<span>Erro ao buscar historico: ${escapeHtml(error.message)}</span>`;
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+field("alert-history-refresh")?.addEventListener("click", loadAlertHistory);
+renderAlertHistory();
 
 const partners = [
   {
