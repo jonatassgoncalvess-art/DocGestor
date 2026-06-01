@@ -996,12 +996,12 @@ if (userList) {
 
 const systemEmailConfig = {
   name: "DocGestor by Carminatti",
-  address: "avisos@docgestor.com.br",
-  domain: "docgestor.com.br",
-  provider: "SMTP",
-  host: "",
-  port: "587",
-  user: "",
+  address: "onboarding@resend.dev",
+  domain: "resend.dev",
+  provider: "Resend",
+  host: "api.resend.com",
+  port: "",
+  user: "RESEND_API_KEY",
   status: "Aguardando validacao",
   lastTest: "",
 };
@@ -1018,6 +1018,19 @@ function loadSystemEmailConfig() {
   try {
     const saved = JSON.parse(localStorage.getItem(SYSTEM_EMAIL_CONFIG_KEY) || "null");
     if (saved) Object.assign(systemEmailConfig, saved);
+    if (!saved || (saved.address === "avisos@docgestor.com.br" && saved.provider === "SMTP")) {
+      Object.assign(systemEmailConfig, {
+        name: "DocGestor by Carminatti",
+        address: "onboarding@resend.dev",
+        domain: "resend.dev",
+        provider: "Resend",
+        host: "api.resend.com",
+        port: "",
+        user: "RESEND_API_KEY",
+        status: "Aguardando validacao",
+      });
+      persistSystemEmailConfig();
+    }
   } catch (error) {
     console.warn("Nao foi possivel carregar a configuracao de e-mail.", error);
   }
