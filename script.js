@@ -1117,22 +1117,16 @@ function openSystemEmailTestModal() {
 }
 
 async function sendSystemEmail({ to, subject, html }) {
-  const recipients = Array.isArray(to)
-    ? to
-    : String(to || "")
-        .split(/[;,]/)
-        .map((email) => email.trim())
-        .filter(Boolean);
-  if (!recipients.length) throw new Error("Informe ao menos um e-mail destinatario.");
-  const invalidRecipients = recipients.filter((email) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
-  if (invalidRecipients.length) throw new Error(`E-mail invalido: ${invalidRecipients.join(", ")}`);
+  const recipient = String(to || "").trim();
+  if (!recipient) throw new Error("Informe o e-mail destinatario.");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)) throw new Error(`E-mail invalido: ${recipient}`);
   const response = await fetch("/api/enviar-email", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      to: recipients,
+      to: recipient,
       fromName: systemEmailConfig.name,
       fromEmail: systemEmailConfig.address,
       subject,
