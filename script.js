@@ -1167,7 +1167,7 @@ function verifySystemEmailDomain() {
 
 ["system-email-domain", "system-email-address"].forEach((id) => field(id)?.addEventListener("input", updateSystemEmailDns));
 field("system-email-save")?.addEventListener("click", saveSystemEmailConfig);
-field("system-email-test")?.addEventListener("click", openSystemEmailTestModal);
+field("system-email-test-open")?.addEventListener("click", openSystemEmailTestModal);
 field("system-email-test-send")?.addEventListener("click", testSystemEmailConfig);
 field("system-email-test-form")?.addEventListener("submit", (event) => {
   event.preventDefault();

@@ -350,9 +350,14 @@
                   </div>
                   <p class="helper-text">No envio real, senha e API key devem ficar em segredo no backend ou em uma Edge Function, nunca expostas no navegador.</p>
                   <div class="modal-actions inline-actions">
-                    <button class="ghost" id="system-email-test">Testar envio</button>
-                    <button class="ghost" id="system-email-verify">Verificar dominio</button>
-                    <button class="primary" id="system-email-save">Salvar configuracao</button>
+                    <button
+                      class="ghost"
+                      id="system-email-test-open"
+                      type="button"
+                      onclick="event.preventDefault(); document.querySelector('#system-email-test-modal')?.classList.add('open'); document.querySelector('#system-email-test-modal')?.setAttribute('aria-hidden', 'false');"
+                    >Testar envio</button>
+                    <button class="ghost" id="system-email-verify" type="button">Verificar dominio</button>
+                    <button class="primary" id="system-email-save" type="button">Salvar configuracao</button>
                   </div>
                 </section>
               </section>
@@ -979,8 +984,8 @@
           <small class="helper-text">Informe um e-mail de qualquer dominio valido, como Gmail, Outlook, Hotmail ou e-mail empresarial.</small>
         </form>
         <div class="modal-actions">
-          <button class="ghost" data-close-modal="system-email-test-modal">Cancelar</button>
-          <button class="primary" id="system-email-test-send">Enviar teste</button>
+          <button class="ghost" data-close-modal="system-email-test-modal" type="button">Cancelar</button>
+          <button class="primary" id="system-email-test-send" type="button">Enviar teste</button>
         </div>
       </section>
     </div>
@@ -1662,9 +1667,9 @@
       </section>
     </div>
 
-    <script src="supabase-config.js?v=20260601-email-modal"></script>
-    <script src="database.js?v=20260601-email-modal"></script>
-    <script src="script.js?v=20260601-email-modal"></script>
+    <script src="supabase-config.js?v=20260601-email-modal2"></script>
+    <script src="database.js?v=20260601-email-modal2"></script>
+    <script src="script.js?v=20260601-email-modal2"></script>
   </body>
 </html>
 
