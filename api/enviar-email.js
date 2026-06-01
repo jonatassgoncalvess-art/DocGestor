@@ -8,13 +8,16 @@ export default async function handler(request, response) {
   }
 
   try {
-    const { to, subject, html } = request.body;
+    const { to, fromName, fromEmail, subject, html } = request.body;
     if (!to) {
       return response.status(400).json({ success: false, error: "Informe o e-mail destinatario." });
     }
+    const cleanFromName = String(fromName || "DocGestor").replace(/[\r\n<>]/g, "").trim();
+    const cleanFromEmail = String(fromEmail || "").replace(/[\r\n<>]/g, "").trim();
+    const configuredFrom = cleanFromEmail ? `${cleanFromName || "DocGestor"} <${cleanFromEmail}>` : "";
 
     const result = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || "DocGestor <onboarding@resend.dev>",
+      from: configuredFrom || process.env.RESEND_FROM_EMAIL || "DocGestor <onboarding@resend.dev>",
       to: [to],
       subject: subject || "Teste de envio do DocGestor",
       html: html || "<p>Funcionou! O DocGestor ja consegue enviar e-mails.</p>",

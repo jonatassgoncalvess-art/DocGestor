@@ -1062,18 +1062,39 @@ function renderSystemEmailConfig() {
   updateSystemEmailDns();
 }
 
+function systemEmailFormPayload() {
+  return {
+    name: field("system-email-name").value.trim(),
+    address: field("system-email-address").value.trim(),
+    domain: field("system-email-domain").value.trim(),
+    provider: field("system-email-provider").value,
+    host: field("system-email-host").value.trim(),
+    port: field("system-email-port").value.trim(),
+    user: field("system-email-user").value.trim(),
+  };
+}
+
+function systemEmailHasChanges(payload) {
+  return ["name", "address", "domain", "provider", "host", "port", "user"].some((key) => String(systemEmailConfig[key] || "") !== String(payload[key] || ""));
+}
+
 function saveSystemEmailConfig() {
-  systemEmailConfig.name = field("system-email-name").value;
-  systemEmailConfig.address = field("system-email-address").value;
-  systemEmailConfig.domain = field("system-email-domain").value;
-  systemEmailConfig.provider = field("system-email-provider").value;
-  systemEmailConfig.host = field("system-email-host").value;
-  systemEmailConfig.port = field("system-email-port").value;
-  systemEmailConfig.user = field("system-email-user").value;
+  const payload = systemEmailFormPayload();
+  if (!payload.name || !payload.address || !payload.domain || !payload.provider) {
+    alert("Preencha nome do remetente, e-mail remetente, dominio autorizado e provedor.");
+    return;
+  }
+  if (!systemEmailHasChanges(payload)) {
+    alert("Nenhuma alteracao encontrada na configuracao de e-mail.");
+    return;
+  }
+  const confirmed = window.confirm(`Deseja alterar o e-mail de envio do sistema para ${payload.name} <${payload.address}>?`);
+  if (!confirmed) return;
+  Object.assign(systemEmailConfig, payload);
   systemEmailConfig.status = "Aguardando validacao";
   persistSystemEmailConfig();
   renderSystemEmailConfig();
-  alert("Configuracao de e-mail salva. Verifique o dominio antes de liberar envios reais.");
+  alert("Configuracao de e-mail alterada no sistema. Verifique o dominio antes de liberar envios reais.");
 }
 
 function openSystemEmailTestModal() {
@@ -1096,6 +1117,8 @@ async function testSystemEmailConfig() {
       },
       body: JSON.stringify({
         to: recipient,
+        fromName: systemEmailConfig.name,
+        fromEmail: systemEmailConfig.address,
         subject: "Teste DocGestor",
         html: "<p>Funcionou! Este e-mail foi enviado pela Vercel + Resend.</p>",
       }),
