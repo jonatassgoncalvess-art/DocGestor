@@ -1049,7 +1049,18 @@ function saveSystemEmailConfig() {
   alert("Configuracao de e-mail salva. Verifique o dominio antes de liberar envios reais.");
 }
 
+function openSystemEmailTestModal() {
+  const input = field("system-email-test-to");
+  if (input && !input.value) input.value = "jonatass.goncalvess@gmail.com";
+  openModal("system-email-test-modal");
+}
+
 async function testSystemEmailConfig() {
+  const recipient = field("system-email-test-to")?.value?.trim();
+  if (!recipient) {
+    alert("Informe o e-mail destinatario.");
+    return;
+  }
   try {
     const response = await fetch("/api/enviar-email", {
       method: "POST",
@@ -1057,7 +1068,7 @@ async function testSystemEmailConfig() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        to: "jonatass.goncalvess@gmail.com",
+        to: recipient,
         subject: "Teste DocGestor",
         html: "<p>Funcionou! Este e-mail foi enviado pela Vercel + Resend.</p>",
       }),
@@ -1066,6 +1077,7 @@ async function testSystemEmailConfig() {
     const result = await response.json();
     console.log(result);
     systemEmailConfig.lastTest = new Date().toLocaleString("pt-BR");
+    if (result.success) closeModal("system-email-test-modal");
     alert(result.success ? "E-mail enviado!" : "Erro ao enviar e-mail");
   } catch (error) {
     console.error(error);
@@ -1080,7 +1092,12 @@ function verifySystemEmailDomain() {
 
 ["system-email-domain", "system-email-address"].forEach((id) => field(id)?.addEventListener("input", updateSystemEmailDns));
 field("system-email-save")?.addEventListener("click", saveSystemEmailConfig);
-field("system-email-test")?.addEventListener("click", testSystemEmailConfig);
+field("system-email-test")?.addEventListener("click", openSystemEmailTestModal);
+field("system-email-test-send")?.addEventListener("click", testSystemEmailConfig);
+field("system-email-test-form")?.addEventListener("submit", (event) => {
+  event.preventDefault();
+  testSystemEmailConfig();
+});
 field("system-email-verify")?.addEventListener("click", verifySystemEmailDomain);
 if (field("system-email-name")) renderSystemEmailConfig();
 
