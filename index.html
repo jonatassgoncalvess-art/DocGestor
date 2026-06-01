@@ -103,9 +103,9 @@
         </nav>
 
         <div class="tenant-card">
-          <small>Sistema exclusivo</small>
-          <strong>Grupo Carminatti</strong>
-          <span>Ambiente interno</span>
+          <small>Sistema</small>
+          <strong>DocGestor</strong>
+          <span>Ambiente principal</span>
           <span id="supabase-status">Supabase: verificando...</span>
         </div>
       </aside>
@@ -412,23 +412,23 @@
           <div class="metric-grid">
             <article class="metric danger">
               <span>Prazos criticos</span>
-              <strong>14</strong>
-              <small>Somando todos os modulos ativos</small>
+              <strong id="dashboard-critical-count">0</strong>
+              <small id="dashboard-critical-label">Sem prazos criticos cadastrados</small>
             </article>
             <article class="metric warning">
               <span>Vencem em 90 dias</span>
-              <strong>31</strong>
-              <small>Licencas, documentos e condicionantes</small>
+              <strong id="dashboard-warning-count">0</strong>
+              <small id="dashboard-warning-label">Sem vencimentos proximos</small>
             </article>
             <article class="metric">
               <span>Processos em andamento</span>
-              <strong>42</strong>
-              <small>Com checklist ou aprovacao pendente</small>
+              <strong id="dashboard-process-count">0</strong>
+              <small id="dashboard-process-label">Processos ambientais ativos</small>
             </article>
             <article class="metric success">
               <span>Conformidade geral</span>
-              <strong>81%</strong>
-              <small>Itens em dia nos modulos contratados</small>
+              <strong id="dashboard-compliance">0%</strong>
+              <small id="dashboard-compliance-label">Baseado nos registros reais do sistema</small>
             </article>
           </div>
 
@@ -438,30 +438,12 @@
                 <h2>Fila de risco por modulo</h2>
                 <button class="ghost">Ver matriz</button>
               </div>
-              <div class="table">
+              <div class="table" id="dashboard-risk-table">
                 <div class="table-row table-head">
                   <span>Modulo</span>
                   <span>Processo</span>
                   <span>Prazo</span>
                   <span>Status</span>
-                </div>
-                <div class="table-row">
-                  <span>Ambiental</span>
-                  <span>LO 4821/2022</span>
-                  <span>12/06/2026</span>
-                  <span class="pill red">Critico</span>
-                </div>
-                <div class="table-row">
-                  <span>AVCB</span>
-                  <span>Renovacao unidade Limeira</span>
-                  <span>03/08/2026</span>
-                  <span class="pill yellow">Atencao</span>
-                </div>
-                <div class="table-row">
-                  <span>Certidoes</span>
-                  <span>CND federal</span>
-                  <span>18/08/2026</span>
-                  <span class="pill yellow">Renovar</span>
                 </div>
               </div>
             </section>
@@ -470,20 +452,7 @@
               <div class="panel-head">
                 <h2>Acoes do dia</h2>
               </div>
-              <ul class="task-list">
-                <li>
-                  <strong>Responder exigencia CETESB</strong>
-                  <span>Modulo Ambiental - vence em 5 dias</span>
-                </li>
-                <li>
-                  <strong>Validar documentos de filial</strong>
-                  <span>Cadastro base - responsavel: Marina</span>
-                </li>
-                <li>
-                  <strong>Iniciar renovacao da LO</strong>
-                  <span>Regra: 180 dias antes do vencimento</span>
-                </li>
-              </ul>
+              <ul class="task-list" id="dashboard-task-list"></ul>
             </section>
           </div>
         </section>
@@ -514,9 +483,9 @@
                 <button class="ghost">+ Filial</button>
               </div>
               <div class="form-grid">
-                <label>Razao social<input value="Carminatti Participacoes S.A." /></label>
-                <label>CNPJ<input value="08.120.981/0001-44" /></label>
-                <label>Inscricao estadual<input value="244.982.100.119" /></label>
+                <label>Razao social<input /></label>
+                <label>CNPJ<input /></label>
+                <label>Inscricao estadual<input /></label>
                 <label>Status<select><option>Ativa</option></select></label>
               </div>
             </section>
@@ -528,11 +497,11 @@
               </div>
               <dl class="details">
                 <dt>Matricula</dt>
-                <dd>45.882 - 2o Cartorio de Registro de Imoveis</dd>
+                <dd>Nenhum imovel selecionado</dd>
                 <dt>Localizacao</dt>
-                <dd>Rodovia SP-332, km 128, Paulinia/SP</dd>
+                <dd>Nao informado</dd>
                 <dt>Coordenadas</dt>
-                <dd>-22.7562, -47.1548</dd>
+                <dd>Nao informado</dd>
               </dl>
             </section>
 
@@ -543,11 +512,11 @@
               </div>
               <dl class="details">
                 <dt>Nome</dt>
-                <dd>Henrique Carminatti</dd>
+                <dd>Nenhum socio selecionado</dd>
                 <dt>CPF</dt>
-                <dd>123.456.789-10</dd>
+                <dd>Nao informado</dd>
                 <dt>Vinculo</dt>
-                <dd>Administrador responsavel pela unidade</dd>
+                <dd>Nao informado</dd>
               </dl>
             </section>
 
@@ -577,7 +546,7 @@
                 <span>Matricula do imovel</span>
                 <span>Planta/layout</span>
                 <span>Memorial descritivo</span>
-                <span>ART/RRT</span>
+                <span>Nenhum documento cadastrado</span>
                 <span>Comprovante de taxa</span>
                 <span>Protocolo</span>
               </div>
@@ -596,7 +565,7 @@
                 </div>
                 <div class="table-row">
                   <span>Licenca de Operacao</span>
-                  <span>Contrato social, CNPJ, matricula, planta, memorial, ART/RRT, taxa</span>
+                  <span>Cadastre documentos no Painel Admin para alimentar os check-lists.</span>
                   <span>180 dias antes</span>
                 </div>
                 <div class="table-row">
@@ -815,22 +784,10 @@
                 <span>Modulos</span>
               </div>
               <div class="table-row">
-                <span>Marina Carminatti</span>
-                <span>Grupo Carminatti</span>
-                <span>Admin Empresa</span>
-                <span class="pill green">Todos</span>
-              </div>
-              <div class="table-row">
-                <span>Rafael Almeida</span>
-                <span>Grupo Carminatti</span>
-                <span>Gestor Ambiental</span>
-                <span class="pill green">Ambiental</span>
-              </div>
-              <div class="table-row">
-                <span>Clara Martins</span>
-                <span>Nova Eco Logistica</span>
-                <span>Consulta</span>
-                <span class="pill yellow">Convite</span>
+                <span>Nenhum usuario carregado</span>
+                <span>Supabase</span>
+                <span>-</span>
+                <span class="pill yellow">Aguardando dados</span>
               </div>
             </div>
           </section>
@@ -849,23 +806,21 @@
         </div>
         <form class="user-form" id="user-form">
           <input type="hidden" id="user-id" value="0" />
-          <label>Nome completo<input id="user-name" value="Marina Carminatti" /></label>
-          <label>E-mail<input id="user-email" value="marina@grupocarminatti.com" /></label>
-          <label>Telefone<input id="user-phone" value="(11) 98888-1200" /></label>
-          <label>CPF<input id="user-cpf" value="123.456.789-10" /></label>
-          <label>Cargo/funcao<input id="user-role-title" value="Coordenadora administrativa" /></label>
+          <label>Nome completo<input id="user-name" /></label>
+          <label>E-mail<input id="user-email" /></label>
+          <label>Telefone<input id="user-phone" /></label>
+          <label>CPF<input id="user-cpf" /></label>
+          <label>Cargo/funcao<input id="user-role-title" /></label>
           <label>Empresa vinculada
             <select id="user-company">
-              <option>Grupo Carminatti</option>
-              <option>Carminatti Participacoes S.A.</option>
-              <option>Carminatti Agroindustrial Ltda</option>
+              <option></option>
+              <option></option>
             </select>
           </label>
           <label>Filial vinculada
             <select id="user-branch">
-              <option>Todas</option>
-              <option>Unidade Paulinia</option>
-              <option>Fazenda Santa Clara</option>
+              <option></option>
+              <option></option>
             </select>
           </label>
           <label>Perfil de acesso
@@ -900,7 +855,7 @@
           <div>
             <p class="eyebrow">Permissoes exclusivas</p>
             <h2 id="permissions-modal-title">Permissoes do usuario</h2>
-            <span id="permission-user">Marina Carminatti</span>
+            <span id="permission-user">Usuario selecionado</span>
           </div>
           <button class="ghost small" data-close-modal="permissions-modal">Fechar</button>
         </div>
@@ -956,11 +911,10 @@
           <input type="hidden" id="send-recipient-id" value="0" />
           <label>Nome<input id="send-recipient-name" /></label>
           <label>E-mail<input id="send-recipient-email" type="email" /></label>
-          <label>Modulo
-            <select id="send-recipient-module">
-              <option value="environmental">03.1 Licencas Ambientais</option>
-            </select>
-          </label>
+          <div class="wide-field">
+            <span class="field-label">Modulos que este e-mail recebera</span>
+            <div class="partner-checks" id="send-recipient-module-checks"></div>
+          </div>
           <label>Vinculo
             <select id="send-recipient-relation">
               <option>Administrativo</option>
@@ -1022,8 +976,8 @@
         </div>
         <form class="user-form" id="partner-form">
           <input type="hidden" id="partner-id" value="0" />
-          <label>Nome completo<input id="partner-name" value="Henrique Carminatti" /></label>
-          <label>CPF/CNPJ<input id="partner-document" value="123.456.789-10" /></label>
+          <label>Nome completo<input id="partner-name" /></label>
+          <label>CPF/CNPJ<input id="partner-document" /></label>
           <label>Qualificacao
             <select id="partner-role">
               <option>Socio administrador</option>
@@ -1032,8 +986,8 @@
               <option>Responsavel legal</option>
             </select>
           </label>
-          <label>Contato<input id="partner-contact" value="henrique@grupocarminatti.com" /></label>
-          <label>Telefone<input id="partner-phone" value="(11) 98888-1000" /></label>
+          <label>Contato<input id="partner-contact" /></label>
+          <label>Telefone<input id="partner-phone" /></label>
           <label>Status
             <select id="partner-status">
               <option>Ativo</option>
@@ -1068,9 +1022,9 @@
           <label id="matrix-link-field" hidden>Matriz vinculada
             <select id="company-parent"></select>
           </label>
-          <label>Razao social / Nome da filial<input id="company-name" value="Carminatti Participacoes S.A." /></label>
-          <label>CNPJ<input id="company-cnpj" value="08.120.981/0001-44" /></label>
-          <label>Nome fantasia<input id="company-trade-name" value="Grupo Carminatti" /></label>
+          <label>Razao social / Nome da filial<input id="company-name" /></label>
+          <label>CNPJ<input id="company-cnpj" /></label>
+          <label>Nome fantasia<input id="company-trade-name" /></label>
           <label>Status
             <select id="company-status">
               <option>Ativa</option>
@@ -1078,11 +1032,8 @@
             </select>
           </label>
         </form>
-        <div class="partner-checks">
+        <div class="partner-checks" id="company-partner-checks">
           <span>Socios vinculados</span>
-          <label><input type="checkbox" name="company-partner" value="Henrique Carminatti" checked /> Henrique Carminatti</label>
-          <label><input type="checkbox" name="company-partner" value="Marina Carminatti" /> Marina Carminatti</label>
-          <label><input type="checkbox" name="company-partner" value="Socio Teste" /> Socio Teste</label>
         </div>
         <div class="modal-actions">
           <button class="ghost" data-close-modal="company-modal">Cancelar</button>
@@ -1117,18 +1068,18 @@
               <option value="rural">Rural</option>
             </select>
           </label>
-          <label>Matricula<input id="property-registration" value="45.882" /></label>
-          <label>Referencia de localizacao<input id="property-reference" value="Proximo ao acesso principal" /></label>
-          <label>Lote<input id="property-lot" value="Lote 08" /></label>
-          <label class="urban-field">Quadra<input id="property-block" value="Quadra 12" /></label>
-          <label class="rural-field" hidden>Gleba<input id="property-glebe" value="Gleba A" /></label>
-          <label class="urban-area-field" hidden>m2 do imovel<input id="property-urban-area" type="number" value="1200" /></label>
-          <label class="rural-field" hidden>m2 total do imovel<input id="property-rural-area" type="number" value="50000" /></label>
-          <label class="rural-field" hidden>Ha<input id="property-hectares" type="number" value="5" disabled /></label>
-          <label class="rural-field" hidden>m2 de reserva legal<input id="property-legal-reserve" type="number" value="10000" /></label>
-          <label class="rural-field" hidden>Ha de reserva legal<input id="property-legal-reserve-ha" type="number" value="1" step="0.0001" /></label>
-          <label class="rural-field" hidden>m2 de APP<input id="property-app-area" type="number" value="2500" /></label>
-          <label class="rural-field" hidden>Ha de APP<input id="property-app-area-ha" type="number" value="0.25" step="0.0001" /></label>
+          <label>Matricula<input id="property-registration" /></label>
+          <label>Referencia de localizacao<input id="property-reference" /></label>
+          <label>Lote<input id="property-lot" /></label>
+          <label class="urban-field">Quadra<input id="property-block" /></label>
+          <label class="rural-field" hidden>Gleba<input id="property-glebe" /></label>
+          <label class="urban-area-field" hidden>m2 do imovel<input id="property-urban-area" type="number" /></label>
+          <label class="rural-field" hidden>m2 total do imovel<input id="property-rural-area" type="number" /></label>
+          <label class="rural-field" hidden>Ha<input id="property-hectares" type="number" disabled /></label>
+          <label class="rural-field" hidden>m2 de reserva legal<input id="property-legal-reserve" type="number" /></label>
+          <label class="rural-field" hidden>Ha de reserva legal<input id="property-legal-reserve-ha" type="number" step="0.0001" /></label>
+          <label class="rural-field" hidden>m2 de APP<input id="property-app-area" type="number" /></label>
+          <label class="rural-field" hidden>Ha de APP<input id="property-app-area-ha" type="number" step="0.0001" /></label>
           <label class="property-use-field" hidden>Uso da propriedade
             <select id="property-rural-use">
               <option>Lavoura</option>
@@ -1178,7 +1129,7 @@
         </div>
         <form class="user-form" id="enterprise-form">
           <input type="hidden" id="enterprise-id" value="0" />
-          <label>Nome do empreendimento<input id="enterprise-name" value="Empreendimento Industrial Carminatti" /></label>
+          <label>Nome do empreendimento<input id="enterprise-name" /></label>
           <label>Empresa vinculada<select id="enterprise-company"></select></label>
           <label>Imovel vinculado<select id="enterprise-property"></select></label>
           <label>Tipo de empreendimento
@@ -1197,8 +1148,8 @@
               <option>Paralisado</option>
             </select>
           </label>
-          <label>Responsavel<input id="enterprise-responsible" value="Marina Carminatti" /></label>
-          <label>Referencia<input id="enterprise-reference" value="Ampliacao da unidade produtiva" /></label>
+          <label>Responsavel<input id="enterprise-responsible" /></label>
+          <label>Referencia<input id="enterprise-reference" /></label>
         </form>
         <div class="modal-actions">
           <button class="ghost" data-close-modal="enterprise-modal">Cancelar</button>
@@ -1252,10 +1203,10 @@
         </div>
         <form class="user-form">
           <input type="hidden" id="license-type-id" value="0" />
-          <label>Nome<input id="license-type-name" value="Licenca de Operacao" /></label>
-          <label>Sigla<input id="license-type-code" value="LO" /></label>
+          <label>Nome<input id="license-type-name" /></label>
+          <label>Sigla<input id="license-type-code" /></label>
           <label>Validade padrao<select id="license-type-validity"><option>4 anos</option><option>5 anos</option><option>Indeterminada</option></select></label>
-          <label>Renovacao recomendada<input id="license-type-renewal" value="180 dias antes" /></label>
+          <label>Renovacao recomendada<input id="license-type-renewal" /></label>
         </form>
         <div class="partner-checks">
           <span>Classificacao da licenca</span>
@@ -1281,7 +1232,7 @@
         </div>
         <form class="user-form">
           <input type="hidden" id="environmental-document-id" value="0" />
-          <label>Nome<input id="environmental-document-name" value="ART/RRT" /></label>
+          <label>Nome<input id="environmental-document-name" /></label>
           <label>Exige vencimento<select id="environmental-document-expiration"><option>Nao</option><option>Sim</option></select></label>
           <label>Obrigatorio por padrao<select id="environmental-document-required"><option>Sim</option><option>Nao</option></select></label>
         </form>
@@ -1307,7 +1258,7 @@
         <form class="user-form">
           <input type="hidden" id="checklist-model-id" value="0" />
           <label>Tipo de licenca<select id="checklist-model-license"></select></label>
-          <label>Nome do modelo<input id="checklist-model-name" value="Checklist - Licenca de Operacao" /></label>
+          <label>Nome do modelo<input id="checklist-model-name" /></label>
         </form>
         <div class="partner-checks" id="checklist-document-checks">
           <span>Documentos vinculados a licenca selecionada</span>
@@ -1432,7 +1383,7 @@
             </select>
           </label>
           <label>Numero interno
-            <input id="environmental-process-number" disabled value="001/2026" />
+            <input id="environmental-process-number" disabled />
           </label>
           <label>Status inicial
             <select id="environmental-process-status">
@@ -1578,6 +1529,17 @@
             <strong>Finalize os requisitos desta etapa</strong>
             <small id="environmental-process-stage-gate-message">Ainda existem pendencias para avancar.</small>
           </div>
+          <form class="stage-data-form" id="environmental-stage-deadline-fields">
+            <label>Validade da etapa
+              <input id="environmental-stage-validity-date" type="date" />
+            </label>
+            <label>Prazo minimo de aviso (dias)
+              <input id="environmental-stage-warning-days" type="number" min="0" value="60" />
+            </label>
+            <label>Prazo critico (dias)
+              <input id="environmental-stage-critical-days" type="number" min="0" value="15" />
+            </label>
+          </form>
           <div class="process-documents-panel" id="environmental-process-documents-panel">
             <div>
               <span>Documentos da etapa atual</span>
@@ -1688,9 +1650,9 @@
       </section>
     </div>
 
-    <script src="supabase-config.js?v=20260601-alert-history"></script>
-    <script src="database.js?v=20260601-alert-history"></script>
-    <script src="script.js?v=20260601-alert-history"></script>
+    <script src="supabase-config.js?v=20260601-real-data-alerts"></script>
+    <script src="database.js?v=20260601-real-data-alerts"></script>
+    <script src="script.js?v=20260601-real-data-alerts"></script>
   </body>
 </html>
 

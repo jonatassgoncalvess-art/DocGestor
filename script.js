@@ -17,6 +17,10 @@ const titles = {
   "agenda-notes": "04.2 Anotacoes",
 };
 
+function sameId(left, right) {
+  return String(left) === String(right);
+}
+
 function openView(viewName) {
   const requiredPermission = viewPermission(viewName);
   if (currentUser && !canAccess(requiredPermission)) {
@@ -142,44 +146,7 @@ document.querySelectorAll("[data-agenda-target]").forEach((button) => {
   });
 });
 
-const agendaEvents = [
-  {
-    id: 1,
-    date: "2026-05-30",
-    time: "09:00",
-    title: "Conferir documentos - processo 006/2026",
-    type: "Ambiental",
-    status: "warning",
-    description: "Revisar documentos elaborados antes do protocolo.",
-  },
-  {
-    id: 2,
-    date: "2026-06-03",
-    time: "14:00",
-    title: "Protocolo ambiental",
-    type: "Licencas Ambientais",
-    status: "green",
-    description: "Registrar protocolo no acompanhamento do processo.",
-  },
-  {
-    id: 3,
-    date: "2026-06-12",
-    time: "10:30",
-    title: "Vencimento critico - LO 4821/2022",
-    type: "Vencimento",
-    status: "danger",
-    description: "Licenca em prazo critico de renovacao.",
-  },
-  {
-    id: 4,
-    date: "2026-06-18",
-    time: "16:00",
-    title: "Retorno do orgao ambiental",
-    type: "Pendencia",
-    status: "warning",
-    description: "Checar resposta e atualizar etapa do processo.",
-  },
-];
+let agendaEvents = [];
 let nextAgendaEventId = 100;
 
 let agendaCursor = new Date(2026, 4, 30);
@@ -276,10 +243,10 @@ function openAgendaNoteModal(eventItem = null) {
 }
 
 function saveAgendaNote() {
-  const id = Number(field("agenda-note-id").value);
-  const existing = agendaEvents.find((event) => event.id === id);
+  const id = field("agenda-note-id").value;
+  const existing = agendaEvents.find((event) => sameId(event.id, id));
   const payload = {
-    id: Number.isNaN(id) ? nextAgendaEventId++ : id,
+    id: id || nextAgendaEventId++,
     title: field("agenda-note-title").value || "Agendamento sem titulo",
     date: field("agenda-note-date").value || dateKey(new Date()),
     time: field("agenda-note-time").value || "09:00",
@@ -528,8 +495,8 @@ field("agenda-link-picker-list")?.addEventListener("click", (event) => {
 field("agenda-note-list")?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-agenda-note-action]");
   if (!button) return;
-  const id = Number(button.dataset.agendaNoteId);
-  const eventItem = agendaEvents.find((item) => item.id === id);
+  const id = button.dataset.agendaNoteId;
+  const eventItem = agendaEvents.find((item) => sameId(item.id, id));
   if (!eventItem) return;
   if (button.dataset.agendaNoteAction === "edit") {
     openAgendaNoteModal(eventItem);
@@ -541,7 +508,7 @@ field("agenda-note-list")?.addEventListener("click", (event) => {
   }
   if (button.dataset.agendaNoteAction === "delete") {
     confirmDelete(`Deseja realmente excluir o agendamento ${eventItem.title}?`, () => {
-      const index = agendaEvents.findIndex((item) => item.id === id);
+      const index = agendaEvents.findIndex((item) => sameId(item.id, id));
       if (index >= 0) agendaEvents.splice(index, 1);
       renderAgenda();
       renderAgendaNotes();
@@ -550,50 +517,7 @@ field("agenda-note-list")?.addEventListener("click", (event) => {
 });
 renderAgendaNotes();
 
-const users = [
-  {
-    id: 0,
-    name: "Marina Carminatti",
-    email: "marina@grupocarminatti.com",
-    phone: "(11) 98888-1200",
-    cpf: "123.456.789-10",
-    roleTitle: "Coordenadora administrativa",
-    company: "Grupo Carminatti",
-    branch: "Todas",
-    profile: "Administrador do Grupo",
-    status: "Ativo",
-    password: "123456",
-    permissions: ["admin", "dashboard", "modules", "environmental", "agenda", "users", "registries", "adminEnvironmental"],
-  },
-  {
-    id: 1,
-    name: "Rafael Almeida",
-    email: "rafael@grupocarminatti.com",
-    phone: "(11) 97777-4400",
-    cpf: "222.333.444-55",
-    roleTitle: "Gestor ambiental",
-    company: "Carminatti Participacoes S.A.",
-    branch: "Unidade Paulinia",
-    profile: "Gestor Ambiental",
-    status: "Ativo",
-    password: "123456",
-    permissions: ["dashboard", "modules", "environmental", "agenda"],
-  },
-  {
-    id: 2,
-    name: "Clara Martins",
-    email: "clara@grupocarminatti.com",
-    phone: "(11) 96666-3300",
-    cpf: "333.444.555-66",
-    roleTitle: "Analista de documentos",
-    company: "Carminatti Agroindustrial Ltda",
-    branch: "Fazenda Santa Clara",
-    profile: "Consulta",
-    status: "Convite enviado",
-    password: "123456",
-    permissions: ["dashboard", "modules", "environmental"],
-  },
-];
+let users = [];
 
 const MASTER_USER = {
   id: "master",
@@ -620,7 +544,7 @@ function field(id) {
 }
 
 function selectedUser() {
-  return users.find((user) => user.id === selectedUserId) || users[0];
+  return users.find((user) => sameId(user.id, selectedUserId)) || users[0];
 }
 
 function defaultPermissionsForProfile(profile) {
@@ -778,7 +702,7 @@ function renderUsers() {
   userList.innerHTML = users
     .map(
       (user) => `
-        <article class="user-row ${user.id === selectedUserId ? "selected" : ""}" data-user-id="${user.id}">
+        <article class="user-row ${sameId(user.id, selectedUserId) ? "selected" : ""}" data-user-id="${user.id}">
           <div>
             <strong>${user.name}</strong>
             <small>${user.email}</small>
@@ -802,7 +726,7 @@ function renderUsers() {
 
 function saveCurrentUser() {
   const id = Number(field("user-id").value);
-  const existing = users.find((user) => user.id === id);
+  const existing = users.find((user) => sameId(user.id, id));
   const payload = {
     id: Number.isNaN(id) ? Date.now() : id,
     name: field("user-name").value,
@@ -825,7 +749,7 @@ function saveCurrentUser() {
   } else {
     users.push(payload);
     selectedUserId = payload.id;
-    addUserLog("Usuario criado", `${payload.name} foi incluido no ambiente do Grupo Carminatti.`);
+    addUserLog("Usuario criado", `${payload.name} foi incluido no sistema.`);
   }
 
   renderUsers();
@@ -842,7 +766,7 @@ function newUser() {
   field("user-phone").value = "";
   field("user-cpf").value = "";
   field("user-role-title").value = "";
-  field("user-company").value = "Grupo Carminatti";
+  field("user-company").value = "";
   field("user-branch").value = "Todas";
   field("user-profile").value = "Consulta";
   field("user-status").value = "Convite enviado";
@@ -854,7 +778,7 @@ function newUser() {
 }
 
 function updateUserStatus(id, status, titleText) {
-  const user = users.find((item) => item.id === id);
+  const user = users.find((item) => sameId(item.id, id));
   if (!user) return;
   user.status = status;
   selectedUserId = id;
@@ -905,10 +829,10 @@ document.querySelector("#permissions-save")?.addEventListener("click", () => {
   user.permissions = readPermissionChecks();
   closeModal("permissions-modal");
   addUserLog("Permissoes salvas", `Permissoes exclusivas atualizadas para ${user.name}.`);
-  if (currentUser && currentUser.id === user.id) applyAccessControl();
+  if (currentUser && sameId(currentUser.id, user.id)) applyAccessControl();
 });
 document.querySelector("#confirm-password-reset")?.addEventListener("click", () => {
-  const user = users.find((item) => item.id === passwordResetUserId);
+  const user = users.find((item) => sameId(item.id, passwordResetUserId));
   if (!user) return;
   const newPassword = generateSixDigitPassword();
   user.password = newPassword;
@@ -947,8 +871,8 @@ document.querySelector("#generic-delete-confirm")?.addEventListener("click", () 
 userList?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-user-action]");
   if (!button) return;
-  const id = Number(button.dataset.userId);
-  const user = users.find((item) => item.id === id);
+  const id = button.dataset.userId;
+  const user = users.find((item) => sameId(item.id, id));
   if (!user) return;
 
   if (button.dataset.userAction === "edit") {
@@ -980,7 +904,7 @@ userList?.addEventListener("click", (event) => {
 
   if (button.dataset.userAction === "delete") {
     confirmDelete(`Deseja realmente excluir o usuario ${user.name}?`, () => {
-      const index = users.findIndex((item) => item.id === id);
+      const index = users.findIndex((item) => sameId(item.id, id));
       if (index >= 0) users.splice(index, 1);
       selectedUserId = users[0]?.id ?? 0;
       renderUsers();
@@ -1183,41 +1107,41 @@ if (field("system-email-name")) {
   renderSystemEmailConfig();
 }
 
-const sendRecipients = [
-  {
-    id: 0,
-    name: "Consultoria Ambiental",
-    email: "consultoria@ambiental.com",
-    module: "environmental",
-    relation: "Consultor",
-    status: "Ativo",
-    readConfirmation: true,
-    sent: 8,
-    read: 6,
-  },
-  {
-    id: 1,
-    name: "Diretoria Carminatti",
-    email: "diretoria@grupocarminatti.com",
-    module: "environmental",
-    relation: "Socio",
-    status: "Ativo",
-    readConfirmation: true,
-    sent: 8,
-    read: 8,
-  },
-];
+let sendRecipients = [];
 
 let selectedSendRecipientId = 0;
 
+const availableAlertModules = [
+  { id: "environmental", name: "03.1 Licencas Ambientais" },
+];
+
 function sendModuleLabel(moduleKey) {
-  return {
-    environmental: "03.1 Licencas Ambientais",
-  }[moduleKey] || moduleKey;
+  return availableAlertModules.find((module) => module.id === moduleKey)?.name || moduleKey;
+}
+
+function sendRecipientModules(recipient) {
+  if (Array.isArray(recipient?.modules) && recipient.modules.length) return recipient.modules;
+  if (recipient?.module) return [recipient.module];
+  return ["environmental"];
+}
+
+function renderSendRecipientModuleChecks(selectedModules = ["environmental"]) {
+  const wrapper = field("send-recipient-module-checks");
+  if (!wrapper) return;
+  wrapper.innerHTML = `<span>Modulos vinculados</span>${availableAlertModules
+    .map(
+      (module) => `
+        <label>
+          <input type="checkbox" name="send-recipient-module" value="${module.id}" ${selectedModules.includes(module.id) ? "checked" : ""} />
+          ${module.name}
+        </label>
+      `,
+    )
+    .join("")}`;
 }
 
 function selectedSendRecipient() {
-  return sendRecipients.find((recipient) => recipient.id === selectedSendRecipientId) || sendRecipients[0];
+  return sendRecipients.find((recipient) => sameId(recipient.id, selectedSendRecipientId)) || sendRecipients[0];
 }
 
 function fillSendRecipientForm(recipient) {
@@ -1226,7 +1150,7 @@ function fillSendRecipientForm(recipient) {
   field("send-recipient-id").value = recipient.id;
   field("send-recipient-name").value = recipient.name;
   field("send-recipient-email").value = recipient.email;
-  field("send-recipient-module").value = recipient.module;
+  renderSendRecipientModuleChecks(sendRecipientModules(recipient));
   field("send-recipient-relation").value = recipient.relation;
   field("send-recipient-status").value = recipient.status;
   field("send-recipient-read-confirmation").checked = Boolean(recipient.readConfirmation);
@@ -1246,7 +1170,7 @@ function renderSendRecipients() {
             <span>${recipient.email}</span>
           </div>
           <div>
-            <strong>${sendModuleLabel(recipient.module)}</strong>
+            <strong>${sendRecipientModules(recipient).map(sendModuleLabel).join(", ")}</strong>
             <span>${recipient.relation} - ${recipient.status}</span>
             <span>Confirmacao de leitura: ${recipient.readConfirmation ? "Exigida" : "Nao exigida"}</span>
           </div>
@@ -1266,7 +1190,7 @@ function newSendRecipient() {
     id: Date.now(),
     name: "",
     email: "",
-    module: "environmental",
+    modules: ["environmental"],
     relation: "Administrativo",
     status: "Ativo",
     readConfirmation: true,
@@ -1279,13 +1203,13 @@ function newSendRecipient() {
 }
 
 function saveSendRecipient() {
-  const id = Number(field("send-recipient-id").value);
-  const existing = sendRecipients.find((recipient) => recipient.id === id);
+  const id = field("send-recipient-id").value;
+  const existing = sendRecipients.find((recipient) => sameId(recipient.id, id));
   const payload = {
-    id: Number.isNaN(id) ? Date.now() : id,
+    id: id || Date.now(),
     name: field("send-recipient-name").value,
     email: field("send-recipient-email").value,
-    module: field("send-recipient-module").value,
+    modules: checkedValues('input[name="send-recipient-module"]').length ? checkedValues('input[name="send-recipient-module"]') : ["environmental"],
     relation: field("send-recipient-relation").value,
     status: field("send-recipient-status").value,
     readConfirmation: field("send-recipient-read-confirmation").checked,
@@ -1297,6 +1221,7 @@ function saveSendRecipient() {
   selectedSendRecipientId = payload.id;
   renderSendRecipients();
   closeModal("send-recipient-modal");
+  persistSendRecipient(payload, Boolean(existing));
 }
 
 field("send-recipient-new")?.addEventListener("click", newSendRecipient);
@@ -1304,8 +1229,8 @@ field("send-recipient-save")?.addEventListener("click", saveSendRecipient);
 field("send-recipient-list")?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-send-recipient-action]");
   if (!button) return;
-  const id = Number(button.dataset.sendRecipientId);
-  const recipient = sendRecipients.find((item) => item.id === id);
+  const id = button.dataset.sendRecipientId;
+  const recipient = sendRecipients.find((item) => sameId(item.id, id));
   if (!recipient) return;
   if (button.dataset.sendRecipientAction === "edit") {
     fillSendRecipientForm(recipient);
@@ -1320,7 +1245,7 @@ field("send-recipient-list")?.addEventListener("click", (event) => {
   }
   if (button.dataset.sendRecipientAction === "delete") {
     confirmDelete(`Deseja realmente excluir o e-mail ${recipient.email} dos envios?`, () => {
-      const index = sendRecipients.findIndex((item) => item.id === id);
+      const index = sendRecipients.findIndex((item) => sameId(item.id, id));
       if (index >= 0) sendRecipients.splice(index, 1);
       renderSendRecipients();
     });
@@ -1438,33 +1363,14 @@ async function loadAlertHistory() {
 field("alert-history-refresh")?.addEventListener("click", loadAlertHistory);
 renderAlertHistory();
 
-const partners = [
-  {
-    id: 0,
-    name: "Henrique Carminatti",
-    document: "123.456.789-10",
-    role: "Socio administrador",
-    contact: "henrique@grupocarminatti.com",
-    phone: "(11) 98888-1000",
-    status: "Ativo",
-  },
-  {
-    id: 1,
-    name: "Marina Carminatti",
-    document: "098.765.432-11",
-    role: "Procurador",
-    contact: "marina@grupocarminatti.com",
-    phone: "(11) 98888-1200",
-    status: "Ativo",
-  },
-];
+let partners = [];
 
 let selectedPartnerId = 0;
 const partnerList = document.querySelector("#partner-list");
 const partnerCount = document.querySelector("#partner-count");
 
 function selectedPartner() {
-  return partners.find((partner) => partner.id === selectedPartnerId) || partners[0];
+  return partners.find((partner) => sameId(partner.id, selectedPartnerId)) || partners[0];
 }
 
 function fillPartnerForm(partner) {
@@ -1513,10 +1419,10 @@ function newPartner() {
 }
 
 function savePartner() {
-  const id = Number(field("partner-id").value);
-  const existing = partners.find((partner) => partner.id === id);
+  const id = field("partner-id").value;
+  const existing = partners.find((partner) => sameId(partner.id, id));
   const payload = {
-    id: Number.isNaN(id) ? Date.now() : id,
+    id: id || Date.now(),
     name: field("partner-name").value,
     document: field("partner-document").value,
     role: field("partner-role").value,
@@ -1543,8 +1449,8 @@ document.querySelector("#partner-save")?.addEventListener("click", savePartner);
 partnerList?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-partner-action]");
   if (!button) return;
-  const id = Number(button.dataset.partnerId);
-  const partner = partners.find((item) => item.id === id);
+  const id = button.dataset.partnerId;
+  const partner = partners.find((item) => sameId(item.id, id));
   if (!partner) return;
 
   if (button.dataset.partnerAction === "edit") {
@@ -1555,7 +1461,7 @@ partnerList?.addEventListener("click", (event) => {
 
   if (button.dataset.partnerAction === "delete") {
     confirmDelete(`Deseja realmente excluir o socio ${partner.name}?`, () => {
-      const index = partners.findIndex((item) => item.id === id);
+      const index = partners.findIndex((item) => sameId(item.id, id));
       if (index >= 0) partners.splice(index, 1);
       selectedPartnerId = partners[0]?.id ?? 0;
       renderPartners();
@@ -1569,50 +1475,7 @@ if (partnerList) {
   fillPartnerForm(selectedPartner());
 }
 
-const companies = [
-  {
-    id: 0,
-    kind: "matrix",
-    name: "Carminatti Participacoes S.A.",
-    cnpj: "08.120.981/0001-44",
-    tradeName: "Grupo Carminatti",
-    status: "Ativa",
-    partners: ["Henrique Carminatti", "Marina Carminatti"],
-    parentId: null,
-    showBranches: true,
-  },
-  {
-    id: 1,
-    kind: "branch",
-    name: "Unidade Paulinia",
-    cnpj: "08.120.981/0002-25",
-    tradeName: "Carminatti Paulinia",
-    status: "Ativa",
-    partners: ["Henrique Carminatti"],
-    parentId: 0,
-  },
-  {
-    id: 2,
-    kind: "branch",
-    name: "Fazenda Santa Clara",
-    cnpj: "08.120.981/0003-06",
-    tradeName: "Carminatti Santa Clara",
-    status: "Ativa",
-    partners: ["Marina Carminatti"],
-    parentId: 0,
-  },
-  {
-    id: 3,
-    kind: "matrix",
-    name: "Carminatti Agroindustrial Ltda",
-    cnpj: "12.441.220/0001-80",
-    tradeName: "Carminatti Agro",
-    status: "Ativa",
-    partners: ["Marina Carminatti"],
-    parentId: null,
-    showBranches: false,
-  },
-];
+let companies = [];
 
 let selectedCompanyId = 0;
 const companyTree = document.querySelector("#company-tree");
@@ -1643,7 +1506,20 @@ function selectedCompanyPartners() {
   return Array.from(document.querySelectorAll('input[name="company-partner"]:checked')).map((input) => input.value);
 }
 
+function renderCompanyPartnerChecks(selectedPartners = []) {
+  const wrapper = field("company-partner-checks");
+  if (!wrapper) return;
+  wrapper.innerHTML = `<span>Socios vinculados</span>${
+    partners.length
+      ? partners
+          .map((partner) => `<label><input type="checkbox" name="company-partner" value="${partner.name}" ${selectedPartners.includes(partner.name) ? "checked" : ""} /> ${partner.name}</label>`)
+          .join("")
+      : "<small>Nenhum socio cadastrado.</small>"
+  }`;
+}
+
 function setCompanyPartners(partners) {
+  renderCompanyPartnerChecks(partners);
   document.querySelectorAll('input[name="company-partner"]').forEach((input) => {
     input.checked = partners.includes(input.value);
   });
@@ -1671,7 +1547,7 @@ function renderCompanies() {
   companyTree.innerHTML = matrices
     .map((matrix) => {
       const branches = companies
-        .filter((company) => company.kind === "branch" && company.parentId === matrix.id)
+        .filter((company) => company.kind === "branch" && sameId(company.parentId, matrix.id))
         .sort((a, b) => a.cnpj.localeCompare(b.cnpj));
       const branchRows = matrix.showBranches
         ? branches
@@ -1729,18 +1605,18 @@ function newCompany() {
 }
 
 function saveCompany() {
-  const id = Number(field("company-id").value);
+  const id = field("company-id").value;
   const kind = field("company-kind").value;
-  const existing = companies.find((company) => company.id === id);
+  const existing = companies.find((company) => sameId(company.id, id));
   const payload = {
-    id: Number.isNaN(id) ? Date.now() : id,
+    id: id || Date.now(),
     kind,
     name: field("company-name").value,
     cnpj: field("company-cnpj").value,
     tradeName: field("company-trade-name").value,
     status: field("company-status").value,
     partners: selectedCompanyPartners(),
-    parentId: kind === "branch" ? Number(field("company-parent").value) : null,
+    parentId: kind === "branch" ? field("company-parent").value : null,
   };
 
   if (kind === "matrix") payload.showBranches = existing?.showBranches ?? true;
@@ -1761,8 +1637,8 @@ companyKind?.addEventListener("change", updateCompanyKindFields);
 companyTree?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-company-action]");
   if (!button) return;
-  const id = Number(button.dataset.companyId);
-  const company = companies.find((item) => item.id === id);
+  const id = button.dataset.companyId;
+  const company = companies.find((item) => sameId(item.id, id));
   if (!company) return;
 
   if (button.dataset.companyAction === "toggle") {
@@ -1780,10 +1656,10 @@ companyTree?.addEventListener("click", (event) => {
     confirmDelete(`Deseja realmente excluir ${company.name}?`, () => {
       if (company.kind === "matrix") {
         for (let index = companies.length - 1; index >= 0; index -= 1) {
-          if (companies[index].id === id || companies[index].parentId === id) companies.splice(index, 1);
+          if (sameId(companies[index].id, id) || sameId(companies[index].parentId, id)) companies.splice(index, 1);
         }
       } else {
-        const index = companies.findIndex((item) => item.id === id);
+        const index = companies.findIndex((item) => sameId(item.id, id));
         if (index >= 0) companies.splice(index, 1);
       }
       renderCompanies();
@@ -1797,46 +1673,7 @@ if (companyTree) {
   renderCompanies();
 }
 
-const properties = [
-  {
-    id: 0,
-    ownerType: "pj",
-    owner: "Carminatti Participacoes S.A.",
-    type: "urban",
-    registration: "45.882",
-    reference: "Proximo ao acesso principal",
-    lot: "Lote 08",
-    block: "Quadra 12",
-    glebe: "",
-    urbanArea: 1200,
-    ruralArea: 0,
-    legalReserve: 0,
-    appArea: 0,
-    ruralUse: "",
-    hasConstruction: true,
-    constructionArea: 450,
-    status: "Ativo",
-  },
-  {
-    id: 1,
-    ownerType: "pf",
-    owner: "Henrique Carminatti",
-    type: "rural",
-    registration: "18.204",
-    reference: "Entrada pela estrada municipal, km 7",
-    lot: "Lote Rural 02",
-    block: "",
-    glebe: "Gleba A",
-    urbanArea: 0,
-    ruralArea: 50000,
-    legalReserve: 10000,
-    appArea: 2500,
-    ruralUse: "Lavoura",
-    hasConstruction: false,
-    constructionArea: 0,
-    status: "Ativo",
-  },
-];
+let properties = [];
 
 let selectedPropertyId = 0;
 let pendingPropertyDeleteId = null;
@@ -1990,11 +1827,11 @@ function newProperty() {
 }
 
 function saveProperty() {
-  const id = Number(field("property-id").value);
-  const existing = properties.find((property) => property.id === id);
+  const id = field("property-id").value;
+  const existing = properties.find((property) => sameId(property.id, id));
   const type = field("property-type").value;
   const payload = {
-    id: Number.isNaN(id) ? Date.now() : id,
+    id: id || Date.now(),
     ownerType: field("property-owner-type").value,
     owner: field("property-owner").value,
     type,
@@ -2023,7 +1860,7 @@ function saveProperty() {
 document.querySelector("#property-new")?.addEventListener("click", newProperty);
 document.querySelector("#property-save")?.addEventListener("click", saveProperty);
 document.querySelector("#property-delete-confirm")?.addEventListener("click", () => {
-  const index = properties.findIndex((property) => property.id === pendingPropertyDeleteId);
+  const index = properties.findIndex((property) => sameId(property.id, pendingPropertyDeleteId));
   if (index >= 0) properties.splice(index, 1);
   pendingPropertyDeleteId = null;
   renderProperties();
@@ -2051,8 +1888,8 @@ document.querySelector("#property-app-area-ha")?.addEventListener("input", () =>
 propertyList?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-property-action]");
   if (!button) return;
-  const id = Number(button.dataset.propertyId);
-  const property = properties.find((item) => item.id === id);
+  const id = button.dataset.propertyId;
+  const property = properties.find((item) => sameId(item.id, id));
   if (!property) return;
 
   if (button.dataset.propertyAction === "edit") {
@@ -2074,28 +1911,7 @@ if (propertyList) {
   renderProperties();
 }
 
-const enterprises = [
-  {
-    id: 0,
-    name: "Empreendimento Industrial Carminatti",
-    company: "Carminatti Participacoes S.A.",
-    property: "Matricula 45.882",
-    type: "Industrial",
-    status: "Em implantacao",
-    responsible: "Marina Carminatti",
-    reference: "Ampliacao da unidade produtiva",
-  },
-  {
-    id: 1,
-    name: "Captacao Fazenda Carminatti",
-    company: "Carminatti Agroindustrial Ltda",
-    property: "Matricula 18.204",
-    type: "Rural",
-    status: "Planejado",
-    responsible: "Henrique Carminatti",
-    reference: "Area rural proxima ao curso d'agua",
-  },
-];
+let enterprises = [];
 
 let selectedEnterpriseId = 0;
 let pendingEnterpriseDeleteId = null;
@@ -2172,10 +1988,10 @@ function newEnterprise() {
 }
 
 function saveEnterprise() {
-  const id = Number(field("enterprise-id").value);
-  const existing = enterprises.find((enterprise) => enterprise.id === id);
+  const id = field("enterprise-id").value;
+  const existing = enterprises.find((enterprise) => sameId(enterprise.id, id));
   const payload = {
-    id: Number.isNaN(id) ? Date.now() : id,
+    id: id || Date.now(),
     name: field("enterprise-name").value,
     company: field("enterprise-company").value,
     property: field("enterprise-property").value,
@@ -2196,7 +2012,7 @@ document.querySelector("#enterprise-new")?.addEventListener("click", newEnterpri
 document.querySelector("#enterprise-save")?.addEventListener("click", saveEnterprise);
 enterpriseCompany?.addEventListener("change", () => populateEnterpriseProperties());
 document.querySelector("#enterprise-delete-confirm")?.addEventListener("click", () => {
-  const index = enterprises.findIndex((enterprise) => enterprise.id === pendingEnterpriseDeleteId);
+  const index = enterprises.findIndex((enterprise) => sameId(enterprise.id, pendingEnterpriseDeleteId));
   if (index >= 0) enterprises.splice(index, 1);
   pendingEnterpriseDeleteId = null;
   renderEnterprises();
@@ -2205,8 +2021,8 @@ document.querySelector("#enterprise-delete-confirm")?.addEventListener("click", 
 enterpriseList?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-enterprise-action]");
   if (!button) return;
-  const id = Number(button.dataset.enterpriseId);
-  const enterprise = enterprises.find((item) => item.id === id);
+  const id = button.dataset.enterpriseId;
+  const enterprise = enterprises.find((item) => sameId(item.id, id));
   if (!enterprise) return;
 
   if (button.dataset.enterpriseAction === "edit") {
@@ -2250,23 +2066,11 @@ document.addEventListener("click", (event) => {
   confirmDelete(`Deseja realmente excluir ${label}?`, () => row.remove());
 });
 
-const environmentalLicenseTypes = [
-  { id: 0, name: "Licenca de Operacao", code: "LO", validity: "4 anos", renewal: "180 dias antes", phases: ["Trifasica"] },
-  { id: 1, name: "LAS", code: "LAS", validity: "5 anos", renewal: "120 dias antes", phases: ["Monofasica"] },
-  { id: 2, name: "Outorga", code: "OUT", validity: "Indeterminada", renewal: "90 dias antes", phases: ["Monofasica", "Bifasica"] },
-];
+let environmentalLicenseTypes = [];
 
-const environmentalDocuments = [
-  { id: 0, name: "CNPJ", expiration: "Nao", required: "Sim", licenses: ["Licenca de Operacao", "LAS", "Outorga"] },
-  { id: 1, name: "Matricula do imovel", expiration: "Nao", required: "Sim", licenses: ["Licenca de Operacao", "LAS", "Outorga"] },
-  { id: 2, name: "ART/RRT", expiration: "Nao", required: "Sim", licenses: ["Licenca de Operacao", "Outorga"] },
-  { id: 3, name: "Comprovante de taxa", expiration: "Nao", required: "Sim", licenses: ["Licenca de Operacao", "LAS"] },
-];
+let environmentalDocuments = [];
 
-const checklistModelsAdmin = [
-  { id: 0, name: "Checklist - Licenca de Operacao", license: "Licenca de Operacao", documents: ["CNPJ", "Matricula do imovel", "ART/RRT", "Comprovante de taxa"] },
-  { id: 1, name: "Checklist - LAS", license: "LAS", documents: ["CNPJ", "Matricula do imovel", "Comprovante de taxa"] },
-];
+let checklistModelsAdmin = [];
 
 const licenseTypeList = document.querySelector("#license-type-list");
 const licenseTypeCount = document.querySelector("#license-type-count");
@@ -2385,10 +2189,10 @@ document.querySelector("#license-type-new")?.addEventListener("click", () => {
 });
 
 document.querySelector("#license-type-save")?.addEventListener("click", () => {
-  const id = Number(field("license-type-id").value);
-  const existing = environmentalLicenseTypes.find((item) => item.id === id);
+  const id = field("license-type-id").value;
+  const existing = environmentalLicenseTypes.find((item) => sameId(item.id, id));
   const payload = {
-    id,
+    id: id || Date.now(),
     name: field("license-type-name").value,
     code: field("license-type-code").value,
     validity: field("license-type-validity").value,
@@ -2405,8 +2209,8 @@ document.querySelector("#license-type-save")?.addEventListener("click", () => {
 licenseTypeList?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-license-type-action]");
   if (!button) return;
-  const id = Number(button.dataset.licenseTypeId);
-  const item = environmentalLicenseTypes.find((entry) => entry.id === id);
+  const id = button.dataset.licenseTypeId;
+  const item = environmentalLicenseTypes.find((entry) => sameId(entry.id, id));
   if (!item) return;
   if (button.dataset.licenseTypeAction === "edit") {
     field("license-type-id").value = item.id;
@@ -2420,7 +2224,7 @@ licenseTypeList?.addEventListener("click", (event) => {
   }
   if (button.dataset.licenseTypeAction === "delete") {
     confirmDelete(`Deseja realmente excluir o tipo de licenca ${item.name}?`, () => {
-      const index = environmentalLicenseTypes.findIndex((entry) => entry.id === id);
+      const index = environmentalLicenseTypes.findIndex((entry) => sameId(entry.id, id));
       if (index >= 0) environmentalLicenseTypes.splice(index, 1);
       renderEnvironmentalLicenseTypes();
       populateChecklistModelSelects();
@@ -2439,10 +2243,10 @@ document.querySelector("#environmental-document-new")?.addEventListener("click",
 });
 
 document.querySelector("#environmental-document-save")?.addEventListener("click", () => {
-  const id = Number(field("environmental-document-id").value);
-  const existing = environmentalDocuments.find((item) => item.id === id);
+  const id = field("environmental-document-id").value;
+  const existing = environmentalDocuments.find((item) => sameId(item.id, id));
   const payload = {
-    id,
+    id: id || Date.now(),
     name: field("environmental-document-name").value,
     expiration: field("environmental-document-expiration").value,
     required: field("environmental-document-required").value,
@@ -2458,8 +2262,8 @@ document.querySelector("#environmental-document-save")?.addEventListener("click"
 environmentalDocumentList?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-document-action]");
   if (!button) return;
-  const id = Number(button.dataset.documentId);
-  const item = environmentalDocuments.find((entry) => entry.id === id);
+  const id = button.dataset.documentId;
+  const item = environmentalDocuments.find((entry) => sameId(entry.id, id));
   if (!item) return;
   if (button.dataset.documentAction === "edit") {
     field("environmental-document-id").value = item.id;
@@ -2472,7 +2276,7 @@ environmentalDocumentList?.addEventListener("click", (event) => {
   }
   if (button.dataset.documentAction === "delete") {
     confirmDelete(`Deseja realmente excluir o documento ${item.name}?`, () => {
-      const index = environmentalDocuments.findIndex((entry) => entry.id === id);
+      const index = environmentalDocuments.findIndex((entry) => sameId(entry.id, id));
       if (index >= 0) environmentalDocuments.splice(index, 1);
       renderEnvironmentalDocuments();
       populateChecklistModelSelects();
@@ -2489,10 +2293,10 @@ document.querySelector("#checklist-model-new")?.addEventListener("click", () => 
 });
 
 document.querySelector("#checklist-model-save")?.addEventListener("click", () => {
-  const id = Number(field("checklist-model-id").value);
-  const existing = checklistModelsAdmin.find((item) => item.id === id);
+  const id = field("checklist-model-id").value;
+  const existing = checklistModelsAdmin.find((item) => sameId(item.id, id));
   const payload = {
-    id,
+    id: id || Date.now(),
     name: field("checklist-model-name").value,
     license: field("checklist-model-license").value,
     documents: checkedValues('input[name="checklist-document"]'),
@@ -2506,8 +2310,8 @@ document.querySelector("#checklist-model-save")?.addEventListener("click", () =>
 checklistModelList?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-checklist-model-action]");
   if (!button) return;
-  const id = Number(button.dataset.checklistModelId);
-  const item = checklistModelsAdmin.find((entry) => entry.id === id);
+  const id = button.dataset.checklistModelId;
+  const item = checklistModelsAdmin.find((entry) => sameId(entry.id, id));
   if (!item) return;
   if (button.dataset.checklistModelAction === "edit") {
     field("checklist-model-id").value = item.id;
@@ -2518,7 +2322,7 @@ checklistModelList?.addEventListener("click", (event) => {
   }
   if (button.dataset.checklistModelAction === "delete") {
     confirmDelete(`Deseja realmente excluir o modelo de ${item.license}?`, () => {
-      const index = checklistModelsAdmin.findIndex((entry) => entry.id === id);
+      const index = checklistModelsAdmin.findIndex((entry) => sameId(entry.id, id));
       if (index >= 0) checklistModelsAdmin.splice(index, 1);
       renderChecklistModelsAdmin();
     });
@@ -2534,141 +2338,11 @@ renderEnvironmentalDocuments();
 populateChecklistModelSelects();
 renderChecklistModelsAdmin();
 
-const checklistModels = {
-  "Licenca de Operacao": [
-    ["CNPJ", "Tipo de documento: Admin", true],
-    ["Contrato social", "Tipo de documento: Admin", true],
-    ["Matricula do imovel", "Imovel: Admin", true],
-    ["Planta/layout operacional", "Checklist: Licenca de Operacao", true],
-    ["ART/RRT do estudo ambiental", "Tipo de documento: Admin", false],
-    ["Comprovante de taxa", "Tipo de documento: Admin", false],
-    ["Memorial descritivo", "Checklist: Licenca de Operacao", false],
-    ["Protocolo de renovacao", "Gerado no processo ambiental", false],
-  ],
-  LAS: [
-    ["CNPJ", "Tipo de documento: Admin", true],
-    ["Matricula do imovel", "Imovel: Admin", true],
-    ["Croqui de localizacao", "Tipo de documento: Admin", false],
-    ["Memorial simplificado", "Checklist: LAS", false],
-    ["Declaracao de atividade", "Tipo de documento: Admin", false],
-    ["Comprovante de taxa", "Tipo de documento: Admin", false],
-  ],
-  Outorga: [
-    ["CNPJ", "Tipo de documento: Admin", true],
-    ["Matricula do imovel", "Imovel: Admin", true],
-    ["Coordenadas do ponto de captacao", "Imovel: Admin", false],
-    ["Estudo de disponibilidade hidrica", "Checklist: Outorga", false],
-    ["ART/RRT do responsavel tecnico", "Tipo de documento: Admin", false],
-  ],
-};
+let checklistModels = {};
 
 const licenseTypeSelect = document.querySelector("#license-type-select");
 const generatedChecklist = document.querySelector("#generated-checklist");
-const environmentalProcesses = [
-  {
-    id: 0,
-    internalNumber: "001/2026",
-    licensingFormat: "trifasico",
-    licensingFormatLabel: "Trifasico",
-    number: "LO 4821/2022",
-    title: "Unidade Paulinia",
-    company: "Carminatti Participacoes S.A.",
-    type: "Licenca de Operacao",
-    agency: "CETESB",
-    status: "open",
-    statusLabel: "Aberta",
-    risk: "Risco critico",
-    due: "Vence em 15 dias",
-    responsible: "Marina Carminatti",
-    progress: 63,
-    documents: "9 de 14 anexados",
-  },
-  {
-    id: 1,
-    internalNumber: "002/2026",
-    licensingFormat: "monofasico",
-    licensingFormatLabel: "Monofasico",
-    number: "LAS 117/2024",
-    title: "Unidade Limeira",
-    company: "Carminatti Participacoes S.A.",
-    type: "LAS",
-    agency: "Secretaria Municipal de Meio Ambiente",
-    status: "pending",
-    statusLabel: "Pendente",
-    risk: "Aguardando documentos",
-    due: "Renovar",
-    responsible: "Rafael Almeida",
-    progress: 42,
-    documents: "4 de 9 anexados",
-  },
-  {
-    id: 2,
-    internalNumber: "003/2026",
-    licensingFormat: "bifasico",
-    licensingFormatLabel: "Bifasico",
-    number: "LI 090/2025",
-    title: "Fazenda Santa Clara",
-    company: "Carminatti Agroindustrial Ltda",
-    type: "Licenca de Instalacao",
-    agency: "CETESB",
-    status: "pending",
-    statusLabel: "Pendente",
-    risk: "Em analise",
-    due: "Resposta do orgao ambiental",
-    responsible: "Henrique Carminatti",
-    progress: 78,
-    documents: "12 de 14 anexados",
-  },
-  {
-    id: 3,
-    internalNumber: "004/2026",
-    licensingFormat: "trifasico",
-    licensingFormatLabel: "Trifasico",
-    number: "LO 031/2020",
-    title: "Unidade Paulinia - Galpao 2",
-    company: "Carminatti Participacoes S.A.",
-    type: "Licenca de Operacao",
-    agency: "CETESB",
-    status: "expired",
-    statusLabel: "Vencida",
-    risk: "Vencida",
-    due: "Venceu em 12/03/2026",
-    responsible: "Marina Carminatti",
-    progress: 88,
-    documents: "Renovacao em atraso",
-  },
-  {
-    id: 4,
-    internalNumber: "005/2026",
-    licensingFormat: "monofasico",
-    licensingFormatLabel: "Monofasico",
-    number: "OUT 044/2023",
-    title: "Captacao Fazenda Carminatti",
-    company: "Carminatti Agroindustrial Ltda",
-    type: "Outorga",
-    agency: "DAEE",
-    status: "done",
-    statusLabel: "Concluida",
-    risk: "Processo concluido",
-    due: "Sem pendencias",
-    responsible: "Henrique Carminatti",
-    progress: 100,
-    documents: "8 de 8 anexados",
-    activeLicense: {
-      id: "sample-005-license",
-      processId: 4,
-      processNumber: "005/2026",
-      stageNumber: 3,
-      type: "Outorga",
-      number: "OUT 044/2023",
-      expiryDate: "2027-06-30",
-      company: "Carminatti Agroindustrial Ltda",
-      title: "Captacao Fazenda Carminatti",
-      responsible: "Henrique Carminatti",
-      status: "Ativa",
-    },
-  },
-];
+let environmentalProcesses = [];
 
 let currentLicenseStatus = "general";
 let activeStageProcessId = null;
@@ -2964,7 +2638,69 @@ function processStagesForFormat(format) {
     name,
     description,
     status: index === 0 ? "Em andamento" : "Nao iniciada",
+    validityDate: "",
+    warningDays: 60,
+    criticalDays: 15,
+    deadlineStatus: "open",
   }));
+}
+
+function daysUntil(dateValue) {
+  if (!dateValue) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(`${dateValue}T00:00:00`);
+  if (Number.isNaN(target.getTime())) return null;
+  return Math.ceil((target - today) / 86400000);
+}
+
+function updateStageDeadlineStatus(stage) {
+  const remaining = daysUntil(stage.validityDate);
+  if (stage.status === "Concluida") {
+    stage.deadlineStatus = "completed";
+    return stage.deadlineStatus;
+  }
+  if (remaining === null) {
+    stage.deadlineStatus = "open";
+  } else if (remaining < 0) {
+    stage.deadlineStatus = "expired";
+  } else if (remaining <= Number(stage.criticalDays || 0)) {
+    stage.deadlineStatus = "critical";
+  } else if (remaining <= Number(stage.warningDays || 0)) {
+    stage.deadlineStatus = "warning";
+  } else {
+    stage.deadlineStatus = "open";
+  }
+  return stage.deadlineStatus;
+}
+
+function applyProcessDeadlineRules(process) {
+  const stages = ensureProcessStages(process);
+  stages.forEach(updateStageDeadlineStatus);
+  const expiredStage2 = stages.some((stage) => stage.number === 2 && stage.deadlineStatus === "expired" && stage.status !== "Concluida");
+  const expiredLicenseStage = stages.some((stage) => isLicenseStage(stage) && stage.deadlineStatus === "expired");
+  const criticalStage = stages.some((stage) => ["warning", "critical"].includes(stage.deadlineStatus) && stage.status !== "Concluida");
+
+  if (expiredLicenseStage) {
+    process.status = "expired";
+    process.statusLabel = processStatusLabel("expired");
+    process.risk = "Licenca vencida";
+    process.due = "Licenca ambiental vencida";
+    return;
+  }
+
+  if (expiredStage2) {
+    process.status = "pending";
+    process.statusLabel = processStatusLabel("pending");
+    process.risk = "Etapa 2 vencida";
+    process.due = "Prazo da etapa 2 ultrapassado";
+    return;
+  }
+
+  if (criticalStage && process.status === "open") {
+    process.risk = "Prazo em atencao";
+    process.due = "Ha etapa proxima do vencimento";
+  }
 }
 
 function processStatusLabel(status) {
@@ -3010,6 +2746,7 @@ function updateProcessProgress(process) {
     process.risk = "Processo concluido";
     process.due = "Sem pendencias";
   }
+  applyProcessDeadlineRules(process);
   return process.progress;
 }
 
@@ -3055,10 +2792,25 @@ function processStageClass(stage) {
 }
 
 function stageStatusPill(stage) {
+  if (stage.deadlineStatus === "expired") return "red";
+  if (stage.deadlineStatus === "critical" || stage.deadlineStatus === "warning") return "yellow";
   if (stage.status === "Concluida") return "green";
   if (stage.status === "Em andamento") return "yellow";
   if (stage.status === "Pendente") return "red";
   return "muted";
+}
+
+function stageDeadlineLabel(stage) {
+  updateStageDeadlineStatus(stage);
+  const labels = {
+    open: "Prazo normal",
+    warning: "Aviso minimo",
+    critical: "Prazo critico",
+    expired: "Vencida",
+    completed: "Concluida",
+  };
+  const validity = stage.validityDate ? `Validade: ${formatAgendaDate(stage.validityDate)}` : "Sem validade definida";
+  return `${validity} - ${labels[stage.deadlineStatus] || "Prazo normal"}`;
 }
 
 function updateEnvironmentalProcessStagesPreview() {
@@ -3330,6 +3082,9 @@ function renderCurrentStageScreen(process, stage) {
   field("environmental-process-current-stage-code").textContent = `Etapa ${stage.number}`;
   field("environmental-process-current-stage-title").textContent = stage.name;
   field("environmental-process-current-stage-description").textContent = stage.description;
+  field("environmental-stage-validity-date").value = stage.validityDate || "";
+  field("environmental-stage-warning-days").value = stage.warningDays ?? 60;
+  field("environmental-stage-critical-days").value = stage.criticalDays ?? 15;
   const gateText = stageRequiredMessage(process, stage);
   if (gate) gate.hidden = !gateText;
   if (gateMessage) gateMessage.textContent = gateText || "Etapa liberada para avancar.";
@@ -3389,6 +3144,11 @@ function refreshActiveStageGate() {
 
 function saveCurrentStageForm(process, stage) {
   const record = stageRecord(process, stage.number);
+  stage.validityDate = field("environmental-stage-validity-date")?.value || "";
+  stage.warningDays = Number(field("environmental-stage-warning-days")?.value || 60);
+  stage.criticalDays = Number(field("environmental-stage-critical-days")?.value || 15);
+  updateStageDeadlineStatus(stage);
+  applyProcessDeadlineRules(process);
   if (isProtocolStage(stage)) {
     record.protocolNumber = field("environmental-stage-protocol-number")?.value || "";
     record.protocolDate = field("environmental-stage-protocol-date")?.value || "";
@@ -3468,6 +3228,7 @@ function renderProcessDetail(process) {
             <span class="process-stage-status">Etapa ${stage.number}</span>
             <strong>${stage.name}</strong>
             <small>${stage.description}</small>
+            <small>${stageDeadlineLabel(stage)}</small>
             <span class="pill ${stageStatusPill(stage)}">${stage.status}</span>
           </div>
           <div class="process-stage-detail-actions">
@@ -3906,7 +3667,7 @@ const PDF_STANDARD = {
   landscapeLimit: 545,
   landscapeContinuationLimit: 735,
   generatedBy: "Usuario DocGestor by Carminatti",
-  organization: "Grupo Carminatti",
+  organization: "DocGestor",
   exclusive: "DocGestor by Carminatti",
 };
 
@@ -4333,11 +4094,11 @@ function openPdfReport(report) {
 }
 
 function companyNameById(id) {
-  return companies.find((company) => company.id === id)?.name || "Nao informado";
+  return companies.find((company) => sameId(company.id, id))?.name || "Nao informado";
 }
 
 function partnerNameById(id) {
-  return partners.find((partner) => partner.id === id)?.name || "Nao informado";
+  return partners.find((partner) => sameId(partner.id, id))?.name || "Nao informado";
 }
 
 function propertyOwnerLabel(property) {
@@ -4389,7 +4150,7 @@ function buildCompaniesReport(filters = {}) {
     .forEach((matrix) => {
     rows.push([matrix.cnpj, matrix.name, "Matriz", matrix.tradeName, matrix.partners.join(", "), matrix.status]);
     companies
-      .filter((company) => company.kind === "branch" && company.parentId === matrix.id)
+      .filter((company) => company.kind === "branch" && sameId(company.parentId, matrix.id))
       .filter((company) => !branchIds.length || branchIds.includes(String(company.id)))
       .sort((a, b) => a.cnpj.localeCompare(b.cnpj))
       .forEach((branch) => {
@@ -4961,7 +4722,7 @@ function pickerConfig(kind) {
       title: "Selecionar filiais",
       context: "01.2.2 Empresas e Filiais",
       options: companyPdfBranches(pdfFilterState.companyMatrixIds).map((branch) => {
-        const matrix = companies.find((company) => company.id === branch.parentId);
+        const matrix = companies.find((company) => sameId(company.id, branch.parentId));
         return { value: String(branch.id), label: `${branch.cnpj} - ${branch.name}`, detail: matrix?.name || "" };
       }),
       selected: pdfFilterState.companyBranchIds,
@@ -5128,3 +4889,344 @@ function installPdfButtons() {
 }
 
 installPdfButtons();
+
+async function dbList(table, query = "select=*") {
+  if (!window.DocGestorDB) return [];
+  try {
+    return await window.DocGestorDB.list(table, query);
+  } catch (error) {
+    console.warn(`Tabela ${table} indisponivel no Supabase.`, error.message);
+    return [];
+  }
+}
+
+function statusFromSupabase(value) {
+  const normalized = String(value || "").toLowerCase();
+  if (["vencida", "vencido", "expired"].includes(normalized)) return "expired";
+  if (["pendente", "pending", "em analise", "em análise"].includes(normalized)) return "pending";
+  if (["concluida", "concluido", "deferido", "done"].includes(normalized)) return "done";
+  return "open";
+}
+
+function renderDashboard() {
+  environmentalProcesses.forEach(applyProcessDeadlineRules);
+  const activeProcesses = environmentalProcesses.filter((process) => process.status !== "done");
+  const criticalProcesses = activeProcesses.filter((process) => process.status === "expired" || process.risk?.toLowerCase().includes("critico") || process.risk?.toLowerCase().includes("vencida"));
+  const warningProcesses = activeProcesses.filter((process) => process.status === "pending" || process.risk?.toLowerCase().includes("atencao"));
+  const concluded = environmentalProcesses.filter((process) => process.status === "done").length;
+  const compliance = environmentalProcesses.length ? Math.round((concluded / environmentalProcesses.length) * 100) : 0;
+
+  if (field("dashboard-critical-count")) field("dashboard-critical-count").textContent = criticalProcesses.length;
+  if (field("dashboard-warning-count")) field("dashboard-warning-count").textContent = warningProcesses.length;
+  if (field("dashboard-process-count")) field("dashboard-process-count").textContent = activeProcesses.length;
+  if (field("dashboard-compliance")) field("dashboard-compliance").textContent = `${compliance}%`;
+
+  const riskTable = field("dashboard-risk-table");
+  if (riskTable) {
+    const head = riskTable.querySelector(".table-head")?.outerHTML || "";
+    const rows = [...criticalProcesses, ...warningProcesses].slice(0, 8);
+    riskTable.innerHTML = `${head}${
+      rows.length
+        ? rows
+            .map(
+              (process) => `
+                <div class="table-row">
+                  <span>Ambiental</span>
+                  <span>${escapeHtml(process.internalNumber || process.number || process.title || "Processo")}</span>
+                  <span>${escapeHtml(process.due || "Sem prazo definido")}</span>
+                  <span class="pill ${process.status === "expired" ? "red" : "yellow"}">${escapeHtml(process.statusLabel || processStatusLabel(process.status))}</span>
+                </div>
+              `,
+            )
+            .join("")
+        : `<div class="table-row"><span>Ambiental</span><span>Nenhum risco real cadastrado</span><span>-</span><span class="pill green">Em dia</span></div>`
+    }`;
+  }
+
+  const taskList = field("dashboard-task-list");
+  if (taskList) {
+    const nextEvents = [...agendaEvents].sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`)).slice(0, 5);
+    taskList.innerHTML = nextEvents.length
+      ? nextEvents.map((event) => `<li><strong>${escapeHtml(event.title)}</strong><span>${escapeHtml(event.type)} - ${escapeHtml(formatAgendaDate(event.date))} ${escapeHtml(event.time || "")}</span></li>`).join("")
+      : `<li><strong>Nenhum agendamento pendente</strong><span>Cadastre prazos na Agenda ou nas etapas dos processos.</span></li>`;
+  }
+}
+
+function looksLikeUuid(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value || ""));
+}
+
+async function persistSendRecipient(recipient, wasExisting) {
+  if (!window.DocGestorDB) return;
+  try {
+    const payload = {
+      name: recipient.name,
+      email: recipient.email,
+      relation: recipient.relation,
+      status: recipient.status === "Ativo" ? "active" : "inactive",
+      require_read_confirmation: Boolean(recipient.readConfirmation),
+    };
+
+    let saved = null;
+    if (wasExisting && looksLikeUuid(recipient.id)) {
+      [saved] = await window.DocGestorDB.update("alert_recipients", recipient.id, payload);
+    } else {
+      [saved] = await window.DocGestorDB.create("alert_recipients", payload);
+      if (saved?.id) {
+        const local = sendRecipients.find((item) => sameId(item.id, recipient.id));
+        if (local) local.id = saved.id;
+        recipient.id = saved.id;
+        selectedSendRecipientId = saved.id;
+      }
+    }
+
+    const recipientId = saved?.id || recipient.id;
+    if (!looksLikeUuid(recipientId)) return;
+    await window.DocGestorDB.removeWhere("alert_recipient_modules", `recipient_id=eq.${encodeURIComponent(recipientId)}`);
+    await Promise.all(sendRecipientModules(recipient).map((moduleId) => window.DocGestorDB.create("alert_recipient_modules", {
+      recipient_id: recipientId,
+      module_id: moduleId,
+    })));
+    renderSendRecipients();
+  } catch (error) {
+    console.warn("Nao foi possivel salvar o e-mail de alerta no Supabase.", error.message);
+  }
+}
+
+async function loadSupabaseData() {
+  const [
+    partnerRows,
+    companyRows,
+    companyPartnerRows,
+    propertyRows,
+    enterpriseRows,
+    licenseTypeRows,
+    phaseRows,
+    documentRows,
+    documentLicenseRows,
+    checklistRows,
+    checklistDocumentRows,
+    licenseRows,
+    alertRecipientRows,
+    alertRecipientModuleRows,
+    agendaRows,
+    userRows,
+  ] = await Promise.all([
+    dbList("partners"),
+    dbList("companies"),
+    dbList("company_partners"),
+    dbList("properties"),
+    dbList("enterprises"),
+    dbList("environmental_license_types"),
+    dbList("environmental_license_type_phases"),
+    dbList("environmental_documents"),
+    dbList("environmental_document_license_types"),
+    dbList("environmental_checklist_models"),
+    dbList("environmental_checklist_model_documents"),
+    dbList("environmental_licenses"),
+    dbList("alert_recipients"),
+    dbList("alert_recipient_modules"),
+    dbList("agenda_events"),
+    dbList("app_users"),
+  ]);
+
+  const partnerById = Object.fromEntries(partnerRows.map((row) => [row.id, row]));
+  const companyById = Object.fromEntries(companyRows.map((row) => [row.id, row]));
+  const propertyById = Object.fromEntries(propertyRows.map((row) => [row.id, row]));
+  const licenseTypeById = Object.fromEntries(licenseTypeRows.map((row) => [row.id, row]));
+  const documentById = Object.fromEntries(documentRows.map((row) => [row.id, row]));
+
+  partners = partnerRows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    document: row.document,
+    role: row.role,
+    contact: row.contact || "",
+    phone: row.phone || "",
+    status: row.status || "Ativo",
+  }));
+
+  companies = companyRows.map((row) => ({
+    id: row.id,
+    kind: row.kind,
+    name: row.name,
+    cnpj: row.cnpj,
+    tradeName: row.trade_name || "",
+    status: row.status || "Ativa",
+    partners: companyPartnerRows.filter((link) => sameId(link.company_id, row.id)).map((link) => partnerById[link.partner_id]?.name).filter(Boolean),
+    parentId: row.parent_id,
+    showBranches: row.show_branches ?? true,
+  }));
+
+  properties = propertyRows.map((row) => {
+    const ownerRow = row.owner_type === "pf" ? partnerById[row.owner_partner_id] : companyById[row.owner_company_id];
+    return {
+      id: row.id,
+      ownerType: row.owner_type,
+      owner: ownerRow?.name || "Proprietario nao encontrado",
+      type: row.type,
+      registration: row.registration,
+      reference: row.reference || "",
+      lot: row.lot || "",
+      block: row.block || "",
+      glebe: row.glebe || "",
+      urbanArea: Number(row.urban_area_m2 || 0),
+      ruralArea: Number(row.rural_area_m2 || 0),
+      legalReserve: Number(row.legal_reserve_m2 || 0),
+      appArea: Number(row.app_area_m2 || 0),
+      ruralUse: row.use_type || "",
+      hasConstruction: Boolean(row.has_construction),
+      constructionArea: Number(row.construction_area_m2 || 0),
+      status: row.status || "Ativo",
+    };
+  });
+
+  enterprises = enterpriseRows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    company: companyById[row.company_id]?.name || "Empresa nao encontrada",
+    property: propertyById[row.property_id] ? `Matricula ${propertyById[row.property_id].registration}` : "Imovel nao encontrado",
+    type: row.type || "",
+    status: row.status || "Planejado",
+    responsible: partnerById[row.responsible_partner_id]?.name || "",
+    reference: row.reference || "",
+  }));
+
+  environmentalLicenseTypes = licenseTypeRows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    code: row.code || "",
+    validity: row.validity || "",
+    renewal: row.renewal || "",
+    phases: phaseRows.filter((phase) => sameId(phase.license_type_id, row.id)).map((phase) => phase.phase),
+  }));
+
+  environmentalDocuments = documentRows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    expiration: row.expiration || "Nao",
+    required: row.required || "Sim",
+    licenses: documentLicenseRows.filter((link) => sameId(link.document_id, row.id)).map((link) => licenseTypeById[link.license_type_id]?.name).filter(Boolean),
+  }));
+
+  checklistModelsAdmin = checklistRows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    license: licenseTypeById[row.license_type_id]?.name || "",
+    documents: checklistDocumentRows.filter((link) => sameId(link.checklist_model_id, row.id)).sort((a, b) => (a.display_order || 0) - (b.display_order || 0)).map((link) => documentById[link.document_id]?.name).filter(Boolean),
+  }));
+
+  checklistModels = checklistModelsAdmin.reduce((acc, model) => {
+    acc[model.license] = model.documents.map((name) => [name, `Checklist: ${model.name}`, true]);
+    return acc;
+  }, {});
+
+  environmentalProcesses = licenseRows.map((row) => {
+    const status = daysUntil(row.expiration_date) !== null && daysUntil(row.expiration_date) < 0 ? "expired" : statusFromSupabase(row.status);
+    const licenseType = licenseTypeById[row.license_type_id]?.name || "Licenca ambiental";
+    const company = companyById[row.company_id]?.name || "Empresa nao encontrada";
+    const property = propertyById[row.property_id] ? `Matricula ${propertyById[row.property_id].registration}` : "";
+    return {
+      id: row.id,
+      internalNumber: row.process_number || row.license_number || "Sem numero",
+      licensingFormat: "monofasico",
+      licensingFormatLabel: "Monofasico",
+      number: row.license_number || row.process_number || "Sem numero",
+      title: enterprises.find((enterprise) => sameId(enterprise.id, row.enterprise_id))?.name || company,
+      company,
+      type: licenseType,
+      licenseTypes: [licenseType],
+      agency: row.environmental_agency || "",
+      status,
+      statusLabel: processStatusLabel(status),
+      risk: row.risk_level || "",
+      due: row.expiration_date ? `Vence em ${formatAgendaDate(row.expiration_date)}` : "Sem vencimento cadastrado",
+      responsible: partnerById[row.responsible_partner_id]?.name || "",
+      progress: Number(row.progress_percent || 0),
+      documents: row.notes || "",
+      property,
+      notes: row.notes || "",
+      activeLicense: row.license_number
+        ? {
+            id: row.id,
+            processId: row.id,
+            processNumber: row.process_number || row.license_number,
+            stageNumber: 3,
+            type: licenseType,
+            number: row.license_number,
+            expiryDate: row.expiration_date,
+            company,
+            title: enterprises.find((enterprise) => sameId(enterprise.id, row.enterprise_id))?.name || company,
+            responsible: partnerById[row.responsible_partner_id]?.name || "",
+            status: status === "expired" ? "Vencida" : "Ativa",
+          }
+        : null,
+    };
+  });
+
+  sendRecipients = alertRecipientRows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    modules: alertRecipientModuleRows.filter((link) => sameId(link.recipient_id, row.id)).map((link) => link.module_id),
+    relation: row.relation || "Administrativo",
+    status: row.status === "active" ? "Ativo" : row.status || "Ativo",
+    readConfirmation: row.require_read_confirmation ?? true,
+    sent: 0,
+    read: 0,
+  }));
+
+  agendaEvents = agendaRows.map((row) => ({
+    id: row.id,
+    date: row.event_date || row.date,
+    time: row.event_time || row.time || "09:00",
+    title: row.title || "Agendamento",
+    type: row.module_id ? sendModuleLabel(row.module_id) : row.type || "Agenda",
+    status: row.status || "green",
+    description: row.description || "",
+  })).filter((event) => event.date);
+
+  users = userRows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    phone: row.phone || "",
+    cpf: row.cpf || "",
+    roleTitle: row.role_title || "",
+    company: companyById[row.company_id]?.name || "",
+    branch: companyById[row.branch_id]?.name || "",
+    profile: row.profile || "Consulta",
+    status: row.status || "Ativo",
+    password: row.password || "123456",
+    permissions: [],
+  }));
+
+  selectedPartnerId = partners[0]?.id ?? 0;
+  selectedCompanyId = companies[0]?.id ?? 0;
+  selectedPropertyId = properties[0]?.id ?? 0;
+  selectedEnterpriseId = enterprises[0]?.id ?? 0;
+  selectedSendRecipientId = sendRecipients[0]?.id ?? 0;
+  selectedUserId = users[0]?.id ?? 0;
+
+  renderUsers();
+  renderPartners();
+  renderCompanies();
+  populateCompanyParents();
+  populatePropertyOwners();
+  renderProperties();
+  populateEnterpriseSelects();
+  renderEnterprises();
+  renderEnvironmentalLicenseTypes();
+  renderEnvironmentalDocuments();
+  populateChecklistModelSelects();
+  renderChecklistModelsAdmin();
+  renderSendRecipients();
+  renderAgenda();
+  renderAgendaNotes();
+  updateNextProcessNumber();
+  renderLicenseStatus(currentLicenseStatus || "general");
+  renderDashboard();
+}
+
+renderDashboard();
+loadSupabaseData();

@@ -69,6 +69,13 @@
         query: `id=eq.${encodeURIComponent(id)}`,
       });
     },
+
+    removeWhere(table, query) {
+      return request(table, {
+        method: "DELETE",
+        query,
+      });
+    },
   };
 
   window.DocGestorDB = db;
