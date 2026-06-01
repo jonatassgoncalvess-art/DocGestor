@@ -1116,33 +1116,49 @@ function openSystemEmailTestModal() {
   openModal("system-email-test-modal");
 }
 
+async function sendSystemEmail({ to, subject, html }) {
+  const recipients = Array.isArray(to)
+    ? to
+    : String(to || "")
+        .split(/[;,]/)
+        .map((email) => email.trim())
+        .filter(Boolean);
+  if (!recipients.length) throw new Error("Informe ao menos um e-mail destinatario.");
+  const invalidRecipients = recipients.filter((email) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
+  if (invalidRecipients.length) throw new Error(`E-mail invalido: ${invalidRecipients.join(", ")}`);
+  const response = await fetch("/api/enviar-email", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      to: recipients,
+      fromName: systemEmailConfig.name,
+      fromEmail: systemEmailConfig.address,
+      subject,
+      html,
+    }),
+  });
+  const result = await response.json();
+  if (!response.ok || !result.success) {
+    throw new Error(result.error || "verifique a configuracao do provedor");
+  }
+  return result;
+}
+
 async function testSystemEmailConfig() {
   const recipient = field("system-email-test-to")?.value?.trim();
-  if (!recipient) {
-    alert("Informe o e-mail destinatario.");
-    return;
-  }
   try {
-    const response = await fetch("/api/enviar-email", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        to: recipient,
-        fromName: systemEmailConfig.name,
-        fromEmail: systemEmailConfig.address,
-        subject: "Teste DocGestor",
-        html: "<p>Funcionou! Este e-mail foi enviado pela Vercel + Resend.</p>",
-      }),
+    const result = await sendSystemEmail({
+      to: recipient,
+      subject: "Teste DocGestor",
+      html: "<p>Funcionou! Este e-mail foi enviado pela Vercel + Resend.</p>",
     });
-
-    const result = await response.json();
     console.log(result);
     systemEmailConfig.lastTest = new Date().toLocaleString("pt-BR");
     persistSystemEmailConfig();
-    if (result.success) closeModal("system-email-test-modal");
-    alert(result.success ? "E-mail enviado!" : `Erro ao enviar e-mail: ${result.error || "verifique a configuracao do provedor"}`);
+    closeModal("system-email-test-modal");
+    alert("E-mail enviado!");
   } catch (error) {
     console.error(error);
     alert(`Erro ao enviar e-mail: ${error.message}`);
