@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DocGestor by Carminatti | Previa</title>
-    <link rel="stylesheet" href="styles.css?v=20260602-backup-settings" />
+    <link rel="stylesheet" href="styles.css?v=20260602-search-property-fields" />
   </head>
   <body>
     <section class="login-screen" id="login-screen">
@@ -127,6 +127,10 @@
             <h1 id="page-title">Home</h1>
           </div>
           <div class="top-actions">
+            <div class="global-search">
+              <input id="global-search-input" type="search" placeholder="Buscar ambientes ou processos" autocomplete="off" />
+              <div class="global-search-results" id="global-search-results" hidden></div>
+            </div>
             <span class="current-user" id="current-user-label">Usuario</span>
             <select aria-label="Modulo ativo">
               <option selected>Licencas Ambientais</option>
@@ -1229,9 +1233,12 @@
           </label>
           <label>Matricula<input id="property-registration" /></label>
           <label>Referencia de localizacao<input id="property-reference" /></label>
+          <label class="urban-field">Inscricao imobiliaria<input id="property-municipal-registration" /></label>
           <label>Lote<input id="property-lot" /></label>
           <label class="urban-field">Quadra<input id="property-block" /></label>
           <label class="rural-field" hidden>Gleba<input id="property-glebe" /></label>
+          <label class="rural-field" hidden>Numero do CAR<input id="property-car-number" /></label>
+          <label class="rural-field" hidden>Numero CCIR/INCRA<input id="property-ccir-incra" /></label>
           <label class="urban-area-field" hidden>m2 do imovel<input id="property-urban-area" type="number" /></label>
           <label class="rural-field" hidden>m2 total do imovel<input id="property-rural-area" type="number" /></label>
           <label class="rural-field" hidden>Ha<input id="property-hectares" type="number" disabled /></label>
@@ -1809,9 +1816,9 @@
       </section>
     </div>
 
-    <script src="supabase-config.js?v=20260602-backup-settings"></script>
-    <script src="database.js?v=20260602-backup-settings"></script>
-    <script src="script.js?v=20260602-backup-settings"></script>
+    <script src="supabase-config.js?v=20260602-search-property-fields"></script>
+    <script src="database.js?v=20260602-search-property-fields"></script>
+    <script src="script.js?v=20260602-search-property-fields"></script>
   </body>
 </html>
 

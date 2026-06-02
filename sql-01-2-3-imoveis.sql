@@ -15,6 +15,9 @@ create table if not exists properties (
   lot text,
   block text,
   glebe text,
+  car_number text,
+  ccir_incra_number text,
+  urban_property_registration text,
   urban_area_m2 numeric(14,2),
   rural_area_m2 numeric(14,2),
   rural_area_ha numeric(14,4) generated always as (coalesce(rural_area_m2, 0) / 10000) stored,
@@ -102,6 +105,9 @@ create index if not exists properties_owner_partner_id_idx on properties(owner_p
 create index if not exists properties_owner_company_id_idx on properties(owner_company_id);
 create index if not exists properties_registration_idx on properties(registration);
 create index if not exists properties_type_idx on properties(type);
+create index if not exists properties_car_number_idx on properties(car_number);
+create index if not exists properties_ccir_incra_number_idx on properties(ccir_incra_number);
+create index if not exists properties_urban_property_registration_idx on properties(urban_property_registration);
 
 create or replace function set_updated_at()
 returns trigger
@@ -129,4 +135,3 @@ on properties
 for all
 using (true)
 with check (true);
-

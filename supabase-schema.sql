@@ -168,6 +168,9 @@ create table if not exists properties (
   lot text,
   block text,
   glebe text,
+  car_number text,
+  ccir_incra_number text,
+  urban_property_registration text,
   urban_area_m2 numeric(14,2),
   rural_area_m2 numeric(14,2),
   rural_area_ha numeric(14,4) generated always as (coalesce(rural_area_m2, 0) / 10000) stored,
@@ -323,6 +326,9 @@ create table if not exists environmental_alerts (
 create index if not exists idx_companies_parent_id on companies(parent_id);
 create index if not exists idx_properties_owner_partner on properties(owner_partner_id);
 create index if not exists idx_properties_owner_company on properties(owner_company_id);
+create index if not exists idx_properties_car_number on properties(car_number);
+create index if not exists idx_properties_ccir_incra_number on properties(ccir_incra_number);
+create index if not exists idx_properties_urban_property_registration on properties(urban_property_registration);
 create index if not exists idx_enterprises_company on enterprises(company_id);
 create index if not exists idx_enterprises_property on enterprises(property_id);
 create index if not exists idx_environmental_licenses_company on environmental_licenses(company_id);

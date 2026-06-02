@@ -152,6 +152,15 @@ function openAdminPanel(panelName) {
   });
 }
 
+function openAdminSearchPanel(panelName) {
+  openView("admin");
+  if (adminSubnav) {
+    adminSubnav.classList.add("open");
+    document.querySelector("[data-admin-menu-toggle]")?.setAttribute("aria-expanded", "true");
+  }
+  openAdminPanel(panelName);
+}
+
 document.querySelectorAll("[data-admin-target]").forEach((button) => {
   button.addEventListener("click", () => {
     openView("admin");
@@ -181,6 +190,123 @@ document.querySelectorAll("[data-settings-target]").forEach((button) => {
       document.querySelector("[data-settings-menu-toggle]")?.setAttribute("aria-expanded", "true");
     }
   });
+});
+
+const globalSearchInput = document.querySelector("#global-search-input");
+const globalSearchResults = document.querySelector("#global-search-results");
+
+const searchableEnvironments = [
+  { code: "00", title: "Home", detail: "Entrada principal do sistema", permission: "home", action: () => openView("home") },
+  { code: "01", title: "Painel Admin", detail: "Ambiente administrativo", permission: "admin", action: () => openView("admin") },
+  { code: "01.1", title: "Usuarios", detail: "Cadastro, acesso, senha e permissoes", permission: "users", action: () => openAdminSearchPanel("usuarios-admin") },
+  { code: "01.2.1", title: "Socios", detail: "Socios e responsaveis legais", permission: "registries", action: () => openAdminSearchPanel("socios-admin") },
+  { code: "01.2.2", title: "Empresas e Filiais", detail: "Matrizes, filiais e socios vinculados", permission: "registries", action: () => openAdminSearchPanel("empresas-filiais") },
+  { code: "01.2.3", title: "Imoveis", detail: "Imoveis urbanos, rurais e proprietarios", permission: "registries", action: () => openAdminSearchPanel("imoveis-admin") },
+  { code: "01.2.4", title: "Empreendimento", detail: "Empresas vinculadas a imoveis", permission: "registries", action: () => openAdminSearchPanel("empreendimentos-admin") },
+  { code: "01.3.1", title: "Tipos de Licencas", detail: "Classificacao ambiental", permission: "adminEnvironmental", action: () => openAdminSearchPanel("tipos-licencas") },
+  { code: "01.3.2", title: "Documentos", detail: "Documentos ambientais por licenca", permission: "adminEnvironmental", action: () => openAdminSearchPanel("documentos-ambientais") },
+  { code: "01.3.3", title: "Modelos de Check-list", detail: "Modelos usados nos processos", permission: "adminEnvironmental", action: () => openAdminSearchPanel("modelos-checklist") },
+  { code: "01.4.1", title: "E-mail do Sistema", detail: "Remetente oficial e dominio", permission: "admin", action: () => openAdminSearchPanel("email-sistema") },
+  { code: "01.4.2", title: "E-mails por Modulo", detail: "Destinatarios dos alertas", permission: "admin", action: () => openAdminSearchPanel("envios-admin") },
+  { code: "01.4.3", title: "Historico de Alertas", detail: "Status dos envios no Resend", permission: "admin", action: () => openAdminSearchPanel("historico-alertas") },
+  { code: "01.5.1", title: "Backup", detail: "Frequencia, horario e armazenamento", permission: "admin", action: () => openAdminSearchPanel("backup-sistema") },
+  { code: "02", title: "Painel Geral", detail: "Indicadores e prazos reais", permission: "dashboard", action: () => openView("dashboard") },
+  { code: "03", title: "Modulos", detail: "Entrada dos modulos operacionais", permission: "modules", action: () => openView("modulos") },
+  { code: "03.1", title: "Licencas Ambientais", detail: "Relatorio geral de processos e licencas", permission: "environmental", action: () => openLicenseStatus("general") },
+  { code: "03.1.1", title: "Abertas", detail: "Processos ambientais em aberto", permission: "environmental", action: () => openLicenseStatus("open") },
+  { code: "03.1.2", title: "Pendentes", detail: "Processos pendentes", permission: "environmental", action: () => openLicenseStatus("pending") },
+  { code: "03.1.3", title: "Vencidas", detail: "Processos e licencas vencidos", permission: "environmental", action: () => openLicenseStatus("expired") },
+  { code: "03.1.4", title: "Concluidas", detail: "Processos concluidos", permission: "environmental", action: () => openLicenseStatus("done") },
+  { code: "03.1.5", title: "Licencas", detail: "Licencas ambientais geradas", permission: "environmental", action: () => openLicenseStatus("licenses") },
+  { code: "04.1", title: "Calendario", detail: "Agenda em formato calendario", permission: "agenda", action: () => openView("agenda") },
+  { code: "04.2", title: "Anotacoes", detail: "Agendamentos e alertas pendentes", permission: "agenda", action: () => openView("agenda-notes") },
+  { code: "05.1", title: "Perfil", detail: "Dados cadastrais e senha do usuario", permission: "profile", action: () => openView("profile-settings") },
+];
+
+function normalizeSearchText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function searchableProcessItems() {
+  if (!canAccess("environmental")) return [];
+  return environmentalProcesses.map((process) => ({
+    code: process.internalNumber || process.number || "Processo",
+    title: process.title || process.type || "Processo ambiental",
+    detail: `${process.statusLabel || processStatusLabel(process.status)} - ${process.company || "Empresa nao informada"} - ${process.type || "Licenca ambiental"}`,
+    kind: "Processo ambiental",
+    permission: "environmental",
+    action: () => {
+      openLicenseStatus(process.status || "general");
+      setTimeout(() => openEnvironmentalProcessDetail(process.id), 0);
+    },
+  }));
+}
+
+function globalSearchItems() {
+  return [...searchableEnvironments, ...searchableProcessItems()].filter((item) => canAccess(item.permission));
+}
+
+function closeGlobalSearch() {
+  if (!globalSearchResults) return;
+  globalSearchResults.hidden = true;
+  globalSearchResults.innerHTML = "";
+}
+
+function renderGlobalSearchResults() {
+  if (!globalSearchInput || !globalSearchResults) return;
+  const query = normalizeSearchText(globalSearchInput.value);
+  if (query.length < 2) {
+    closeGlobalSearch();
+    return;
+  }
+  const results = globalSearchItems()
+    .filter((item) => normalizeSearchText(`${item.code} ${item.title} ${item.detail} ${item.kind || "Ambiente"}`).includes(query))
+    .slice(0, 10);
+
+  globalSearchResults.hidden = false;
+  globalSearchResults.innerHTML = results.length
+    ? results
+        .map(
+          (item, index) => `
+            <button type="button" data-global-search-index="${index}">
+              <span>${escapeHtml(item.kind || "Ambiente")} ${escapeHtml(item.code)}</span>
+              <strong>${escapeHtml(item.title)}</strong>
+              <small>${escapeHtml(item.detail || "")}</small>
+            </button>
+          `,
+        )
+        .join("")
+    : `<button type="button" disabled><span>Busca</span><strong>Nenhum resultado encontrado</strong><small>Digite outro termo ou numero do ambiente.</small></button>`;
+  globalSearchResults.dataset.results = JSON.stringify(results.map((item) => item.code));
+  globalSearchResults.__docGestorResults = results;
+}
+
+globalSearchInput?.addEventListener("input", renderGlobalSearchResults);
+globalSearchInput?.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeGlobalSearch();
+  if (event.key === "Enter") {
+    const first = globalSearchResults?.__docGestorResults?.[0];
+    if (first) {
+      first.action();
+      globalSearchInput.value = "";
+      closeGlobalSearch();
+    }
+  }
+});
+globalSearchResults?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-global-search-index]");
+  if (!button) return;
+  const item = globalSearchResults.__docGestorResults?.[Number(button.dataset.globalSearchIndex)];
+  if (!item) return;
+  item.action();
+  globalSearchInput.value = "";
+  closeGlobalSearch();
+});
+document.addEventListener("click", (event) => {
+  if (!event.target.closest(".global-search")) closeGlobalSearch();
 });
 
 let agendaEvents = [];
@@ -2149,10 +2275,14 @@ function renderProperties() {
         property.type === "urban"
           ? `${property.hasConstruction ? `Construcao ${property.constructionArea} m2` : "Sem construcao informada"}`
           : `${property.ruralArea} m2 total | RL ${property.legalReserve} m2 | APP ${property.appArea} m2`;
+      const registryLabel =
+        property.type === "urban"
+          ? `inscricao imobiliaria: ${property.municipalRegistration || "Nao informada"}`
+          : `CAR: ${property.carNumber || "Nao informado"} | CCIR/INCRA: ${property.ccirIncra || "Nao informado"}`;
       return `
         <article>
           <strong>Matricula ${property.registration}</strong>
-          <span>${typeLabel} - ${areaLabel} - proprietario: ${property.owner} - referencia: ${property.reference || "Nao informada"}</span>
+          <span>${typeLabel} - ${areaLabel} - ${registryLabel} - proprietario: ${property.owner} - referencia: ${property.reference || "Nao informada"}</span>
           <div>
             <button type="button" data-property-action="edit" data-property-id="${property.id}">Editar</button>
             <button type="button" data-property-action="delete" data-property-id="${property.id}">Excluir</button>
@@ -2173,8 +2303,11 @@ function fillPropertyForm(property) {
   field("property-registration").value = property.registration;
   field("property-reference").value = property.reference || "";
   field("property-lot").value = property.lot;
+  field("property-municipal-registration").value = property.municipalRegistration || "";
   field("property-block").value = property.block;
   field("property-glebe").value = property.glebe;
+  field("property-car-number").value = property.carNumber || "";
+  field("property-ccir-incra").value = property.ccirIncra || "";
   field("property-urban-area").value = property.urbanArea;
   field("property-rural-area").value = property.ruralArea;
   field("property-hectares").value = property.ruralArea ? (property.ruralArea / 10000).toFixed(4) : "";
@@ -2199,8 +2332,11 @@ function newProperty() {
   field("property-registration").value = "";
   field("property-reference").value = "";
   field("property-lot").value = "";
+  field("property-municipal-registration").value = "";
   field("property-block").value = "";
   field("property-glebe").value = "";
+  field("property-car-number").value = "";
+  field("property-ccir-incra").value = "";
   field("property-urban-area").value = "";
   field("property-rural-area").value = "";
   field("property-hectares").value = "";
@@ -2229,8 +2365,11 @@ function saveProperty() {
     registration: field("property-registration").value,
     reference: field("property-reference").value,
     lot: field("property-lot").value,
+    municipalRegistration: type === "urban" ? field("property-municipal-registration").value : "",
     block: type === "urban" ? field("property-block").value : "",
     glebe: type === "rural" ? field("property-glebe").value : "",
+    carNumber: type === "rural" ? field("property-car-number").value : "",
+    ccirIncra: type === "rural" ? field("property-ccir-incra").value : "",
     urbanArea: 0,
     ruralArea: type === "rural" ? Number(field("property-rural-area").value || 0) : 0,
     legalReserve: type === "rural" ? Number(field("property-legal-reserve").value || 0) : 0,
@@ -4574,6 +4713,8 @@ function buildPropertiesRelationReport(filteredProperties, filters = {}) {
         ["Referencia", property.reference],
         ["Lote", property.lot],
         [isRural ? "Gleba" : "Quadra", isRural ? property.glebe : property.block],
+        [isRural ? "Numero do CAR" : "Inscricao imobiliaria", isRural ? property.carNumber : property.municipalRegistration],
+        ...(isRural ? [["Numero CCIR/INCRA", property.ccirIncra]] : []),
         ["Area total", isRural ? `${formatAreaM2(property.ruralArea)} / ${formatAreaHa(property.ruralArea)}` : formatAreaM2(property.urbanArea)],
         ["Reserva legal", isRural ? `${formatAreaM2(property.legalReserve)} / ${formatAreaHa(property.legalReserve)}` : "Nao aplicavel"],
         ["APP", isRural ? `${formatAreaM2(property.appArea)} / ${formatAreaHa(property.appArea)}` : "Nao aplicavel"],
@@ -5463,6 +5604,9 @@ async function loadSupabaseData() {
       lot: row.lot || "",
       block: row.block || "",
       glebe: row.glebe || "",
+      municipalRegistration: row.urban_property_registration || "",
+      carNumber: row.car_number || "",
+      ccirIncra: row.ccir_incra_number || "",
       urbanArea: Number(row.urban_area_m2 || 0),
       ruralArea: Number(row.rural_area_m2 || 0),
       legalReserve: Number(row.legal_reserve_m2 || 0),
