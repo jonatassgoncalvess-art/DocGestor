@@ -4,6 +4,7 @@ const title = document.querySelector("#page-title");
 const adminSubnav = document.querySelector("#admin-subnav");
 const moduleSubnav = document.querySelector("#module-subnav");
 const agendaSubnav = document.querySelector("#agenda-subnav");
+const settingsSubnav = document.querySelector("#settings-subnav");
 
 const titles = {
   home: "Home",
@@ -15,6 +16,8 @@ const titles = {
   usuarios: "Usuarios e permissoes",
   agenda: "04.1 Calendario",
   "agenda-notes": "04.2 Anotacoes",
+  settings: "05 Configuracoes",
+  "profile-settings": "05.1 Perfil",
 };
 
 function sameId(left, right) {
@@ -27,7 +30,7 @@ function openView(viewName) {
     openView(firstAccessibleView());
     return;
   }
-  const parentView = ["cadastros", "usuarios"].includes(viewName) ? "admin" : viewName === "licencas" ? "modulos" : viewName === "agenda-notes" ? "agenda" : viewName;
+  const parentView = ["cadastros", "usuarios"].includes(viewName) ? "admin" : viewName === "licencas" ? "modulos" : viewName === "agenda-notes" ? "agenda" : viewName === "profile-settings" ? "settings" : viewName;
   navItems.forEach((nav) => nav.classList.toggle("active", nav.dataset.view === parentView));
   views.forEach((view) => view.classList.toggle("active", view.id === viewName));
   title.textContent = titles[viewName];
@@ -51,6 +54,15 @@ function openView(viewName) {
     document.querySelector("[data-agenda-menu-toggle]")?.setAttribute("aria-expanded", "true");
   }
 
+  if (settingsSubnav && parentView !== "settings") {
+    settingsSubnav.classList.remove("open");
+    document.querySelector("[data-settings-menu-toggle]")?.setAttribute("aria-expanded", "false");
+  }
+  if (settingsSubnav && parentView === "settings") {
+    settingsSubnav.classList.add("open");
+    document.querySelector("[data-settings-menu-toggle]")?.setAttribute("aria-expanded", "true");
+  }
+
   if (viewName !== "licencas") {
     document.querySelectorAll("[data-module-license-status]").forEach((item) => item.classList.remove("active"));
   }
@@ -58,6 +70,12 @@ function openView(viewName) {
   document.querySelectorAll("[data-agenda-target]").forEach((item) => {
     item.classList.toggle("active", item.dataset.agendaTarget === viewName);
   });
+
+  document.querySelectorAll("[data-settings-target]").forEach((item) => {
+    item.classList.toggle("active", item.dataset.settingsTarget === viewName);
+  });
+
+  if (viewName === "profile-settings") fillProfileForm();
 }
 
 navItems.forEach((item) => {
@@ -71,6 +89,9 @@ navItems.forEach((item) => {
     const isAgendaToggle = item.hasAttribute("data-agenda-menu-toggle");
     const isAgendaActive = item.classList.contains("active");
     const wasAgendaOpen = agendaSubnav?.classList.contains("open");
+    const isSettingsToggle = item.hasAttribute("data-settings-menu-toggle");
+    const isSettingsActive = item.classList.contains("active");
+    const wasSettingsOpen = settingsSubnav?.classList.contains("open");
 
     openView(item.dataset.view);
 
@@ -89,6 +110,12 @@ navItems.forEach((item) => {
     if (isAgendaToggle && agendaSubnav) {
       const shouldOpen = !isAgendaActive || !wasAgendaOpen;
       agendaSubnav.classList.toggle("open", shouldOpen);
+      item.setAttribute("aria-expanded", String(shouldOpen));
+    }
+
+    if (isSettingsToggle && settingsSubnav) {
+      const shouldOpen = !isSettingsActive || !wasSettingsOpen;
+      settingsSubnav.classList.toggle("open", shouldOpen);
       item.setAttribute("aria-expanded", String(shouldOpen));
     }
 
@@ -142,6 +169,16 @@ document.querySelectorAll("[data-agenda-target]").forEach((button) => {
     if (agendaSubnav) {
       agendaSubnav.classList.add("open");
       document.querySelector("[data-agenda-menu-toggle]")?.setAttribute("aria-expanded", "true");
+    }
+  });
+});
+
+document.querySelectorAll("[data-settings-target]").forEach((button) => {
+  button.addEventListener("click", () => {
+    openView(button.dataset.settingsTarget);
+    if (settingsSubnav) {
+      settingsSubnav.classList.add("open");
+      document.querySelector("[data-settings-menu-toggle]")?.setAttribute("aria-expanded", "true");
     }
   });
 });
@@ -529,6 +566,12 @@ const MASTER_USER = {
   isMaster: true,
 };
 
+const MASTER_PASSWORD_KEY = "docgestor.masterPassword";
+
+function masterPassword() {
+  return localStorage.getItem(MASTER_PASSWORD_KEY) || "CA123*";
+}
+
 let currentUser = null;
 let selectedUserId = 0;
 let passwordResetUserId = null;
@@ -563,6 +606,7 @@ function userPermissions(user) {
 
 function canAccess(permissionKey) {
   if (!permissionKey || permissionKey === "home") return true;
+  if (permissionKey === "profile") return Boolean(currentUser);
   if (!currentUser) return false;
   return userPermissions(currentUser).includes(permissionKey);
 }
@@ -573,6 +617,7 @@ function viewPermission(viewName) {
   if (viewName === "modulos") return "modules";
   if (viewName === "licencas") return "environmental";
   if (viewName === "agenda" || viewName === "agenda-notes") return "agenda";
+  if (viewName === "settings" || viewName === "profile-settings") return "profile";
   return "home";
 }
 
@@ -626,7 +671,7 @@ function loginError(message) {
 
 function authenticate(login, password) {
   const normalized = String(login || "").trim().toLowerCase();
-  if (normalized === "admin" && password === "CA123*") return MASTER_USER;
+  if (normalized === "admin" && password === masterPassword()) return MASTER_USER;
   const user = users.find((item) => [item.email, item.name].some((value) => String(value || "").trim().toLowerCase() === normalized));
   if (!user || user.password !== password) return null;
   if (["Bloqueado", "Inativo"].includes(user.status)) return { blocked: true, user };
@@ -647,6 +692,108 @@ function logoutUser() {
   document.querySelector("#login-screen")?.removeAttribute("hidden");
   field("login-password").value = "";
   field("login-error").hidden = true;
+}
+
+function fillProfileForm() {
+  if (!currentUser) return;
+  field("profile-name").value = currentUser.name || "";
+  field("profile-email").value = currentUser.email || "";
+  field("profile-phone").value = currentUser.phone || "";
+  field("profile-cpf").value = currentUser.cpf || "";
+  field("profile-role-title").value = currentUser.roleTitle || "";
+  field("profile-access-profile").value = currentUser.profile || "";
+  const status = field("profile-status-pill");
+  if (status) {
+    status.textContent = currentUser.status || "Usuario ativo";
+    status.className = `pill ${userStatusClass(currentUser.status || "Ativo")}`;
+  }
+}
+
+function updateCurrentUserFromProfile() {
+  if (!currentUser) return null;
+  currentUser.name = field("profile-name").value;
+  currentUser.email = field("profile-email").value;
+  currentUser.phone = field("profile-phone").value;
+  currentUser.cpf = field("profile-cpf").value;
+  currentUser.roleTitle = field("profile-role-title").value;
+
+  if (!currentUser.isMaster) {
+    const user = users.find((item) => sameId(item.id, currentUser.id));
+    if (user) Object.assign(user, currentUser);
+    renderUsers();
+    persistCurrentUserProfile(currentUser);
+  }
+
+  applyAccessControl();
+  fillProfileForm();
+  return currentUser;
+}
+
+async function persistCurrentUserProfile(user) {
+  if (!window.DocGestorDB || user?.isMaster || !looksLikeUuid(user?.id)) return;
+  try {
+    await window.DocGestorDB.update("app_users", user.id, {
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      cpf: user.cpf,
+      role_title: user.roleTitle,
+    });
+  } catch (error) {
+    console.warn("Nao foi possivel salvar o perfil no Supabase.", error.message);
+  }
+}
+
+async function persistCurrentUserPassword(user) {
+  if (!window.DocGestorDB || user?.isMaster || !looksLikeUuid(user?.id)) return;
+  try {
+    await window.DocGestorDB.update("app_users", user.id, {
+      password: user.password,
+      status: user.status,
+    });
+  } catch (error) {
+    console.warn("Nao foi possivel salvar a senha no Supabase.", error.message);
+  }
+}
+
+function clearProfilePasswordFields() {
+  ["profile-current-password", "profile-new-password", "profile-confirm-password"].forEach((id) => {
+    if (field(id)) field(id).value = "";
+  });
+}
+
+function saveProfilePassword() {
+  if (!currentUser) return;
+  const currentPassword = field("profile-current-password").value;
+  const newPassword = field("profile-new-password").value;
+  const confirmation = field("profile-confirm-password").value;
+  const storedPassword = currentUser.isMaster ? masterPassword() : currentUser.password;
+
+  if (currentPassword !== storedPassword) {
+    alert("Senha atual incorreta.");
+    return;
+  }
+  if (!newPassword || newPassword.length < 6) {
+    alert("A nova senha deve ter pelo menos 6 caracteres.");
+    return;
+  }
+  if (newPassword !== confirmation) {
+    alert("A confirmacao da nova senha nao confere.");
+    return;
+  }
+  currentUser.password = newPassword;
+  currentUser.status = "Ativo";
+  if (currentUser.isMaster) {
+    localStorage.setItem(MASTER_PASSWORD_KEY, newPassword);
+  } else {
+    const user = users.find((item) => sameId(item.id, currentUser.id));
+    if (user) Object.assign(user, currentUser);
+    persistCurrentUserPassword(currentUser);
+  }
+  clearProfilePasswordFields();
+  renderUsers();
+  applyAccessControl();
+  alert("Senha alterada com sucesso.");
 }
 
 function addUserLog(titleText, bodyText) {
@@ -824,6 +971,12 @@ document.querySelector("#login-form")?.addEventListener("submit", (event) => {
   loginUser(result);
 });
 document.querySelector("#logout-button")?.addEventListener("click", logoutUser);
+document.querySelector("#profile-save")?.addEventListener("click", () => {
+  const updated = updateCurrentUserFromProfile();
+  if (updated) alert("Perfil atualizado com sucesso.");
+});
+document.querySelector("#profile-password-clear")?.addEventListener("click", clearProfilePasswordFields);
+document.querySelector("#profile-password-save")?.addEventListener("click", saveProfilePassword);
 document.querySelector("#permissions-save")?.addEventListener("click", () => {
   const user = selectedUser();
   user.permissions = readPermissionChecks();

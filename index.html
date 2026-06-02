@@ -100,6 +100,12 @@
             <button class="admin-link active" data-agenda-target="agenda">04.1 Calendario</button>
             <button class="admin-link" data-agenda-target="agenda-notes">04.2 Anotacoes</button>
           </div>
+          <button class="nav-item" data-view="settings" data-settings-menu-toggle="true" aria-expanded="false">
+            <span>05</span> Configuracoes
+          </button>
+          <div class="admin-subnav settings-subnav" id="settings-subnav">
+            <button class="admin-link" data-settings-target="profile-settings">05.1 Perfil</button>
+          </div>
         </nav>
 
         <div class="tenant-card">
@@ -664,6 +670,67 @@
           <section class="panel">
             <div class="list-head"><h3>Anotacoes e compromissos</h3><span id="agenda-note-count">0 itens</span></div>
             <div class="crud-list agenda-note-list" id="agenda-note-list"></div>
+          </section>
+        </section>
+
+        <section class="view" id="settings">
+          <div class="module-context">
+            <p class="eyebrow">05 Configuracoes</p>
+            <h2>Configuracoes do usuario</h2>
+          </div>
+          <section class="panel">
+            <div class="list-head">
+              <h3>Ambientes disponiveis</h3>
+              <span>1 item</span>
+            </div>
+            <div class="crud-list">
+              <article>
+                <div>
+                  <strong>05.1 Perfil</strong>
+                  <span>Atualize suas informacoes cadastrais e altere sua senha.</span>
+                </div>
+                <div>
+                  <button type="button" data-settings-target="profile-settings">Abrir perfil</button>
+                </div>
+              </article>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="profile-settings">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">05.1 Perfil</p>
+              <h2>Meu perfil</h2>
+            </div>
+            <span class="pill green" id="profile-status-pill">Usuario ativo</span>
+          </div>
+          <section class="panel">
+            <form class="user-form" id="profile-form">
+              <label>Nome completo<input id="profile-name" /></label>
+              <label>E-mail<input id="profile-email" type="email" /></label>
+              <label>Telefone<input id="profile-phone" /></label>
+              <label>CPF<input id="profile-cpf" /></label>
+              <label>Cargo/funcao<input id="profile-role-title" /></label>
+              <label>Perfil de acesso<input id="profile-access-profile" disabled /></label>
+            </form>
+            <div class="modal-actions inline-actions">
+              <button class="primary" id="profile-save" type="button">Salvar perfil</button>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-head">
+              <h2>Alterar senha</h2>
+            </div>
+            <form class="user-form" id="profile-password-form">
+              <label>Senha atual<input id="profile-current-password" type="password" autocomplete="current-password" /></label>
+              <label>Nova senha<input id="profile-new-password" type="password" autocomplete="new-password" /></label>
+              <label>Confirmar nova senha<input id="profile-confirm-password" type="password" autocomplete="new-password" /></label>
+            </form>
+            <div class="modal-actions inline-actions">
+              <button class="ghost" id="profile-password-clear" type="button">Limpar</button>
+              <button class="primary" id="profile-password-save" type="button">Alterar senha</button>
+            </div>
           </section>
         </section>
 
@@ -1650,9 +1717,9 @@
       </section>
     </div>
 
-    <script src="supabase-config.js?v=20260601-real-data-alerts"></script>
-    <script src="database.js?v=20260601-real-data-alerts"></script>
-    <script src="script.js?v=20260601-real-data-alerts"></script>
+    <script src="supabase-config.js?v=20260602-settings-profile"></script>
+    <script src="database.js?v=20260602-settings-profile"></script>
+    <script src="script.js?v=20260602-settings-profile"></script>
   </body>
 </html>
 
