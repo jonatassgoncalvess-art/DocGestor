@@ -203,6 +203,7 @@ const searchableEnvironments = [
   { code: "01.2.2", title: "Empresas e Filiais", detail: "Matrizes, filiais e socios vinculados", permission: "registries", action: () => openAdminSearchPanel("empresas-filiais") },
   { code: "01.2.3", title: "Imoveis", detail: "Imoveis urbanos, rurais e proprietarios", permission: "registries", action: () => openAdminSearchPanel("imoveis-admin") },
   { code: "01.2.4", title: "Empreendimento", detail: "Empresas vinculadas a imoveis", permission: "registries", action: () => openAdminSearchPanel("empreendimentos-admin") },
+  { code: "01.2.5", title: "Atividades", detail: "Atividades, CNAE, CNPJ e CTF/APP", permission: "registries", action: () => openAdminSearchPanel("atividades-admin") },
   { code: "01.3.1", title: "Tipos de Licencas", detail: "Classificacao ambiental", permission: "adminEnvironmental", action: () => openAdminSearchPanel("tipos-licencas") },
   { code: "01.3.2", title: "Documentos", detail: "Documentos ambientais por licenca", permission: "adminEnvironmental", action: () => openAdminSearchPanel("documentos-ambientais") },
   { code: "01.3.3", title: "Modelos de Check-list", detail: "Modelos usados nos processos", permission: "adminEnvironmental", action: () => openAdminSearchPanel("modelos-checklist") },
@@ -762,7 +763,7 @@ function applyAccessControl() {
   document.querySelectorAll('[data-admin-target="usuarios-admin"]').forEach((element) => {
     element.hidden = !canAccess("users");
   });
-  document.querySelectorAll('[data-admin-target="socios-admin"], [data-admin-target="empresas-filiais"], [data-admin-target="imoveis-admin"], [data-admin-target="empreendimentos-admin"]').forEach((element) => {
+  document.querySelectorAll('[data-admin-target="socios-admin"], [data-admin-target="empresas-filiais"], [data-admin-target="imoveis-admin"], [data-admin-target="empreendimentos-admin"], [data-admin-target="atividades-admin"]').forEach((element) => {
     element.hidden = !canAccess("registries");
   });
   document.querySelectorAll('[data-admin-target="tipos-licencas"], [data-admin-target="documentos-ambientais"], [data-admin-target="modelos-checklist"]').forEach((element) => {
@@ -2246,10 +2247,18 @@ function syncAreaPair(sourceId, targetId, direction) {
   const source = field(sourceId);
   const target = field(targetId);
   if (!source || !target) return;
-  const value = Number(source.value || 0);
+  const value = Math.max(0, Number(source.value || 0));
+  if (Number(source.value || 0) < 0) source.value = "0";
   if (direction === "m2-to-ha") target.value = value ? (value / 10000).toFixed(4) : "";
   if (direction === "ha-to-m2") target.value = value ? (value * 10000).toFixed(0) : "";
   updateReserveCalculation();
+}
+
+function nonNegativeFieldValue(id) {
+  const input = field(id);
+  const value = Math.max(0, Number(input?.value || 0));
+  if (input && Number(input.value || 0) < 0) input.value = "0";
+  return value;
 }
 
 function updatePropertyFields() {
@@ -2381,13 +2390,13 @@ async function saveProperty() {
     glebe: type === "rural" ? field("property-glebe").value : "",
     carNumber: type === "rural" ? field("property-car-number").value : "",
     ccirIncra: type === "rural" ? field("property-ccir-incra").value : "",
-    urbanArea: 0,
-    ruralArea: type === "rural" ? Number(field("property-rural-area").value || 0) : 0,
-    legalReserve: type === "rural" ? Number(field("property-legal-reserve").value || 0) : 0,
-    appArea: type === "rural" ? Number(field("property-app-area").value || 0) : 0,
+    urbanArea: type === "urban" ? nonNegativeFieldValue("property-urban-area") : 0,
+    ruralArea: type === "rural" ? nonNegativeFieldValue("property-rural-area") : 0,
+    legalReserve: type === "rural" ? nonNegativeFieldValue("property-legal-reserve") : 0,
+    appArea: type === "rural" ? nonNegativeFieldValue("property-app-area") : 0,
     ruralUse: field("property-rural-use").value,
     hasConstruction: field("property-has-construction").checked,
-    constructionArea: field("property-has-construction").checked ? Number(field("property-construction-area").value || 0) : 0,
+    constructionArea: field("property-has-construction").checked ? nonNegativeFieldValue("property-construction-area") : 0,
     status: "Ativo",
   };
 
@@ -2415,8 +2424,12 @@ propertyOwnerType?.addEventListener("change", () => populatePropertyOwners());
 propertyType?.addEventListener("change", updatePropertyFields);
 propertyRuralUse?.addEventListener("change", updatePropertyFields);
 propertyHasConstruction?.addEventListener("change", updatePropertyFields);
-["property-rural-area", "property-legal-reserve", "property-app-area"].forEach((id) => {
-  document.querySelector(`#${id}`)?.addEventListener("input", updateReserveCalculation);
+["property-urban-area", "property-rural-area", "property-legal-reserve", "property-legal-reserve-ha", "property-app-area", "property-app-area-ha", "property-construction-area"].forEach((id) => {
+  document.querySelector(`#${id}`)?.addEventListener("input", () => {
+    const input = field(id);
+    if (input && Number(input.value || 0) < 0) input.value = "0";
+    updateReserveCalculation();
+  });
 });
 document.querySelector("#property-legal-reserve")?.addEventListener("input", () => {
   syncAreaPair("property-legal-reserve", "property-legal-reserve-ha", "m2-to-ha");
@@ -2465,6 +2478,7 @@ const enterpriseList = document.querySelector("#enterprise-list");
 const enterpriseCount = document.querySelector("#enterprise-count");
 const enterpriseCompany = document.querySelector("#enterprise-company");
 const enterpriseProperty = document.querySelector("#enterprise-property");
+const enterprisePropertyList = document.querySelector("#enterprise-property-list");
 
 function activeSystemModules() {
   return availableAlertModules.length ? availableAlertModules : [{ id: "environmental", name: "03.1 Licencas Ambientais" }];
@@ -2513,16 +2527,45 @@ function enterprisesForModule(moduleId) {
   return enterprises.filter((enterprise) => enterpriseModules(enterprise).includes(moduleId));
 }
 
+function companyProperties(companyName = enterpriseCompany?.value) {
+  return properties.filter((property) => property.owner === companyName);
+}
+
+function updateEnterprisePropertySummary(value = enterpriseProperty?.value) {
+  const summary = field("enterprise-property-summary");
+  if (summary) summary.textContent = value || "Nenhum imovel selecionado";
+}
+
 function populateEnterpriseProperties(selectedProperty = "") {
   if (!enterpriseProperty || !enterpriseCompany) return;
-  const selectedCompany = enterpriseCompany.value;
-  const propertyNames = properties
-    .filter((property) => property.owner === selectedCompany)
-    .map((property) => `Matricula ${property.registration}`);
-  enterpriseProperty.innerHTML = propertyNames.length
-    ? propertyNames.map((name) => `<option>${name}</option>`).join("")
-    : `<option>Nenhum imovel cadastrado para esta empresa</option>`;
-  if (selectedProperty && propertyNames.includes(selectedProperty)) enterpriseProperty.value = selectedProperty;
+  const propertyNames = companyProperties().map((property) => `Matricula ${property.registration}`);
+  enterpriseProperty.value = selectedProperty && propertyNames.includes(selectedProperty) ? selectedProperty : "";
+  updateEnterprisePropertySummary();
+}
+
+function renderEnterprisePropertyPicker() {
+  if (!enterprisePropertyList) return;
+  const available = companyProperties();
+  enterprisePropertyList.innerHTML = available.length
+    ? available
+        .map(
+          (property) => `
+            <article>
+              <div>
+                <strong>Matricula ${property.registration}</strong>
+                <span>${property.reference || propertyOwnerLabel(property)} - ${property.type === "rural" ? "Rural" : "Urbano"}</span>
+              </div>
+              <button type="button" data-enterprise-property-pick="Matricula ${property.registration}">Selecionar</button>
+            </article>
+          `,
+        )
+        .join("")
+    : `<article><strong>Nenhum imovel encontrado</strong><span>Cadastre um imovel vinculado a ${enterpriseCompany?.value || "empresa selecionada"}.</span></article>`;
+}
+
+function openEnterprisePropertyPicker() {
+  renderEnterprisePropertyPicker();
+  openModal("enterprise-property-modal");
 }
 
 function populateEnterpriseSelects(selectedCompany = "", selectedProperty = "") {
@@ -2545,7 +2588,7 @@ function renderEnterprises() {
         return `
           <article>
             <strong>${enterprise.name}</strong>
-            <span>${enterprise.company} - ${enterprise.property} - ${enterprise.type} - ${enterprise.status} - responsavel: ${enterprise.responsible} - modulos: ${enterpriseModuleLabels(modules)}</span>
+            <span>${enterprise.company} - ${enterprise.property} - ${enterprise.type} - ${enterprise.status} - modulos: ${enterpriseModuleLabels(modules)} - ${enterprise.potentialPolluter ? "CTF/APP: potencialmente poluidor" : "CTF/APP: nao classificado"}</span>
             <div>
               <button type="button" data-enterprise-action="edit" data-enterprise-id="${enterprise.id}">Editar</button>
               <button type="button" data-enterprise-action="delete" data-enterprise-id="${enterprise.id}">Excluir</button>
@@ -2565,7 +2608,6 @@ function fillEnterpriseForm(enterprise) {
   field("enterprise-name").value = enterprise.name;
   field("enterprise-type").value = enterprise.type;
   field("enterprise-status").value = enterprise.status;
-  field("enterprise-responsible").value = enterprise.responsible;
   field("enterprise-reference").value = enterprise.reference;
   enterpriseModuleSelection = [...enterpriseModules(enterprise)];
   updateEnterpriseModuleSummary();
@@ -2579,7 +2621,6 @@ function newEnterprise() {
   field("enterprise-name").value = "";
   field("enterprise-type").value = "Industrial";
   field("enterprise-status").value = "Planejado";
-  field("enterprise-responsible").value = "";
   field("enterprise-reference").value = "";
   enterpriseModuleSelection = ["environmental"];
   updateEnterpriseModuleSummary();
@@ -2598,7 +2639,7 @@ async function saveEnterprise() {
     property: field("enterprise-property").value,
     type: field("enterprise-type").value,
     status: field("enterprise-status").value,
-    responsible: field("enterprise-responsible").value,
+    responsible: "",
     reference: field("enterprise-reference").value,
     modules: [...enterpriseModuleSelection],
   };
@@ -2614,9 +2655,17 @@ async function saveEnterprise() {
 
 document.querySelector("#enterprise-new")?.addEventListener("click", newEnterprise);
 document.querySelector("#enterprise-save")?.addEventListener("click", saveEnterprise);
+document.querySelector("#enterprise-property-open")?.addEventListener("click", openEnterprisePropertyPicker);
 document.querySelector("#enterprise-modules-open")?.addEventListener("click", openEnterpriseModulesModal);
 document.querySelector("#enterprise-modules-apply")?.addEventListener("click", applyEnterpriseModules);
 enterpriseCompany?.addEventListener("change", () => populateEnterpriseProperties());
+enterprisePropertyList?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-enterprise-property-pick]");
+  if (!button) return;
+  enterpriseProperty.value = button.dataset.enterprisePropertyPick;
+  updateEnterprisePropertySummary();
+  closeModal("enterprise-property-modal");
+});
 document.querySelector("#enterprise-delete-confirm")?.addEventListener("click", () => {
   const id = pendingEnterpriseDeleteId;
   const index = enterprises.findIndex((enterprise) => sameId(enterprise.id, pendingEnterpriseDeleteId));
@@ -2652,6 +2701,198 @@ if (enterpriseList) {
   renderEnterprises();
 }
 
+let activities = [];
+let selectedActivityId = 0;
+let activityEnterpriseSelection = [];
+const activityList = document.querySelector("#activity-list");
+const activityCount = document.querySelector("#activity-count");
+
+function companyByCnpj(cnpj) {
+  return companies.find((company) => company.cnpj === cnpj) || null;
+}
+
+function enterpriseCompanyCnpj(enterprise) {
+  return companies.find((company) => company.name === enterprise.company)?.cnpj || "";
+}
+
+function activityEnterpriseLabels(ids = activityEnterpriseSelection) {
+  const names = ids
+    .map((id) => enterprises.find((enterprise) => sameId(enterprise.id, id))?.name)
+    .filter(Boolean);
+  return names.length ? names.join(", ") : "Nenhum empreendimento selecionado";
+}
+
+function updateActivityEnterpriseSummary(ids = activityEnterpriseSelection) {
+  const summary = field("activity-enterprise-summary");
+  if (summary) summary.textContent = activityEnterpriseLabels(ids);
+}
+
+function populateActivityCompanies(selectedCnpj = "") {
+  const select = field("activity-company-cnpj");
+  if (!select) return;
+  select.innerHTML = companies
+    .sort((a, b) => a.cnpj.localeCompare(b.cnpj))
+    .map((company) => `<option value="${company.cnpj}">${company.cnpj} - ${company.name}</option>`)
+    .join("");
+  if (selectedCnpj && companies.some((company) => company.cnpj === selectedCnpj)) select.value = selectedCnpj;
+}
+
+function enterprisesForActivityCnpj(cnpj = field("activity-company-cnpj")?.value) {
+  const company = companyByCnpj(cnpj);
+  if (!company) return [];
+  return enterprises.filter((enterprise) => enterprise.company === company.name);
+}
+
+function renderActivityEnterpriseChecks() {
+  const wrapper = field("activity-enterprise-checks");
+  if (!wrapper) return;
+  const available = enterprisesForActivityCnpj();
+  wrapper.innerHTML = `<span>Empreendimentos do CNPJ selecionado</span>${
+    available.length
+      ? available
+          .map(
+            (enterprise) => `
+              <label>
+                <input type="checkbox" name="activity-enterprise" value="${enterprise.id}" ${activityEnterpriseSelection.some((id) => sameId(id, enterprise.id)) ? "checked" : ""} />
+                ${enterprise.name} - ${enterprise.property}
+              </label>
+            `,
+          )
+          .join("")
+      : "<small>Nenhum empreendimento vinculado a este CNPJ.</small>"
+  }`;
+}
+
+function openActivityEnterprisePicker() {
+  renderActivityEnterpriseChecks();
+  openModal("activity-enterprises-modal");
+}
+
+function applyActivityEnterprises() {
+  activityEnterpriseSelection = checkedValues('input[name="activity-enterprise"]');
+  updateActivityEnterpriseSummary();
+  closeModal("activity-enterprises-modal");
+}
+
+function recalcEnterprisePolluterStatus() {
+  enterprises.forEach((enterprise) => {
+    enterprise.potentialPolluter = activities.some((activity) => Boolean(activity.ctfApp) && (activity.enterpriseIds || []).some((id) => sameId(id, enterprise.id)));
+  });
+}
+
+async function persistEnterprisePolluterStatus() {
+  if (!window.DocGestorDB) return;
+  const rows = enterprises.filter((enterprise) => looksLikeUuid(enterprise.id));
+  try {
+    await Promise.all(rows.map((enterprise) => window.DocGestorDB.update("enterprises", enterprise.id, {
+      potential_polluter: Boolean(enterprise.potentialPolluter),
+    })));
+  } catch (error) {
+    console.warn("Nao foi possivel atualizar a classificacao CTF/APP dos empreendimentos.", error.message);
+  }
+}
+
+function renderActivities() {
+  if (!activityList) return;
+  recalcEnterprisePolluterStatus();
+  activityCount.textContent = `${activities.length} itens`;
+  activityList.innerHTML = activities
+    .map(
+      (activity) => `
+        <article>
+          <strong>${activity.name}</strong>
+          <span>CNAE ${activity.cnae || "Nao informado"} - CNPJ ${activity.companyCnpj || "Nao informado"} - ${activity.ctfApp ? "CTF/APP: potencialmente poluidora" : "Sem CTF/APP"} - empreendimentos: ${activityEnterpriseLabels(activity.enterpriseIds || [])}</span>
+          <div>
+            <button type="button" data-activity-action="edit" data-activity-id="${activity.id}">Editar</button>
+            <button type="button" data-activity-action="delete" data-activity-id="${activity.id}">Excluir</button>
+          </div>
+        </article>
+      `,
+    )
+    .join("");
+  renderEnterprises();
+}
+
+function fillActivityForm(activity) {
+  selectedActivityId = activity.id;
+  field("activity-id").value = activity.id;
+  field("activity-name").value = activity.name;
+  field("activity-cnae").value = activity.cnae || "";
+  populateActivityCompanies(activity.companyCnpj);
+  field("activity-ctf-app").checked = Boolean(activity.ctfApp);
+  activityEnterpriseSelection = [...(activity.enterpriseIds || [])];
+  updateActivityEnterpriseSummary();
+}
+
+function newActivity() {
+  const id = Date.now();
+  selectedActivityId = id;
+  field("activity-id").value = id;
+  field("activity-name").value = "";
+  field("activity-cnae").value = "";
+  populateActivityCompanies();
+  field("activity-ctf-app").checked = false;
+  activityEnterpriseSelection = [];
+  updateActivityEnterpriseSummary();
+  document.querySelector("#activity-modal-title").textContent = "Nova Atividade";
+  openModal("activity-modal");
+}
+
+async function saveActivity() {
+  const id = field("activity-id").value;
+  const existing = activities.find((activity) => sameId(activity.id, id));
+  const wasExisting = Boolean(existing);
+  const payload = {
+    id: id || Date.now(),
+    name: field("activity-name").value,
+    cnae: field("activity-cnae").value,
+    companyCnpj: field("activity-company-cnpj").value,
+    ctfApp: field("activity-ctf-app").checked,
+    enterpriseIds: [...activityEnterpriseSelection],
+  };
+  if (existing) Object.assign(existing, payload);
+  else activities.push(payload);
+  renderActivities();
+  closeModal("activity-modal");
+  await persistActivity(payload, wasExisting);
+}
+
+document.querySelector("#activity-new")?.addEventListener("click", newActivity);
+document.querySelector("#activity-save")?.addEventListener("click", saveActivity);
+document.querySelector("#activity-enterprises-open")?.addEventListener("click", openActivityEnterprisePicker);
+document.querySelector("#activity-enterprises-apply")?.addEventListener("click", applyActivityEnterprises);
+field("activity-company-cnpj")?.addEventListener("change", () => {
+  const availableIds = enterprisesForActivityCnpj().map((enterprise) => String(enterprise.id));
+  activityEnterpriseSelection = activityEnterpriseSelection.filter((id) => availableIds.includes(String(id)));
+  updateActivityEnterpriseSummary();
+});
+activityList?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-activity-action]");
+  if (!button) return;
+  const id = button.dataset.activityId;
+  const activity = activities.find((item) => sameId(item.id, id));
+  if (!activity) return;
+  if (button.dataset.activityAction === "edit") {
+    fillActivityForm(activity);
+    document.querySelector("#activity-modal-title").textContent = "Editar Atividade";
+    openModal("activity-modal");
+  }
+  if (button.dataset.activityAction === "delete") {
+    confirmDelete(`Deseja realmente excluir a atividade ${activity.name}?`, () => {
+      const index = activities.findIndex((item) => sameId(item.id, id));
+      if (index >= 0) activities.splice(index, 1);
+      renderActivities();
+      persistDelete("activities", id, "atividade");
+      persistEnterprisePolluterStatus();
+    });
+  }
+});
+
+if (activityList) {
+  populateActivityCompanies();
+  renderActivities();
+}
+
 document.addEventListener("click", (event) => {
   const button = event.target.closest("button");
   if (!button || button.textContent.trim() !== "Excluir") return;
@@ -2661,6 +2902,7 @@ document.addEventListener("click", (event) => {
     button.dataset.companyAction ||
     button.dataset.propertyAction ||
     button.dataset.enterpriseAction ||
+    button.dataset.activityAction ||
     button.dataset.licenseTypeAction ||
     button.dataset.documentAction ||
     button.dataset.checklistModelAction
@@ -2703,7 +2945,7 @@ function renderEnvironmentalLicenseTypes() {
   licenseTypeList.innerHTML = environmentalLicenseTypes.map((item) => `
     <article>
       <strong>${item.name}</strong>
-      <span>${item.code} - ${item.phases.join(", ")} - validade ${item.validity} - renovar ${item.renewal}</span>
+      <span>${item.code} - ${item.phases.join(", ")}</span>
       <div>
         <button type="button" data-license-type-action="edit" data-license-type-id="${item.id}">Editar</button>
         <button type="button" data-license-type-action="delete" data-license-type-id="${item.id}">Excluir</button>
@@ -2718,7 +2960,7 @@ function renderEnvironmentalDocuments() {
   environmentalDocumentList.innerHTML = environmentalDocuments.map((item) => `
     <article>
       <strong>${item.name}</strong>
-      <span>Licencas: ${item.licenses.join(", ")} - vencimento: ${item.expiration} - obrigatorio: ${item.required}</span>
+      <span>Licencas: ${item.licenses.join(", ")} - vencimento: ${item.expiration} - obrigatorio: ${item.required} - parametros: ${item.parameters || "Nao informado"}</span>
       <div>
         <button type="button" data-document-action="edit" data-document-id="${item.id}">Editar</button>
         <button type="button" data-document-action="delete" data-document-id="${item.id}">Excluir</button>
@@ -2789,8 +3031,6 @@ document.querySelector("#license-type-new")?.addEventListener("click", () => {
   field("license-type-id").value = Date.now();
   field("license-type-name").value = "";
   field("license-type-code").value = "";
-  field("license-type-validity").value = "4 anos";
-  field("license-type-renewal").value = "";
   setCheckedValues('input[name="license-phase"]', []);
   document.querySelector("#license-type-modal-title").textContent = "Novo Tipo de Licenca";
   openModal("license-type-modal");
@@ -2804,8 +3044,8 @@ document.querySelector("#license-type-save")?.addEventListener("click", async ()
     id: id || Date.now(),
     name: field("license-type-name").value,
     code: field("license-type-code").value,
-    validity: field("license-type-validity").value,
-    renewal: field("license-type-renewal").value,
+    validity: "",
+    renewal: "",
     phases: checkedValues('input[name="license-phase"]'),
   };
   if (existing) Object.assign(existing, payload);
@@ -2826,8 +3066,6 @@ licenseTypeList?.addEventListener("click", (event) => {
     field("license-type-id").value = item.id;
     field("license-type-name").value = item.name;
     field("license-type-code").value = item.code;
-    field("license-type-validity").value = item.validity;
-    field("license-type-renewal").value = item.renewal;
     setCheckedValues('input[name="license-phase"]', item.phases);
     document.querySelector("#license-type-modal-title").textContent = "Editar Tipo de Licenca";
     openModal("license-type-modal");
@@ -2848,6 +3086,7 @@ document.querySelector("#environmental-document-new")?.addEventListener("click",
   field("environmental-document-name").value = "";
   field("environmental-document-expiration").value = "Nao";
   field("environmental-document-required").value = "Sim";
+  field("environmental-document-parameters").value = "";
   renderDocumentLicenseChecks();
   document.querySelector("#environmental-document-modal-title").textContent = "Novo Documento";
   openModal("environmental-document-modal");
@@ -2862,6 +3101,7 @@ document.querySelector("#environmental-document-save")?.addEventListener("click"
     name: field("environmental-document-name").value,
     expiration: field("environmental-document-expiration").value,
     required: field("environmental-document-required").value,
+    parameters: field("environmental-document-parameters").value,
     licenses: checkedValues('input[name="document-license"]'),
   };
   if (existing) Object.assign(existing, payload);
@@ -2883,6 +3123,7 @@ environmentalDocumentList?.addEventListener("click", (event) => {
     field("environmental-document-name").value = item.name;
     field("environmental-document-expiration").value = item.expiration;
     field("environmental-document-required").value = item.required;
+    field("environmental-document-parameters").value = item.parameters || "";
     renderDocumentLicenseChecks(item.licenses);
     document.querySelector("#environmental-document-modal-title").textContent = "Editar Documento";
     openModal("environmental-document-modal");
@@ -4906,8 +5147,8 @@ function buildEnterprisesReport() {
     sections: [
       pdfTableSection(
         "Empreendimentos cadastrados",
-        ["Nome", "Empresa", "Imovel", "Tipo", "Status", "Responsavel", "Modulos", "Referencia"],
-        enterprises.map((enterprise) => [enterprise.name, enterprise.company, enterprise.property, enterprise.type, enterprise.status, enterprise.responsible, enterpriseModuleLabels(enterpriseModules(enterprise)), enterprise.reference]),
+        ["Nome", "Empresa", "Imovel", "Tipo", "Status", "Modulos", "CTF/APP", "Referencia"],
+        enterprises.map((enterprise) => [enterprise.name, enterprise.company, enterprise.property, enterprise.type, enterprise.status, enterpriseModuleLabels(enterpriseModules(enterprise)), enterprise.potentialPolluter ? "Potencialmente poluidor" : "Nao classificado", enterprise.reference]),
         { rowEstimate: 38 },
       ),
     ],
@@ -4919,12 +5160,12 @@ function buildLicenseTypesReport() {
   return {
     title: "Relatorio de Tipos de Licencas Ambientais",
     module: "01.3.1 Tipos de Licencas",
-    subtitle: "Classificacao e validade padrao dos tipos de licenca.",
+    subtitle: "Classificacao dos tipos de licenca.",
     sections: [
       pdfTableSection(
         "Tipos cadastrados",
-        ["Nome", "Sigla", "Classificacao", "Validade", "Renovacao"],
-        environmentalLicenseTypes.map((item) => [item.name, item.code, item.phases.join(", "), item.validity, item.renewal]),
+        ["Nome", "Sigla", "Classificacao"],
+        environmentalLicenseTypes.map((item) => [item.name, item.code, item.phases.join(", ")]),
       ),
     ],
   };
@@ -4939,8 +5180,8 @@ function buildEnvironmentalDocumentsReport() {
     sections: [
       pdfTableSection(
         "Documentos cadastrados",
-        ["Documento", "Licencas vinculadas", "Exige vencimento", "Obrigatorio"],
-        environmentalDocuments.map((item) => [item.name, item.licenses.join(", "), item.expiration, item.required]),
+        ["Documento", "Licencas vinculadas", "Exige vencimento", "Obrigatorio", "Parametros"],
+        environmentalDocuments.map((item) => [item.name, item.licenses.join(", "), item.expiration, item.required, item.parameters || "Nao informado"]),
         { rowEstimate: 38 },
       ),
     ],
@@ -5637,6 +5878,10 @@ function companyIdByName(name) {
   return companies.find((company) => company.name === name)?.id || null;
 }
 
+function companyIdByCnpj(cnpj) {
+  return companies.find((company) => company.cnpj === cnpj)?.id || null;
+}
+
 function propertyIdByLabel(label) {
   const registration = String(label || "").replace(/^Matricula\s+/i, "").trim();
   return properties.find((property) => property.registration === registration || `Matricula ${property.registration}` === label)?.id || null;
@@ -5809,6 +6054,7 @@ async function persistEnterprise(enterprise, wasExisting) {
     status: enterprise.status,
     responsible_partner_id: looksLikeUuid(responsibleId) ? responsibleId : null,
     reference: enterprise.reference,
+    potential_polluter: Boolean(enterprise.potentialPolluter),
   };
   try {
     let saved = null;
@@ -5843,8 +6089,6 @@ async function persistEnvironmentalLicenseType(licenseType, wasExisting) {
     organization_id: organizationId,
     name: licenseType.name,
     code: licenseType.code,
-    validity: licenseType.validity,
-    renewal: licenseType.renewal,
   };
   try {
     let saved = null;
@@ -5879,6 +6123,7 @@ async function persistEnvironmentalDocument(documentItem, wasExisting) {
     name: documentItem.name,
     expiration: documentItem.expiration,
     required: documentItem.required,
+    document_parameters: documentItem.parameters || "",
   };
   try {
     let saved = null;
@@ -5902,6 +6147,49 @@ async function persistEnvironmentalDocument(documentItem, wasExisting) {
   } catch (error) {
     console.warn("Nao foi possivel salvar o documento ambiental no Supabase.", error.message);
     alert(`Nao foi possivel salvar o documento ambiental no banco: ${error.message}`);
+  }
+}
+
+async function persistActivity(activity, wasExisting) {
+  if (!window.DocGestorDB) return;
+  const organizationId = await defaultOrganizationId();
+  if (!organizationId) return;
+  const companyId = companyIdByCnpj(activity.companyCnpj);
+  if (!looksLikeUuid(companyId)) {
+    alert("Nao foi possivel salvar a atividade no banco porque o CNPJ selecionado ainda nao possui ID valido no Supabase.");
+    return;
+  }
+  const payload = {
+    organization_id: organizationId,
+    company_id: companyId,
+    name: activity.name,
+    cnae: activity.cnae || "",
+    ctf_app: Boolean(activity.ctfApp),
+    status: "Ativo",
+  };
+  try {
+    let saved = null;
+    if (wasExisting && looksLikeUuid(activity.id)) {
+      [saved] = await window.DocGestorDB.update("activities", activity.id, payload);
+    } else {
+      [saved] = await window.DocGestorDB.create("activities", payload);
+    }
+    if (saved?.id) {
+      updateLocalId(activities, activity.id, saved.id);
+      activity.id = saved.id;
+      await window.DocGestorDB.removeWhere("activity_enterprises", `activity_id=eq.${encodeURIComponent(saved.id)}`);
+      const enterpriseIds = (activity.enterpriseIds || []).filter(looksLikeUuid);
+      await Promise.all(enterpriseIds.map((enterpriseId) => window.DocGestorDB.create("activity_enterprises", {
+        activity_id: saved.id,
+        enterprise_id: enterpriseId,
+      })));
+      recalcEnterprisePolluterStatus();
+      await persistEnterprisePolluterStatus();
+      renderActivities();
+    }
+  } catch (error) {
+    console.warn("Nao foi possivel salvar a atividade no Supabase.", error.message);
+    alert(`Nao foi possivel salvar a atividade no banco: ${error.message}`);
   }
 }
 
@@ -5989,6 +6277,8 @@ async function loadSupabaseData() {
     propertyRows,
     enterpriseRows,
     enterpriseModuleRows,
+    activityRows,
+    activityEnterpriseRows,
     licenseTypeRows,
     phaseRows,
     documentRows,
@@ -6009,6 +6299,8 @@ async function loadSupabaseData() {
     dbList("properties"),
     dbList("enterprises"),
     dbList("enterprise_modules"),
+    dbList("activities"),
+    dbList("activity_enterprises"),
     dbList("environmental_license_types"),
     dbList("environmental_license_type_phases"),
     dbList("environmental_documents"),
@@ -6101,8 +6393,21 @@ async function loadSupabaseData() {
     status: row.status || "Planejado",
     responsible: partnerById[row.responsible_partner_id]?.name || "",
     reference: row.reference || "",
+    potentialPolluter: Boolean(row.potential_polluter),
     modules: enterpriseModuleRows.filter((link) => sameId(link.enterprise_id, row.id)).map((link) => link.module_id),
   }));
+
+  activities = activityRows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    cnae: row.cnae || "",
+    companyCnpj: companyById[row.company_id]?.cnpj || "",
+    ctfApp: Boolean(row.ctf_app),
+    status: row.status || "Ativo",
+    enterpriseIds: activityEnterpriseRows.filter((link) => sameId(link.activity_id, row.id)).map((link) => link.enterprise_id),
+  }));
+
+  recalcEnterprisePolluterStatus();
 
   environmentalLicenseTypes = licenseTypeRows.map((row) => ({
     id: row.id,
@@ -6118,6 +6423,7 @@ async function loadSupabaseData() {
     name: row.name,
     expiration: row.expiration || "Nao",
     required: row.required || "Sim",
+    parameters: row.document_parameters || "",
     licenses: documentLicenseRows.filter((link) => sameId(link.document_id, row.id)).map((link) => licenseTypeById[link.license_type_id]?.name).filter(Boolean),
   }));
 
@@ -6247,6 +6553,8 @@ async function loadSupabaseData() {
   renderProperties();
   populateEnterpriseSelects();
   renderEnterprises();
+  populateActivityCompanies();
+  renderActivities();
   renderEnvironmentalLicenseTypes();
   renderEnvironmentalDocuments();
   populateChecklistModelSelects();

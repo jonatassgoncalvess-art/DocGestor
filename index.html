@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DocGestor by Carminatti | Previa</title>
-    <link rel="stylesheet" href="styles.css?v=20260602-db-persist" />
+    <link rel="stylesheet" href="styles.css?v=20260602-activities-adjustments" />
   </head>
   <body>
     <section class="login-screen" id="login-screen">
@@ -63,6 +63,7 @@
               <button class="admin-link" data-admin-target="empresas-filiais">01.2.2 Empresas e Filiais</button>
               <button class="admin-link" data-admin-target="imoveis-admin">01.2.3 Imoveis</button>
               <button class="admin-link" data-admin-target="empreendimentos-admin">01.2.4 Empreendimento</button>
+              <button class="admin-link" data-admin-target="atividades-admin">01.2.5 Atividades</button>
             </div>
             <div class="side-tree-group">
               <strong>01.3 Ambiental</strong>
@@ -276,6 +277,20 @@
                 <section class="panel">
                   <div class="list-head"><h3>Empreendimentos cadastrados</h3><span id="enterprise-count">2 itens</span></div>
                   <div class="crud-list" id="enterprise-list"></div>
+                </section>
+              </section>
+
+              <section class="admin-panel" id="admin-atividades-admin">
+                <div class="section-title">
+                  <div>
+                    <p class="eyebrow">01.2.5 Atividades</p>
+                    <h2>Atividades vinculadas a CNPJ e empreendimentos</h2>
+                  </div>
+                  <button class="primary" id="activity-new">Nova Atividade</button>
+                </div>
+                <section class="panel">
+                  <div class="list-head"><h3>Atividades cadastradas</h3><span id="activity-count">0 itens</span></div>
+                  <div class="crud-list" id="activity-list"></div>
                 </section>
               </section>
 
@@ -1239,13 +1254,13 @@
           <label class="rural-field" hidden>Gleba<input id="property-glebe" /></label>
           <label class="rural-field" hidden>Numero do CAR<input id="property-car-number" /></label>
           <label class="rural-field" hidden>Numero CCIR/INCRA<input id="property-ccir-incra" /></label>
-          <label class="urban-area-field" hidden>m2 do imovel<input id="property-urban-area" type="number" /></label>
-          <label class="rural-field" hidden>m2 total do imovel<input id="property-rural-area" type="number" /></label>
-          <label class="rural-field" hidden>Ha<input id="property-hectares" type="number" disabled /></label>
-          <label class="rural-field" hidden>m2 de reserva legal<input id="property-legal-reserve" type="number" /></label>
-          <label class="rural-field" hidden>Ha de reserva legal<input id="property-legal-reserve-ha" type="number" step="0.0001" /></label>
-          <label class="rural-field" hidden>m2 de APP<input id="property-app-area" type="number" /></label>
-          <label class="rural-field" hidden>Ha de APP<input id="property-app-area-ha" type="number" step="0.0001" /></label>
+          <label class="urban-area-field" hidden>m2 do imovel<input id="property-urban-area" type="number" min="0" /></label>
+          <label class="rural-field" hidden>m2 total do imovel<input id="property-rural-area" type="number" min="0" /></label>
+          <label class="rural-field" hidden>Ha<input id="property-hectares" type="number" min="0" disabled /></label>
+          <label class="rural-field" hidden>m2 de reserva legal<input id="property-legal-reserve" type="number" min="0" /></label>
+          <label class="rural-field" hidden>Ha de reserva legal<input id="property-legal-reserve-ha" type="number" min="0" step="0.0001" /></label>
+          <label class="rural-field" hidden>m2 de APP<input id="property-app-area" type="number" min="0" /></label>
+          <label class="rural-field" hidden>Ha de APP<input id="property-app-area-ha" type="number" min="0" step="0.0001" /></label>
           <label class="property-use-field" hidden>Uso da propriedade
             <select id="property-rural-use">
               <option>Lavoura</option>
@@ -1253,7 +1268,7 @@
             </select>
           </label>
           <label class="construction-toggle"><input type="checkbox" id="property-has-construction" /> Construcao</label>
-          <label id="construction-area-field" hidden>m2 total da construcao<input id="property-construction-area" type="number" value="0" /></label>
+          <label id="construction-area-field" hidden>m2 total da construcao<input id="property-construction-area" type="number" min="0" value="0" /></label>
         </form>
         <div class="reserve-result rural-field" id="reserve-result" hidden>
           <span>Calculo automatico da reserva legal</span>
@@ -1297,7 +1312,7 @@
           <input type="hidden" id="enterprise-id" value="0" />
           <label>Nome do empreendimento<input id="enterprise-name" /></label>
           <label>Empresa vinculada<select id="enterprise-company"></select></label>
-          <label>Imovel vinculado<select id="enterprise-property"></select></label>
+          <input type="hidden" id="enterprise-property" />
           <label>Tipo de empreendimento
             <select id="enterprise-type">
               <option>Industrial</option>
@@ -1314,9 +1329,15 @@
               <option>Paralisado</option>
             </select>
           </label>
-          <label>Responsavel<input id="enterprise-responsible" /></label>
           <label>Referencia<input id="enterprise-reference" /></label>
         </form>
+        <div class="module-link-box">
+          <div>
+            <span>Imovel vinculado</span>
+            <strong id="enterprise-property-summary">Nenhum imovel selecionado</strong>
+          </div>
+          <button class="ghost" id="enterprise-property-open" type="button">Selecionar</button>
+        </div>
         <div class="module-link-box">
           <div>
             <span>Modulos vinculados</span>
@@ -1328,6 +1349,19 @@
           <button class="ghost" data-close-modal="enterprise-modal">Cancelar</button>
           <button class="primary" id="enterprise-save">Salvar empreendimento</button>
         </div>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="enterprise-property-modal" aria-hidden="true">
+      <section class="modal-panel confirm-modal" role="dialog" aria-modal="true" aria-labelledby="enterprise-property-title">
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">01.2.4 Empreendimento</p>
+            <h2 id="enterprise-property-title">Selecionar imovel</h2>
+          </div>
+          <button class="ghost small" data-close-modal="enterprise-property-modal">Fechar</button>
+        </div>
+        <div class="picker-list" id="enterprise-property-list"></div>
       </section>
     </div>
 
@@ -1378,8 +1412,6 @@
           <input type="hidden" id="license-type-id" value="0" />
           <label>Nome<input id="license-type-name" /></label>
           <label>Sigla<input id="license-type-code" /></label>
-          <label>Validade padrao<select id="license-type-validity"><option>4 anos</option><option>5 anos</option><option>Indeterminada</option></select></label>
-          <label>Renovacao recomendada<input id="license-type-renewal" /></label>
         </form>
         <div class="partner-checks">
           <span>Classificacao da licenca</span>
@@ -1408,6 +1440,7 @@
           <label>Nome<input id="environmental-document-name" /></label>
           <label>Exige vencimento<select id="environmental-document-expiration"><option>Nao</option><option>Sim</option></select></label>
           <label>Obrigatorio por padrao<select id="environmental-document-required"><option>Sim</option><option>Nao</option></select></label>
+          <label class="wide-field">Parametros do Documento<textarea id="environmental-document-parameters" rows="4" placeholder="Informe parametros, criterios ou observacoes tecnicas do documento"></textarea></label>
         </form>
         <div class="partner-checks" id="document-license-checks">
           <span>Licencas vinculadas</span>
@@ -1550,6 +1583,56 @@
         <div class="modal-actions">
           <button class="ghost" data-close-modal="enterprise-modules-modal">Cancelar</button>
           <button class="primary" id="enterprise-modules-apply" type="button">Aplicar modulos</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="activity-modal" aria-hidden="true">
+      <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="activity-modal-title">
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">01.2.5 Atividades</p>
+            <h2 id="activity-modal-title">Nova Atividade</h2>
+          </div>
+          <button class="ghost small" data-close-modal="activity-modal">Fechar</button>
+        </div>
+        <form class="user-form" id="activity-form">
+          <input type="hidden" id="activity-id" value="0" />
+          <label>Nome da atividade<input id="activity-name" placeholder="Ex.: Avicultura de Postura" /></label>
+          <label>CNAE<input id="activity-cnae" placeholder="Ex.: 0155-5/03" /></label>
+          <label>CNPJ vinculado<select id="activity-company-cnpj"></select></label>
+          <label class="wide-field checkbox-line">
+            <input id="activity-ctf-app" type="checkbox" />
+            CTF/APP
+          </label>
+        </form>
+        <div class="module-link-box">
+          <div>
+            <span>Empreendimentos vinculados</span>
+            <strong id="activity-enterprise-summary">Nenhum empreendimento selecionado</strong>
+          </div>
+          <button class="ghost" id="activity-enterprises-open" type="button">Selecionar empreendimentos</button>
+        </div>
+        <div class="modal-actions">
+          <button class="ghost" data-close-modal="activity-modal">Cancelar</button>
+          <button class="primary" id="activity-save">Salvar atividade</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="activity-enterprises-modal" aria-hidden="true">
+      <section class="modal-panel confirm-modal" role="dialog" aria-modal="true" aria-labelledby="activity-enterprises-title">
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">01.2.5 Atividades</p>
+            <h2 id="activity-enterprises-title">Selecionar empreendimentos</h2>
+          </div>
+          <button class="ghost small" data-close-modal="activity-enterprises-modal">Fechar</button>
+        </div>
+        <div class="partner-checks module-checks" id="activity-enterprise-checks"></div>
+        <div class="modal-actions">
+          <button class="ghost" data-close-modal="activity-enterprises-modal">Cancelar</button>
+          <button class="primary" id="activity-enterprises-apply" type="button">Aplicar empreendimentos</button>
         </div>
       </section>
     </div>
@@ -1845,7 +1928,7 @@
 
     <script src="supabase-config.js?v=20260602-db-persist"></script>
     <script src="database.js?v=20260602-db-persist"></script>
-    <script src="script.js?v=20260602-db-persist"></script>
+    <script src="script.js?v=20260602-activities-adjustments"></script>
   </body>
 </html>
 

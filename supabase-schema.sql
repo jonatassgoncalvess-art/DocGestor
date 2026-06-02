@@ -40,7 +40,7 @@ exception when duplicate_object then null;
 end $$;
 
 do $$ begin
-  create type process_status as enum ('Planejado', 'Em implantacao', 'Em analise', 'Ativo', 'Renovar', 'Critico', 'Encerrado');
+  create type process_status as enum ('Planejado', 'Em implantacao', 'Em analise', 'Ativo', 'Operando', 'Paralisado', 'Suspenso', 'Renovar', 'Critico', 'Encerrado');
 exception when duplicate_object then null;
 end $$;
 
@@ -201,6 +201,7 @@ create table if not exists enterprises (
   status process_status not null default 'Planejado',
   responsible_partner_id uuid references partners(id) on delete set null,
   reference text,
+  potential_polluter boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -212,13 +213,31 @@ create table if not exists enterprise_modules (
   primary key (enterprise_id, module_id)
 );
 
+create table if not exists activities (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references organizations(id) on delete cascade,
+  company_id uuid not null references companies(id) on delete restrict,
+  name text not null,
+  cnae text,
+  ctf_app boolean not null default false,
+  status text not null default 'Ativo',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (organization_id, company_id, name)
+);
+
+create table if not exists activity_enterprises (
+  activity_id uuid not null references activities(id) on delete cascade,
+  enterprise_id uuid not null references enterprises(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (activity_id, enterprise_id)
+);
+
 create table if not exists environmental_license_types (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references organizations(id) on delete cascade,
   name text not null,
   code text,
-  validity text,
-  renewal text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (organization_id, name)
@@ -236,6 +255,7 @@ create table if not exists environmental_documents (
   name text not null,
   expiration yes_no not null default 'Nao',
   required yes_no not null default 'Sim',
+  document_parameters text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (organization_id, name)
@@ -340,6 +360,10 @@ create index if not exists idx_enterprises_company on enterprises(company_id);
 create index if not exists idx_enterprises_property on enterprises(property_id);
 create index if not exists idx_enterprise_modules_enterprise on enterprise_modules(enterprise_id);
 create index if not exists idx_enterprise_modules_module on enterprise_modules(module_id);
+create index if not exists idx_activities_organization on activities(organization_id);
+create index if not exists idx_activities_company on activities(company_id);
+create index if not exists idx_activity_enterprises_activity on activity_enterprises(activity_id);
+create index if not exists idx_activity_enterprises_enterprise on activity_enterprises(enterprise_id);
 create index if not exists idx_environmental_licenses_company on environmental_licenses(company_id);
 create index if not exists idx_environmental_licenses_property on environmental_licenses(property_id);
 create index if not exists idx_environmental_licenses_expiration on environmental_licenses(expiration_date);
@@ -367,6 +391,9 @@ create trigger trg_properties_updated_at before update on properties for each ro
 
 drop trigger if exists trg_enterprises_updated_at on enterprises;
 create trigger trg_enterprises_updated_at before update on enterprises for each row execute function set_updated_at();
+
+drop trigger if exists trg_activities_updated_at on activities;
+create trigger trg_activities_updated_at before update on activities for each row execute function set_updated_at();
 
 drop trigger if exists trg_environmental_license_types_updated_at on environmental_license_types;
 create trigger trg_environmental_license_types_updated_at before update on environmental_license_types for each row execute function set_updated_at();
@@ -404,6 +431,8 @@ alter table user_permissions enable row level security;
 alter table properties enable row level security;
 alter table enterprises enable row level security;
 alter table enterprise_modules enable row level security;
+alter table activities enable row level security;
+alter table activity_enterprises enable row level security;
 alter table environmental_license_types enable row level security;
 alter table environmental_license_type_phases enable row level security;
 alter table environmental_documents enable row level security;
@@ -430,6 +459,8 @@ begin
     'properties',
     'enterprises',
     'enterprise_modules',
+    'activities',
+    'activity_enterprises',
     'environmental_license_types',
     'environmental_license_type_phases',
     'environmental_documents',

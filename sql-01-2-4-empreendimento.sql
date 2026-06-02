@@ -13,14 +13,35 @@ create table if not exists enterprises (
   status text not null default 'Planejado',
   responsible_partner_id uuid references partners(id) on delete set null,
   reference text,
+  potential_polluter boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint enterprises_name_by_organization_unique unique (organization_id, name),
-  constraint enterprises_status_check check (status in ('Planejado', 'Em implantacao', 'Em analise', 'Ativo', 'Suspenso', 'Encerrado')),
+  constraint enterprises_status_check check (status in ('Planejado', 'Em implantacao', 'Em analise', 'Ativo', 'Operando', 'Paralisado', 'Suspenso', 'Encerrado')),
   constraint enterprises_type_check check (
     type is null
-    or type in ('Industrial', 'Rural', 'Comercial', 'Residencial', 'Outro')
+    or type in ('Industrial', 'Rural', 'Comercial', 'Residencial', 'Infraestrutura', 'Outro')
   )
+);
+
+alter table enterprises
+add column if not exists potential_polluter boolean not null default false;
+
+alter table enterprises
+drop constraint if exists enterprises_status_check;
+
+alter table enterprises
+add constraint enterprises_status_check
+check (status in ('Planejado', 'Em implantacao', 'Em analise', 'Ativo', 'Operando', 'Paralisado', 'Suspenso', 'Encerrado'));
+
+alter table enterprises
+drop constraint if exists enterprises_type_check;
+
+alter table enterprises
+add constraint enterprises_type_check
+check (
+  type is null
+  or type in ('Industrial', 'Rural', 'Comercial', 'Residencial', 'Infraestrutura', 'Outro')
 );
 
 create index if not exists enterprises_organization_id_idx on enterprises(organization_id);

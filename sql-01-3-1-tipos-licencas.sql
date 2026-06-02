@@ -8,8 +8,6 @@ create table if not exists environmental_license_types (
   organization_id uuid not null references organizations(id) on delete cascade,
   name text not null,
   code text,
-  validity text,
-  renewal text,
   status text not null default 'Ativo',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -68,4 +66,3 @@ on environmental_license_type_phases
 for all
 using (true)
 with check (true);
-

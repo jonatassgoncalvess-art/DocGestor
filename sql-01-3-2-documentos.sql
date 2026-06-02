@@ -9,6 +9,7 @@ create table if not exists environmental_documents (
   name text not null,
   expiration text not null default 'Nao',
   required text not null default 'Sim',
+  document_parameters text,
   status text not null default 'Ativo',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -71,4 +72,3 @@ on environmental_document_license_types
 for all
 using (true)
 with check (true);
-
