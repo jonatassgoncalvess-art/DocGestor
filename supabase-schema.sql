@@ -205,6 +205,13 @@ create table if not exists enterprises (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists enterprise_modules (
+  enterprise_id uuid not null references enterprises(id) on delete cascade,
+  module_id text not null,
+  created_at timestamptz not null default now(),
+  primary key (enterprise_id, module_id)
+);
+
 create table if not exists environmental_license_types (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references organizations(id) on delete cascade,
@@ -331,6 +338,8 @@ create index if not exists idx_properties_ccir_incra_number on properties(ccir_i
 create index if not exists idx_properties_urban_property_registration on properties(urban_property_registration);
 create index if not exists idx_enterprises_company on enterprises(company_id);
 create index if not exists idx_enterprises_property on enterprises(property_id);
+create index if not exists idx_enterprise_modules_enterprise on enterprise_modules(enterprise_id);
+create index if not exists idx_enterprise_modules_module on enterprise_modules(module_id);
 create index if not exists idx_environmental_licenses_company on environmental_licenses(company_id);
 create index if not exists idx_environmental_licenses_property on environmental_licenses(property_id);
 create index if not exists idx_environmental_licenses_expiration on environmental_licenses(expiration_date);
@@ -394,6 +403,7 @@ alter table app_users enable row level security;
 alter table user_permissions enable row level security;
 alter table properties enable row level security;
 alter table enterprises enable row level security;
+alter table enterprise_modules enable row level security;
 alter table environmental_license_types enable row level security;
 alter table environmental_license_type_phases enable row level security;
 alter table environmental_documents enable row level security;
@@ -419,6 +429,7 @@ begin
     'user_permissions',
     'properties',
     'enterprises',
+    'enterprise_modules',
     'environmental_license_types',
     'environmental_license_type_phases',
     'environmental_documents',

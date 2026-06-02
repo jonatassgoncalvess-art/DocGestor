@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DocGestor by Carminatti | Previa</title>
-    <link rel="stylesheet" href="styles.css?v=20260602-search-property-fields" />
+    <link rel="stylesheet" href="styles.css?v=20260602-enterprise-modules" />
   </head>
   <body>
     <section class="login-screen" id="login-screen">
@@ -1317,6 +1317,13 @@
           <label>Responsavel<input id="enterprise-responsible" /></label>
           <label>Referencia<input id="enterprise-reference" /></label>
         </form>
+        <div class="module-link-box">
+          <div>
+            <span>Modulos vinculados</span>
+            <strong id="enterprise-module-summary">Nenhum modulo selecionado</strong>
+          </div>
+          <button class="ghost" id="enterprise-modules-open" type="button">Inserir modulos</button>
+        </div>
         <div class="modal-actions">
           <button class="ghost" data-close-modal="enterprise-modal">Cancelar</button>
           <button class="primary" id="enterprise-save">Salvar empreendimento</button>
@@ -1530,6 +1537,23 @@
       </section>
     </div>
 
+    <div class="modal-backdrop" id="enterprise-modules-modal" aria-hidden="true">
+      <section class="modal-panel confirm-modal" role="dialog" aria-modal="true" aria-labelledby="enterprise-modules-title">
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">01.2.4 Empreendimento</p>
+            <h2 id="enterprise-modules-title">Inserir modulos</h2>
+          </div>
+          <button class="ghost small" data-close-modal="enterprise-modules-modal">Fechar</button>
+        </div>
+        <div class="partner-checks module-checks" id="enterprise-module-checks"></div>
+        <div class="modal-actions">
+          <button class="ghost" data-close-modal="enterprise-modules-modal">Cancelar</button>
+          <button class="primary" id="enterprise-modules-apply" type="button">Aplicar modulos</button>
+        </div>
+      </section>
+    </div>
+
     <div class="modal-backdrop" id="environmental-process-modal" aria-hidden="true">
       <section class="modal-panel wide-modal" role="dialog" aria-modal="true" aria-labelledby="environmental-process-title">
         <div class="modal-head">
@@ -1556,6 +1580,9 @@
               <option value="open">Aberto</option>
               <option value="pending">Pendente</option>
             </select>
+          </label>
+          <label>Empreendimento
+            <select id="environmental-process-enterprise"></select>
           </label>
           <label>Empresa
             <select id="environmental-process-company"></select>
@@ -1816,9 +1843,9 @@
       </section>
     </div>
 
-    <script src="supabase-config.js?v=20260602-search-property-fields"></script>
-    <script src="database.js?v=20260602-search-property-fields"></script>
-    <script src="script.js?v=20260602-search-property-fields"></script>
+    <script src="supabase-config.js?v=20260602-enterprise-modules"></script>
+    <script src="database.js?v=20260602-enterprise-modules"></script>
+    <script src="script.js?v=20260602-enterprise-modules"></script>
   </body>
 </html>
 

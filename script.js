@@ -2445,10 +2445,58 @@ let enterprises = [];
 
 let selectedEnterpriseId = 0;
 let pendingEnterpriseDeleteId = null;
+let enterpriseModuleSelection = ["environmental"];
 const enterpriseList = document.querySelector("#enterprise-list");
 const enterpriseCount = document.querySelector("#enterprise-count");
 const enterpriseCompany = document.querySelector("#enterprise-company");
 const enterpriseProperty = document.querySelector("#enterprise-property");
+
+function activeSystemModules() {
+  return availableAlertModules.length ? availableAlertModules : [{ id: "environmental", name: "03.1 Licencas Ambientais" }];
+}
+
+function enterpriseModules(enterprise) {
+  return Array.isArray(enterprise?.modules) ? enterprise.modules : [];
+}
+
+function enterpriseModuleLabels(modules = []) {
+  return modules.length ? modules.map(sendModuleLabel).join(", ") : "Nenhum modulo vinculado";
+}
+
+function updateEnterpriseModuleSummary(modules = enterpriseModuleSelection) {
+  const summary = field("enterprise-module-summary");
+  if (summary) summary.textContent = enterpriseModuleLabels(modules);
+}
+
+function renderEnterpriseModuleChecks(selectedModules = enterpriseModuleSelection) {
+  const wrapper = field("enterprise-module-checks");
+  if (!wrapper) return;
+  wrapper.innerHTML = `<span>Modulos disponiveis</span>${activeSystemModules()
+    .map(
+      (module) => `
+        <label>
+          <input type="checkbox" name="enterprise-module" value="${module.id}" ${selectedModules.includes(module.id) ? "checked" : ""} />
+          ${module.name}
+        </label>
+      `,
+    )
+    .join("")}`;
+}
+
+function openEnterpriseModulesModal() {
+  renderEnterpriseModuleChecks(enterpriseModuleSelection);
+  openModal("enterprise-modules-modal");
+}
+
+function applyEnterpriseModules() {
+  enterpriseModuleSelection = checkedValues('input[name="enterprise-module"]');
+  updateEnterpriseModuleSummary();
+  closeModal("enterprise-modules-modal");
+}
+
+function enterprisesForModule(moduleId) {
+  return enterprises.filter((enterprise) => enterpriseModules(enterprise).includes(moduleId));
+}
 
 function populateEnterpriseProperties(selectedProperty = "") {
   if (!enterpriseProperty || !enterpriseCompany) return;
@@ -2477,16 +2525,19 @@ function renderEnterprises() {
   enterpriseCount.textContent = `${enterprises.length} itens`;
   enterpriseList.innerHTML = enterprises
     .map(
-      (enterprise) => `
-        <article>
-          <strong>${enterprise.name}</strong>
-          <span>${enterprise.company} - ${enterprise.property} - ${enterprise.type} - ${enterprise.status} - responsavel: ${enterprise.responsible}</span>
-          <div>
-            <button type="button" data-enterprise-action="edit" data-enterprise-id="${enterprise.id}">Editar</button>
-            <button type="button" data-enterprise-action="delete" data-enterprise-id="${enterprise.id}">Excluir</button>
-          </div>
-        </article>
-      `,
+      (enterprise) => {
+        const modules = enterpriseModules(enterprise);
+        return `
+          <article>
+            <strong>${enterprise.name}</strong>
+            <span>${enterprise.company} - ${enterprise.property} - ${enterprise.type} - ${enterprise.status} - responsavel: ${enterprise.responsible} - modulos: ${enterpriseModuleLabels(modules)}</span>
+            <div>
+              <button type="button" data-enterprise-action="edit" data-enterprise-id="${enterprise.id}">Editar</button>
+              <button type="button" data-enterprise-action="delete" data-enterprise-id="${enterprise.id}">Excluir</button>
+            </div>
+          </article>
+        `;
+      },
     )
     .join("");
 }
@@ -2501,6 +2552,8 @@ function fillEnterpriseForm(enterprise) {
   field("enterprise-status").value = enterprise.status;
   field("enterprise-responsible").value = enterprise.responsible;
   field("enterprise-reference").value = enterprise.reference;
+  enterpriseModuleSelection = [...enterpriseModules(enterprise)];
+  updateEnterpriseModuleSummary();
 }
 
 function newEnterprise() {
@@ -2513,6 +2566,8 @@ function newEnterprise() {
   field("enterprise-status").value = "Planejado";
   field("enterprise-responsible").value = "";
   field("enterprise-reference").value = "";
+  enterpriseModuleSelection = ["environmental"];
+  updateEnterpriseModuleSummary();
   document.querySelector("#enterprise-modal-title").textContent = "Novo Empreendimento";
   openModal("enterprise-modal");
 }
@@ -2529,17 +2584,21 @@ function saveEnterprise() {
     status: field("enterprise-status").value,
     responsible: field("enterprise-responsible").value,
     reference: field("enterprise-reference").value,
+    modules: [...enterpriseModuleSelection],
   };
 
   if (existing) Object.assign(existing, payload);
   else enterprises.push(payload);
 
   renderEnterprises();
+  populateEnvironmentalProcessSelects();
   closeModal("enterprise-modal");
 }
 
 document.querySelector("#enterprise-new")?.addEventListener("click", newEnterprise);
 document.querySelector("#enterprise-save")?.addEventListener("click", saveEnterprise);
+document.querySelector("#enterprise-modules-open")?.addEventListener("click", openEnterpriseModulesModal);
+document.querySelector("#enterprise-modules-apply")?.addEventListener("click", applyEnterpriseModules);
 enterpriseCompany?.addEventListener("change", () => populateEnterpriseProperties());
 document.querySelector("#enterprise-delete-confirm")?.addEventListener("click", () => {
   const index = enterprises.findIndex((enterprise) => sameId(enterprise.id, pendingEnterpriseDeleteId));
@@ -3367,11 +3426,18 @@ function updateEnvironmentalProcessStagesPreview() {
 function populateEnvironmentalProcessSelects() {
   const number = nextEnvironmentalProcessNumber();
   field("environmental-process-number").value = number;
+  const enterpriseSelect = field("environmental-process-enterprise");
   const companySelect = field("environmental-process-company");
   const branchSelect = field("environmental-process-branch");
   const propertySelect = field("environmental-process-property");
   const responsibleSelect = field("environmental-process-responsible");
 
+  if (enterpriseSelect) {
+    const environmentalEnterprises = enterprisesForModule("environmental");
+    enterpriseSelect.innerHTML = environmentalEnterprises.length
+      ? environmentalEnterprises.map((enterprise) => `<option value="${enterprise.name}">${enterprise.name}</option>`).join("")
+      : `<option value="">Nenhum empreendimento vinculado ao modulo Ambiental</option>`;
+  }
   if (companySelect) {
     companySelect.innerHTML = companies
       .filter((company) => company.kind === "matrix")
@@ -3391,8 +3457,21 @@ function populateEnvironmentalProcessSelects() {
     responsibleSelect.innerHTML = partners.map((partner) => `<option value="${partner.name}">${partner.name}</option>`).join("");
   }
   updateEnvironmentalProcessLicenseOptions();
+  updateEnvironmentalProcessEnterpriseFields();
   updateEnvironmentalProcessChecklistPreview();
   updateEnvironmentalProcessStagesPreview();
+}
+
+function selectedEnvironmentalEnterprise() {
+  const selectedName = field("environmental-process-enterprise")?.value;
+  return enterprisesForModule("environmental").find((enterprise) => enterprise.name === selectedName) || null;
+}
+
+function updateEnvironmentalProcessEnterpriseFields() {
+  const enterprise = selectedEnvironmentalEnterprise();
+  if (!enterprise) return;
+  if (field("environmental-process-company")) field("environmental-process-company").value = enterprise.company;
+  if (field("environmental-process-property")) field("environmental-process-property").value = enterprise.property;
 }
 
 function updateEnvironmentalProcessLicenseOptions() {
@@ -3451,6 +3530,7 @@ function saveEnvironmentalProcess() {
   const type = selectedLicenses.join(" / ") || "Tipo de licenca nao definido";
   const company = field("environmental-process-company").value;
   const branch = field("environmental-process-branch").value;
+  const enterprise = selectedEnvironmentalEnterprise();
   const responsible = field("environmental-process-responsible").value;
   const objective = field("environmental-process-objective").value;
   const priority = field("environmental-process-priority").value;
@@ -3461,7 +3541,8 @@ function saveEnvironmentalProcess() {
     licensingFormatLabel: formatConfig.label,
     stages: processStagesForFormat(licensingFormat),
     number: internalNumber,
-    title: branch || company,
+    title: enterprise?.name || branch || company,
+    enterprise: enterprise?.name || "",
     company,
     type,
     licenseTypes: selectedLicenses,
@@ -4182,6 +4263,7 @@ field("environmental-process-format")?.addEventListener("change", () => {
   updateEnvironmentalProcessLicenseOptions();
   updateEnvironmentalProcessStagesPreview();
 });
+field("environmental-process-enterprise")?.addEventListener("change", updateEnvironmentalProcessEnterpriseFields);
 field("environmental-process-license-fields")?.addEventListener("change", updateEnvironmentalProcessChecklistPreview);
 field("environmental-process-save")?.addEventListener("click", saveEnvironmentalProcess);
 field("environmental-process-detail-save")?.addEventListener("click", saveEnvironmentalProcessDetail);
@@ -4796,8 +4878,8 @@ function buildEnterprisesReport() {
     sections: [
       pdfTableSection(
         "Empreendimentos cadastrados",
-        ["Nome", "Empresa", "Imovel", "Tipo", "Status", "Responsavel", "Referencia"],
-        enterprises.map((enterprise) => [enterprise.name, enterprise.company, enterprise.property, enterprise.type, enterprise.status, enterprise.responsible, enterprise.reference]),
+        ["Nome", "Empresa", "Imovel", "Tipo", "Status", "Responsavel", "Modulos", "Referencia"],
+        enterprises.map((enterprise) => [enterprise.name, enterprise.company, enterprise.property, enterprise.type, enterprise.status, enterprise.responsible, enterpriseModuleLabels(enterpriseModules(enterprise)), enterprise.reference]),
         { rowEstimate: 38 },
       ),
     ],
@@ -5532,6 +5614,7 @@ async function loadSupabaseData() {
     companyPartnerRows,
     propertyRows,
     enterpriseRows,
+    enterpriseModuleRows,
     licenseTypeRows,
     phaseRows,
     documentRows,
@@ -5539,6 +5622,7 @@ async function loadSupabaseData() {
     checklistRows,
     checklistDocumentRows,
     licenseRows,
+    appModuleRows,
     alertRecipientRows,
     alertRecipientModuleRows,
     agendaRows,
@@ -5550,6 +5634,7 @@ async function loadSupabaseData() {
     dbList("company_partners"),
     dbList("properties"),
     dbList("enterprises"),
+    dbList("enterprise_modules"),
     dbList("environmental_license_types"),
     dbList("environmental_license_type_phases"),
     dbList("environmental_documents"),
@@ -5557,6 +5642,7 @@ async function loadSupabaseData() {
     dbList("environmental_checklist_models"),
     dbList("environmental_checklist_model_documents"),
     dbList("environmental_licenses"),
+    dbList("app_modules"),
     dbList("alert_recipients"),
     dbList("alert_recipient_modules"),
     dbList("agenda_events"),
@@ -5569,6 +5655,20 @@ async function loadSupabaseData() {
   const propertyById = Object.fromEntries(propertyRows.map((row) => [row.id, row]));
   const licenseTypeById = Object.fromEntries(licenseTypeRows.map((row) => [row.id, row]));
   const documentById = Object.fromEntries(documentRows.map((row) => [row.id, row]));
+
+  if (appModuleRows.length) {
+    availableAlertModules.splice(
+      0,
+      availableAlertModules.length,
+      ...appModuleRows
+        .filter((row) => row.is_active !== false && !row.is_admin_area)
+        .sort((a, b) => Number(a.display_order || 0) - Number(b.display_order || 0))
+        .map((row) => ({
+          id: row.code || row.id,
+          name: row.name,
+        })),
+    );
+  }
 
   partners = partnerRows.map((row) => ({
     id: row.id,
@@ -5627,6 +5727,7 @@ async function loadSupabaseData() {
     status: row.status || "Planejado",
     responsible: partnerById[row.responsible_partner_id]?.name || "",
     reference: row.reference || "",
+    modules: enterpriseModuleRows.filter((link) => sameId(link.enterprise_id, row.id)).map((link) => link.module_id),
   }));
 
   environmentalLicenseTypes = licenseTypeRows.map((row) => ({
