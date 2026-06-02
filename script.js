@@ -1935,9 +1935,10 @@ function newPartner() {
   openModal("partner-modal");
 }
 
-function savePartner() {
+async function savePartner() {
   const id = field("partner-id").value;
   const existing = partners.find((partner) => sameId(partner.id, id));
+  const wasExisting = Boolean(existing);
   const payload = {
     id: id || Date.now(),
     name: field("partner-name").value,
@@ -1958,6 +1959,9 @@ function savePartner() {
 
   renderPartners();
   closeModal("partner-modal");
+  await persistPartner(payload, wasExisting);
+  populatePropertyOwners();
+  renderCompanyPartnerChecks();
 }
 
 document.querySelector("#partner-new")?.addEventListener("click", newPartner);
@@ -1983,6 +1987,7 @@ partnerList?.addEventListener("click", (event) => {
       selectedPartnerId = partners[0]?.id ?? 0;
       renderPartners();
       if (partners.length) fillPartnerForm(selectedPartner());
+      persistDelete("partners", id, "socio");
     });
   }
 });
@@ -2121,10 +2126,11 @@ function newCompany() {
   openModal("company-modal");
 }
 
-function saveCompany() {
+async function saveCompany() {
   const id = field("company-id").value;
   const kind = field("company-kind").value;
   const existing = companies.find((company) => sameId(company.id, id));
+  const wasExisting = Boolean(existing);
   const payload = {
     id: id || Date.now(),
     kind,
@@ -2146,6 +2152,9 @@ function saveCompany() {
 
   renderCompanies();
   closeModal("company-modal");
+  await persistCompany(payload, wasExisting);
+  populatePropertyOwners();
+  populateEnterpriseSelects();
 }
 
 document.querySelector("#company-new")?.addEventListener("click", newCompany);
@@ -2181,6 +2190,7 @@ companyTree?.addEventListener("click", (event) => {
       }
       renderCompanies();
       populateEnterpriseSelects();
+      persistDelete("companies", id, "empresa");
     });
   }
 });
@@ -2353,9 +2363,10 @@ function newProperty() {
   openModal("property-modal");
 }
 
-function saveProperty() {
+async function saveProperty() {
   const id = field("property-id").value;
   const existing = properties.find((property) => sameId(property.id, id));
+  const wasExisting = Boolean(existing);
   const type = field("property-type").value;
   const payload = {
     id: id || Date.now(),
@@ -2385,15 +2396,19 @@ function saveProperty() {
 
   renderProperties();
   closeModal("property-modal");
+  await persistProperty(payload, wasExisting);
+  populateEnterpriseSelects();
 }
 
 document.querySelector("#property-new")?.addEventListener("click", newProperty);
 document.querySelector("#property-save")?.addEventListener("click", saveProperty);
 document.querySelector("#property-delete-confirm")?.addEventListener("click", () => {
+  const id = pendingPropertyDeleteId;
   const index = properties.findIndex((property) => sameId(property.id, pendingPropertyDeleteId));
   if (index >= 0) properties.splice(index, 1);
   pendingPropertyDeleteId = null;
   renderProperties();
+  persistDelete("properties", id, "imovel");
   closeModal("property-delete-modal");
 });
 propertyOwnerType?.addEventListener("change", () => populatePropertyOwners());
@@ -2572,9 +2587,10 @@ function newEnterprise() {
   openModal("enterprise-modal");
 }
 
-function saveEnterprise() {
+async function saveEnterprise() {
   const id = field("enterprise-id").value;
   const existing = enterprises.find((enterprise) => sameId(enterprise.id, id));
+  const wasExisting = Boolean(existing);
   const payload = {
     id: id || Date.now(),
     name: field("enterprise-name").value,
@@ -2593,6 +2609,7 @@ function saveEnterprise() {
   renderEnterprises();
   populateEnvironmentalProcessSelects();
   closeModal("enterprise-modal");
+  await persistEnterprise(payload, wasExisting);
 }
 
 document.querySelector("#enterprise-new")?.addEventListener("click", newEnterprise);
@@ -2601,10 +2618,12 @@ document.querySelector("#enterprise-modules-open")?.addEventListener("click", op
 document.querySelector("#enterprise-modules-apply")?.addEventListener("click", applyEnterpriseModules);
 enterpriseCompany?.addEventListener("change", () => populateEnterpriseProperties());
 document.querySelector("#enterprise-delete-confirm")?.addEventListener("click", () => {
+  const id = pendingEnterpriseDeleteId;
   const index = enterprises.findIndex((enterprise) => sameId(enterprise.id, pendingEnterpriseDeleteId));
   if (index >= 0) enterprises.splice(index, 1);
   pendingEnterpriseDeleteId = null;
   renderEnterprises();
+  persistDelete("enterprises", id, "empreendimento");
   closeModal("enterprise-delete-modal");
 });
 enterpriseList?.addEventListener("click", (event) => {
@@ -2777,9 +2796,10 @@ document.querySelector("#license-type-new")?.addEventListener("click", () => {
   openModal("license-type-modal");
 });
 
-document.querySelector("#license-type-save")?.addEventListener("click", () => {
+document.querySelector("#license-type-save")?.addEventListener("click", async () => {
   const id = field("license-type-id").value;
   const existing = environmentalLicenseTypes.find((item) => sameId(item.id, id));
+  const wasExisting = Boolean(existing);
   const payload = {
     id: id || Date.now(),
     name: field("license-type-name").value,
@@ -2793,6 +2813,7 @@ document.querySelector("#license-type-save")?.addEventListener("click", () => {
   renderEnvironmentalLicenseTypes();
   populateChecklistModelSelects();
   closeModal("license-type-modal");
+  await persistEnvironmentalLicenseType(payload, wasExisting);
 });
 
 licenseTypeList?.addEventListener("click", (event) => {
@@ -2817,6 +2838,7 @@ licenseTypeList?.addEventListener("click", (event) => {
       if (index >= 0) environmentalLicenseTypes.splice(index, 1);
       renderEnvironmentalLicenseTypes();
       populateChecklistModelSelects();
+      persistDelete("environmental_license_types", id, "tipo de licenca");
     });
   }
 });
@@ -2831,9 +2853,10 @@ document.querySelector("#environmental-document-new")?.addEventListener("click",
   openModal("environmental-document-modal");
 });
 
-document.querySelector("#environmental-document-save")?.addEventListener("click", () => {
+document.querySelector("#environmental-document-save")?.addEventListener("click", async () => {
   const id = field("environmental-document-id").value;
   const existing = environmentalDocuments.find((item) => sameId(item.id, id));
+  const wasExisting = Boolean(existing);
   const payload = {
     id: id || Date.now(),
     name: field("environmental-document-name").value,
@@ -2846,6 +2869,7 @@ document.querySelector("#environmental-document-save")?.addEventListener("click"
   renderEnvironmentalDocuments();
   populateChecklistModelSelects();
   closeModal("environmental-document-modal");
+  await persistEnvironmentalDocument(payload, wasExisting);
 });
 
 environmentalDocumentList?.addEventListener("click", (event) => {
@@ -2869,6 +2893,7 @@ environmentalDocumentList?.addEventListener("click", (event) => {
       if (index >= 0) environmentalDocuments.splice(index, 1);
       renderEnvironmentalDocuments();
       populateChecklistModelSelects();
+      persistDelete("environmental_documents", id, "documento ambiental");
     });
   }
 });
@@ -2881,9 +2906,10 @@ document.querySelector("#checklist-model-new")?.addEventListener("click", () => 
   openModal("checklist-model-modal");
 });
 
-document.querySelector("#checklist-model-save")?.addEventListener("click", () => {
+document.querySelector("#checklist-model-save")?.addEventListener("click", async () => {
   const id = field("checklist-model-id").value;
   const existing = checklistModelsAdmin.find((item) => sameId(item.id, id));
+  const wasExisting = Boolean(existing);
   const payload = {
     id: id || Date.now(),
     name: field("checklist-model-name").value,
@@ -2894,6 +2920,7 @@ document.querySelector("#checklist-model-save")?.addEventListener("click", () =>
   else checklistModelsAdmin.push(payload);
   renderChecklistModelsAdmin();
   closeModal("checklist-model-modal");
+  await persistChecklistModel(payload, wasExisting);
 });
 
 checklistModelList?.addEventListener("click", (event) => {
@@ -2914,6 +2941,7 @@ checklistModelList?.addEventListener("click", (event) => {
       const index = checklistModelsAdmin.findIndex((entry) => sameId(entry.id, id));
       if (index >= 0) checklistModelsAdmin.splice(index, 1);
       renderChecklistModelsAdmin();
+      persistDelete("environmental_checklist_models", id, "modelo de check-list");
     });
   }
 });
@@ -5568,6 +5596,352 @@ function renderDashboard() {
 
 function looksLikeUuid(value) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(value || ""));
+}
+
+const DEFAULT_ORGANIZATION_NAME = "Grupo Carminatti";
+let cachedOrganizationId = null;
+
+async function defaultOrganizationId() {
+  if (cachedOrganizationId) return cachedOrganizationId;
+  if (!window.DocGestorDB) return null;
+  try {
+    const rows = await window.DocGestorDB.list("organizations", "select=id,name&limit=1");
+    if (rows[0]?.id) {
+      cachedOrganizationId = rows[0].id;
+      return cachedOrganizationId;
+    }
+    const [created] = await window.DocGestorDB.create("organizations", {
+      name: DEFAULT_ORGANIZATION_NAME,
+      exclusive_label: "DocGestor",
+      status: "Ativa",
+    });
+    cachedOrganizationId = created?.id || null;
+    return cachedOrganizationId;
+  } catch (error) {
+    console.warn("Nao foi possivel obter a organizacao padrao no Supabase.", error.message);
+    return null;
+  }
+}
+
+function updateLocalId(collection, oldId, newId) {
+  if (!newId || sameId(oldId, newId)) return;
+  const item = collection.find((record) => sameId(record.id, oldId));
+  if (item) item.id = newId;
+}
+
+function partnerIdByName(name) {
+  return partners.find((partner) => partner.name === name)?.id || null;
+}
+
+function companyIdByName(name) {
+  return companies.find((company) => company.name === name)?.id || null;
+}
+
+function propertyIdByLabel(label) {
+  const registration = String(label || "").replace(/^Matricula\s+/i, "").trim();
+  return properties.find((property) => property.registration === registration || `Matricula ${property.registration}` === label)?.id || null;
+}
+
+function licenseTypeIdByName(name) {
+  return environmentalLicenseTypes.find((license) => license.name === name)?.id || null;
+}
+
+function documentIdByName(name) {
+  return environmentalDocuments.find((documentItem) => documentItem.name === name)?.id || null;
+}
+
+async function persistDelete(table, id, label) {
+  if (!window.DocGestorDB || !looksLikeUuid(id)) return;
+  try {
+    await window.DocGestorDB.remove(table, id);
+  } catch (error) {
+    console.warn(`Nao foi possivel excluir ${label} no Supabase.`, error.message);
+  }
+}
+
+async function persistPartner(partner, wasExisting) {
+  if (!window.DocGestorDB) return;
+  const organizationId = await defaultOrganizationId();
+  if (!organizationId) return;
+  const payload = {
+    organization_id: organizationId,
+    name: partner.name,
+    document: partner.document,
+    role: partner.role,
+    contact: partner.contact,
+    phone: partner.phone,
+    status: partner.status,
+  };
+  try {
+    let saved = null;
+    if (wasExisting && looksLikeUuid(partner.id)) {
+      [saved] = await window.DocGestorDB.update("partners", partner.id, payload);
+    } else {
+      [saved] = await window.DocGestorDB.create("partners", payload);
+    }
+    if (saved?.id) {
+      updateLocalId(partners, partner.id, saved.id);
+      partner.id = saved.id;
+      selectedPartnerId = saved.id;
+      renderPartners();
+    }
+  } catch (error) {
+    console.warn("Nao foi possivel salvar o socio no Supabase.", error.message);
+    alert(`Nao foi possivel salvar o socio no banco: ${error.message}`);
+  }
+}
+
+async function persistCompany(company, wasExisting) {
+  if (!window.DocGestorDB) return;
+  const organizationId = await defaultOrganizationId();
+  if (!organizationId) return;
+  const parentId = company.kind === "branch" ? company.parentId : null;
+  if (company.kind === "branch" && !looksLikeUuid(parentId)) {
+    alert("Nao foi possivel salvar a filial no banco porque a matriz ainda nao possui ID valido no Supabase.");
+    return;
+  }
+  const payload = {
+    organization_id: organizationId,
+    kind: company.kind,
+    parent_id: company.kind === "branch" && looksLikeUuid(parentId) ? parentId : null,
+    name: company.name,
+    cnpj: company.cnpj,
+    trade_name: company.tradeName,
+    status: company.status,
+    show_branches: company.showBranches ?? true,
+  };
+  try {
+    let saved = null;
+    if (wasExisting && looksLikeUuid(company.id)) {
+      [saved] = await window.DocGestorDB.update("companies", company.id, payload);
+    } else {
+      [saved] = await window.DocGestorDB.create("companies", payload);
+    }
+    if (saved?.id) {
+      updateLocalId(companies, company.id, saved.id);
+      company.id = saved.id;
+      selectedCompanyId = saved.id;
+      await window.DocGestorDB.removeWhere("company_partners", `company_id=eq.${encodeURIComponent(saved.id)}`);
+      const partnerIds = company.partners.map(partnerIdByName).filter(looksLikeUuid);
+      await Promise.all(partnerIds.map((partnerId) => window.DocGestorDB.create("company_partners", {
+        company_id: saved.id,
+        partner_id: partnerId,
+        role: "Socio",
+      })));
+      populateCompanyParents();
+      renderCompanies();
+    }
+  } catch (error) {
+    console.warn("Nao foi possivel salvar a empresa no Supabase.", error.message);
+    alert(`Nao foi possivel salvar a empresa no banco: ${error.message}`);
+  }
+}
+
+async function persistProperty(property, wasExisting) {
+  if (!window.DocGestorDB) return;
+  const organizationId = await defaultOrganizationId();
+  if (!organizationId) return;
+  const ownerPartnerId = property.ownerType === "pf" ? partnerIdByName(property.owner) : null;
+  const ownerCompanyId = property.ownerType === "pj" ? companyIdByName(property.owner) : null;
+  if ((property.ownerType === "pf" && !looksLikeUuid(ownerPartnerId)) || (property.ownerType === "pj" && !looksLikeUuid(ownerCompanyId))) {
+    alert("Nao foi possivel salvar o imovel no banco porque o proprietario ainda nao possui ID valido no Supabase.");
+    return;
+  }
+  const payload = {
+    organization_id: organizationId,
+    owner_type: property.ownerType,
+    owner_partner_id: property.ownerType === "pf" ? ownerPartnerId : null,
+    owner_company_id: property.ownerType === "pj" ? ownerCompanyId : null,
+    type: property.type,
+    registration: property.registration,
+    reference: property.reference,
+    lot: property.lot,
+    block: property.type === "urban" ? property.block : null,
+    glebe: property.type === "rural" ? property.glebe : null,
+    car_number: property.type === "rural" ? property.carNumber : null,
+    ccir_incra_number: property.type === "rural" ? property.ccirIncra : null,
+    urban_property_registration: property.type === "urban" ? property.municipalRegistration : null,
+    urban_area_m2: property.type === "urban" ? Number(property.urbanArea || 0) : null,
+    rural_area_m2: property.type === "rural" ? Number(property.ruralArea || 0) : null,
+    legal_reserve_m2: property.type === "rural" ? Number(property.legalReserve || 0) : null,
+    app_area_m2: property.type === "rural" ? Number(property.appArea || 0) : null,
+    use_type: property.type === "rural" ? property.ruralUse : null,
+    has_construction: Boolean(property.hasConstruction),
+    construction_area_m2: Number(property.constructionArea || 0),
+    status: property.status,
+  };
+  try {
+    let saved = null;
+    if (wasExisting && looksLikeUuid(property.id)) {
+      [saved] = await window.DocGestorDB.update("properties", property.id, payload);
+    } else {
+      [saved] = await window.DocGestorDB.create("properties", payload);
+    }
+    if (saved?.id) {
+      updateLocalId(properties, property.id, saved.id);
+      property.id = saved.id;
+      selectedPropertyId = saved.id;
+      renderProperties();
+    }
+  } catch (error) {
+    console.warn("Nao foi possivel salvar o imovel no Supabase.", error.message);
+    alert(`Nao foi possivel salvar o imovel no banco: ${error.message}`);
+  }
+}
+
+async function persistEnterprise(enterprise, wasExisting) {
+  if (!window.DocGestorDB) return;
+  const organizationId = await defaultOrganizationId();
+  if (!organizationId) return;
+  const companyId = companyIdByName(enterprise.company);
+  const propertyId = propertyIdByLabel(enterprise.property);
+  const responsibleId = partnerIdByName(enterprise.responsible);
+  if (!looksLikeUuid(companyId) || !looksLikeUuid(propertyId)) {
+    alert("Nao foi possivel salvar o empreendimento no banco porque empresa ou imovel ainda nao possui ID valido no Supabase.");
+    return;
+  }
+  const payload = {
+    organization_id: organizationId,
+    name: enterprise.name,
+    company_id: companyId,
+    property_id: propertyId,
+    type: enterprise.type,
+    status: enterprise.status,
+    responsible_partner_id: looksLikeUuid(responsibleId) ? responsibleId : null,
+    reference: enterprise.reference,
+  };
+  try {
+    let saved = null;
+    if (wasExisting && looksLikeUuid(enterprise.id)) {
+      [saved] = await window.DocGestorDB.update("enterprises", enterprise.id, payload);
+    } else {
+      [saved] = await window.DocGestorDB.create("enterprises", payload);
+    }
+    if (saved?.id) {
+      updateLocalId(enterprises, enterprise.id, saved.id);
+      enterprise.id = saved.id;
+      selectedEnterpriseId = saved.id;
+      await window.DocGestorDB.removeWhere("enterprise_modules", `enterprise_id=eq.${encodeURIComponent(saved.id)}`);
+      await Promise.all(enterpriseModules(enterprise).map((moduleId) => window.DocGestorDB.create("enterprise_modules", {
+        enterprise_id: saved.id,
+        module_id: moduleId,
+      })));
+      renderEnterprises();
+      populateEnvironmentalProcessSelects();
+    }
+  } catch (error) {
+    console.warn("Nao foi possivel salvar o empreendimento no Supabase.", error.message);
+    alert(`Nao foi possivel salvar o empreendimento no banco: ${error.message}`);
+  }
+}
+
+async function persistEnvironmentalLicenseType(licenseType, wasExisting) {
+  if (!window.DocGestorDB) return;
+  const organizationId = await defaultOrganizationId();
+  if (!organizationId) return;
+  const payload = {
+    organization_id: organizationId,
+    name: licenseType.name,
+    code: licenseType.code,
+    validity: licenseType.validity,
+    renewal: licenseType.renewal,
+  };
+  try {
+    let saved = null;
+    if (wasExisting && looksLikeUuid(licenseType.id)) {
+      [saved] = await window.DocGestorDB.update("environmental_license_types", licenseType.id, payload);
+    } else {
+      [saved] = await window.DocGestorDB.create("environmental_license_types", payload);
+    }
+    if (saved?.id) {
+      updateLocalId(environmentalLicenseTypes, licenseType.id, saved.id);
+      licenseType.id = saved.id;
+      await window.DocGestorDB.removeWhere("environmental_license_type_phases", `license_type_id=eq.${encodeURIComponent(saved.id)}`);
+      await Promise.all((licenseType.phases || []).map((phase) => window.DocGestorDB.create("environmental_license_type_phases", {
+        license_type_id: saved.id,
+        phase,
+      })));
+      renderEnvironmentalLicenseTypes();
+      populateChecklistModelSelects();
+    }
+  } catch (error) {
+    console.warn("Nao foi possivel salvar o tipo de licenca no Supabase.", error.message);
+    alert(`Nao foi possivel salvar o tipo de licenca no banco: ${error.message}`);
+  }
+}
+
+async function persistEnvironmentalDocument(documentItem, wasExisting) {
+  if (!window.DocGestorDB) return;
+  const organizationId = await defaultOrganizationId();
+  if (!organizationId) return;
+  const payload = {
+    organization_id: organizationId,
+    name: documentItem.name,
+    expiration: documentItem.expiration,
+    required: documentItem.required,
+  };
+  try {
+    let saved = null;
+    if (wasExisting && looksLikeUuid(documentItem.id)) {
+      [saved] = await window.DocGestorDB.update("environmental_documents", documentItem.id, payload);
+    } else {
+      [saved] = await window.DocGestorDB.create("environmental_documents", payload);
+    }
+    if (saved?.id) {
+      updateLocalId(environmentalDocuments, documentItem.id, saved.id);
+      documentItem.id = saved.id;
+      await window.DocGestorDB.removeWhere("environmental_document_license_types", `document_id=eq.${encodeURIComponent(saved.id)}`);
+      const licenseIds = (documentItem.licenses || []).map(licenseTypeIdByName).filter(looksLikeUuid);
+      await Promise.all(licenseIds.map((licenseTypeId) => window.DocGestorDB.create("environmental_document_license_types", {
+        document_id: saved.id,
+        license_type_id: licenseTypeId,
+      })));
+      renderEnvironmentalDocuments();
+      populateChecklistModelSelects();
+    }
+  } catch (error) {
+    console.warn("Nao foi possivel salvar o documento ambiental no Supabase.", error.message);
+    alert(`Nao foi possivel salvar o documento ambiental no banco: ${error.message}`);
+  }
+}
+
+async function persistChecklistModel(model, wasExisting) {
+  if (!window.DocGestorDB) return;
+  const organizationId = await defaultOrganizationId();
+  if (!organizationId) return;
+  const licenseTypeId = licenseTypeIdByName(model.license);
+  if (!looksLikeUuid(licenseTypeId)) {
+    alert("Nao foi possivel salvar o modelo no banco porque o tipo de licenca ainda nao possui ID valido no Supabase.");
+    return;
+  }
+  const payload = {
+    organization_id: organizationId,
+    name: model.name,
+    license_type_id: licenseTypeId,
+  };
+  try {
+    let saved = null;
+    if (wasExisting && looksLikeUuid(model.id)) {
+      [saved] = await window.DocGestorDB.update("environmental_checklist_models", model.id, payload);
+    } else {
+      [saved] = await window.DocGestorDB.create("environmental_checklist_models", payload);
+    }
+    if (saved?.id) {
+      updateLocalId(checklistModelsAdmin, model.id, saved.id);
+      model.id = saved.id;
+      await window.DocGestorDB.removeWhere("environmental_checklist_model_documents", `checklist_model_id=eq.${encodeURIComponent(saved.id)}`);
+      const documentIds = (model.documents || []).map(documentIdByName).filter(looksLikeUuid);
+      await Promise.all(documentIds.map((documentId, index) => window.DocGestorDB.create("environmental_checklist_model_documents", {
+        checklist_model_id: saved.id,
+        document_id: documentId,
+        display_order: index + 1,
+      })));
+      renderChecklistModelsAdmin();
+    }
+  } catch (error) {
+    console.warn("Nao foi possivel salvar o modelo de check-list no Supabase.", error.message);
+    alert(`Nao foi possivel salvar o modelo de check-list no banco: ${error.message}`);
+  }
 }
 
 async function persistSendRecipient(recipient, wasExisting) {
