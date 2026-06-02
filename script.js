@@ -642,7 +642,7 @@ function applyAccessControl() {
   document.querySelectorAll('[data-admin-target="tipos-licencas"], [data-admin-target="documentos-ambientais"], [data-admin-target="modelos-checklist"]').forEach((element) => {
     element.hidden = !canAccess("adminEnvironmental");
   });
-  document.querySelectorAll('[data-admin-target="email-sistema"], [data-admin-target="envios-admin"], [data-admin-target="historico-alertas"]').forEach((element) => {
+  document.querySelectorAll('[data-admin-target="email-sistema"], [data-admin-target="envios-admin"], [data-admin-target="historico-alertas"], [data-admin-target="backup-sistema"]').forEach((element) => {
     element.hidden = !canAccess("admin");
   });
   const label = field("current-user-label");
@@ -1258,6 +1258,244 @@ field("system-email-verify")?.addEventListener("click", verifySystemEmailDomain)
 if (field("system-email-name")) {
   loadSystemEmailConfig();
   renderSystemEmailConfig();
+}
+
+const BACKUP_CONFIG_KEY = "docgestor.backupConfig";
+
+let backupConfig = {
+  id: null,
+  enabled: true,
+  frequency: "daily",
+  time: "02:00",
+  retentionDays: 90,
+  weekday: 1,
+  monthday: 1,
+  provider: "supabase",
+  destination: "docgestor-backups/ambiental",
+  status: "Configurado",
+  lastBackup: "",
+  nextBackup: "",
+};
+
+function backupFrequencyLabel(value) {
+  return {
+    daily: "Diario",
+    weekly: "Semanal",
+    biweekly: "Quinzenal",
+    monthly: "Mensal",
+  }[value] || value;
+}
+
+function backupProviderLabel(value) {
+  return {
+    supabase: "Supabase Storage",
+    "vercel-blob": "Vercel Blob",
+    "google-drive": "Google Drive",
+    onedrive: "OneDrive/SharePoint",
+    s3: "Amazon S3",
+    backblaze: "Backblaze B2",
+  }[value] || value;
+}
+
+function backupStatusClass(status) {
+  if (status === "Pausado") return "yellow";
+  if (status === "Falhou") return "red";
+  return "green";
+}
+
+function parseBackupTime(value) {
+  const [hour, minute] = String(value || "02:00").split(":").map(Number);
+  return {
+    hour: Number.isFinite(hour) ? hour : 2,
+    minute: Number.isFinite(minute) ? minute : 0,
+  };
+}
+
+function computeNextBackupDate(config = backupConfig) {
+  if (!config.enabled) return "";
+  const now = new Date();
+  const { hour, minute } = parseBackupTime(config.time);
+  const candidate = new Date(now);
+  candidate.setHours(hour, minute, 0, 0);
+
+  if (config.frequency === "daily") {
+    while (candidate <= now) candidate.setDate(candidate.getDate() + 1);
+    return candidate.toISOString();
+  }
+
+  if (config.frequency === "weekly" || config.frequency === "biweekly") {
+    const targetDay = Number(config.weekday ?? 1);
+    const interval = config.frequency === "biweekly" ? 14 : 7;
+    const diff = (targetDay - candidate.getDay() + 7) % 7;
+    candidate.setDate(candidate.getDate() + diff);
+    if (candidate <= now) candidate.setDate(candidate.getDate() + interval);
+    return candidate.toISOString();
+  }
+
+  const monthday = Math.min(Math.max(Number(config.monthday || 1), 1), 28);
+  candidate.setDate(monthday);
+  if (candidate <= now) {
+    candidate.setMonth(candidate.getMonth() + 1);
+    candidate.setDate(monthday);
+  }
+  return candidate.toISOString();
+}
+
+function formatBackupDate(value) {
+  if (!value) return "Ainda nao executado";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function loadBackupConfig() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(BACKUP_CONFIG_KEY) || "null");
+    if (saved) Object.assign(backupConfig, saved);
+  } catch (error) {
+    console.warn("Nao foi possivel carregar a configuracao de backup.", error);
+  }
+  if (!backupConfig.nextBackup) backupConfig.nextBackup = computeNextBackupDate(backupConfig);
+}
+
+function persistBackupConfigLocal() {
+  localStorage.setItem(BACKUP_CONFIG_KEY, JSON.stringify(backupConfig));
+}
+
+async function persistBackupConfigSupabase() {
+  if (!window.DocGestorDB) return;
+  const payload = {
+    enabled: Boolean(backupConfig.enabled),
+    frequency: backupConfig.frequency,
+    backup_time: backupConfig.time,
+    retention_days: Number(backupConfig.retentionDays || 90),
+    weekday: Number(backupConfig.weekday || 1),
+    monthday: Number(backupConfig.monthday || 1),
+    provider: backupConfig.provider,
+    destination: backupConfig.destination,
+    status: backupConfig.status,
+    last_backup_at: backupConfig.lastBackup || null,
+    next_backup_at: backupConfig.nextBackup || null,
+  };
+  try {
+    let saved = null;
+    if (looksLikeUuid(backupConfig.id)) {
+      [saved] = await window.DocGestorDB.update("system_backup_configs", backupConfig.id, payload);
+    } else {
+      [saved] = await window.DocGestorDB.create("system_backup_configs", payload);
+    }
+    if (saved?.id) backupConfig.id = saved.id;
+    persistBackupConfigLocal();
+  } catch (error) {
+    console.warn("Nao foi possivel salvar a configuracao de backup no Supabase.", error.message);
+  }
+}
+
+function backupFormPayload() {
+  return {
+    enabled: field("backup-enabled")?.value === "true",
+    frequency: field("backup-frequency")?.value || "daily",
+    time: field("backup-time")?.value || "02:00",
+    retentionDays: Number(field("backup-retention")?.value || 90),
+    weekday: Number(field("backup-weekday")?.value || 1),
+    monthday: Number(field("backup-monthday")?.value || 1),
+    provider: field("backup-provider")?.value || "supabase",
+    destination: field("backup-destination")?.value?.trim() || "docgestor-backups/ambiental",
+  };
+}
+
+function renderBackupConfig() {
+  if (!field("backup-enabled")) return;
+  field("backup-enabled").value = String(Boolean(backupConfig.enabled));
+  field("backup-frequency").value = backupConfig.frequency;
+  field("backup-time").value = backupConfig.time;
+  field("backup-retention").value = String(backupConfig.retentionDays);
+  field("backup-weekday").value = String(backupConfig.weekday);
+  field("backup-monthday").value = String(backupConfig.monthday);
+  field("backup-provider").value = backupConfig.provider;
+  field("backup-destination").value = backupConfig.destination;
+
+  const status = field("backup-status");
+  if (status) {
+    status.textContent = backupConfig.enabled ? backupConfig.status : "Pausado";
+    status.className = `pill ${backupStatusClass(status.textContent)}`;
+  }
+
+  const summary = field("backup-summary");
+  if (summary) {
+    summary.innerHTML = `
+      <span>Local escolhido</span>
+      <strong>${backupProviderLabel(backupConfig.provider)} - ${escapeHtml(backupConfig.destination)}</strong>
+      <span>Rotina</span>
+      <strong>${backupFrequencyLabel(backupConfig.frequency)} as ${escapeHtml(backupConfig.time)} - retencao de ${Number(backupConfig.retentionDays || 0)} dias</strong>
+      <span>Ultimo backup</span>
+      <strong>${formatBackupDate(backupConfig.lastBackup)}</strong>
+      <span>Proximo backup previsto</span>
+      <strong>${formatBackupDate(backupConfig.nextBackup)}</strong>
+    `;
+  }
+}
+
+async function saveBackupConfig() {
+  const payload = backupFormPayload();
+  if (!payload.destination) {
+    alert("Informe o bucket, pasta ou caminho onde os backups serao armazenados.");
+    return;
+  }
+  const confirmed = window.confirm(`Deseja salvar a rotina de backup ${backupFrequencyLabel(payload.frequency)} as ${payload.time}?`);
+  if (!confirmed) return;
+  Object.assign(backupConfig, payload);
+  backupConfig.status = backupConfig.enabled ? "Configurado" : "Pausado";
+  backupConfig.nextBackup = computeNextBackupDate(backupConfig);
+  persistBackupConfigLocal();
+  renderBackupConfig();
+  await persistBackupConfigSupabase();
+  alert("Configuracao de backup salva.");
+}
+
+function testBackupDestination() {
+  const payload = backupFormPayload();
+  const message = payload.provider === "supabase"
+    ? "Destino valido para a primeira versao. Crie um bucket privado no Supabase Storage com esse nome/caminho antes de ativar a rotina real."
+    : "Destino registrado. Para envio automatico real, sera necessario configurar a credencial segura desse provedor no backend.";
+  alert(`${backupProviderLabel(payload.provider)}\n${payload.destination}\n\n${message}`);
+}
+
+async function generateBackupNow() {
+  const confirmed = window.confirm("Deseja registrar uma execucao manual de backup agora?");
+  if (!confirmed) return;
+  Object.assign(backupConfig, backupFormPayload());
+  backupConfig.lastBackup = new Date().toISOString();
+  backupConfig.nextBackup = computeNextBackupDate(backupConfig);
+  backupConfig.status = "Configurado";
+  persistBackupConfigLocal();
+  renderBackupConfig();
+  await persistBackupConfigSupabase();
+  alert("Backup manual registrado. A geracao real do arquivo sera feita quando conectarmos a rotina backend.");
+}
+
+["backup-enabled", "backup-frequency", "backup-time", "backup-retention", "backup-weekday", "backup-monthday", "backup-provider", "backup-destination"].forEach((id) => {
+  field(id)?.addEventListener("input", () => {
+    const preview = { ...backupConfig, ...backupFormPayload() };
+    preview.nextBackup = computeNextBackupDate(preview);
+    const original = backupConfig;
+    backupConfig = preview;
+    renderBackupConfig();
+    backupConfig = original;
+  });
+});
+field("backup-save")?.addEventListener("click", saveBackupConfig);
+field("backup-test")?.addEventListener("click", testBackupDestination);
+field("backup-run-now")?.addEventListener("click", generateBackupNow);
+if (field("backup-enabled")) {
+  loadBackupConfig();
+  renderBackupConfig();
 }
 
 let sendRecipients = [];
@@ -5164,6 +5402,7 @@ async function loadSupabaseData() {
     alertRecipientModuleRows,
     agendaRows,
     userRows,
+    backupRows,
   ] = await Promise.all([
     dbList("partners"),
     dbList("companies"),
@@ -5181,6 +5420,7 @@ async function loadSupabaseData() {
     dbList("alert_recipient_modules"),
     dbList("agenda_events"),
     dbList("app_users"),
+    dbList("system_backup_configs", "select=*&order=updated_at.desc&limit=1"),
   ]);
 
   const partnerById = Object.fromEntries(partnerRows.map((row) => [row.id, row]));
@@ -5354,6 +5594,25 @@ async function loadSupabaseData() {
     permissions: [],
   }));
 
+  if (backupRows[0]) {
+    Object.assign(backupConfig, {
+      id: backupRows[0].id,
+      enabled: Boolean(backupRows[0].enabled),
+      frequency: backupRows[0].frequency || "daily",
+      time: backupRows[0].backup_time || "02:00",
+      retentionDays: Number(backupRows[0].retention_days || 90),
+      weekday: Number(backupRows[0].weekday || 1),
+      monthday: Number(backupRows[0].monthday || 1),
+      provider: backupRows[0].provider || "supabase",
+      destination: backupRows[0].destination || "docgestor-backups/ambiental",
+      status: backupRows[0].status || "Configurado",
+      lastBackup: backupRows[0].last_backup_at || "",
+      nextBackup: backupRows[0].next_backup_at || "",
+    });
+    if (!backupConfig.nextBackup) backupConfig.nextBackup = computeNextBackupDate(backupConfig);
+    persistBackupConfigLocal();
+  }
+
   selectedPartnerId = partners[0]?.id ?? 0;
   selectedCompanyId = companies[0]?.id ?? 0;
   selectedPropertyId = properties[0]?.id ?? 0;
@@ -5376,6 +5635,7 @@ async function loadSupabaseData() {
   renderSendRecipients();
   renderAgenda();
   renderAgendaNotes();
+  renderBackupConfig();
   updateNextProcessNumber();
   renderLicenseStatus(currentLicenseStatus || "general");
   renderDashboard();

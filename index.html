@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DocGestor by Carminatti | Previa</title>
-    <link rel="stylesheet" href="styles.css?v=20260601-email-modal" />
+    <link rel="stylesheet" href="styles.css?v=20260602-backup-settings" />
   </head>
   <body>
     <section class="login-screen" id="login-screen">
@@ -75,6 +75,10 @@
               <button class="admin-link" data-admin-target="email-sistema">01.4.1 E-mail do Sistema</button>
               <button class="admin-link" data-admin-target="envios-admin">01.4.2 E-mails por Modulo</button>
               <button class="admin-link" data-admin-target="historico-alertas">01.4.3 Historico de Alertas</button>
+            </div>
+            <div class="side-tree-group">
+              <strong>01.5 Configuracoes do Sistema</strong>
+              <button class="admin-link" data-admin-target="backup-sistema">01.5.1 Backup</button>
             </div>
           </div>
           <button class="nav-item" data-view="dashboard" data-permission-view="dashboard">
@@ -400,6 +404,94 @@
                     <span>Use atualizar historico para buscar os envios diretamente no Resend.</span>
                   </div>
                   <div class="crud-list alert-history-list" id="alert-history-list"></div>
+                </section>
+              </section>
+
+              <section class="admin-panel" id="admin-backup-sistema">
+                <div class="section-title">
+                  <div>
+                    <p class="eyebrow">01.5.1 Backup</p>
+                    <h2>Rotina de backup do sistema</h2>
+                  </div>
+                  <span class="pill green" id="backup-status">Configurado</span>
+                </div>
+                <section class="panel">
+                  <div class="backup-layout">
+                    <div>
+                      <div class="form-grid">
+                        <label>Status da rotina
+                          <select id="backup-enabled">
+                            <option value="true">Ativo</option>
+                            <option value="false">Pausado</option>
+                          </select>
+                        </label>
+                        <label>Frequencia
+                          <select id="backup-frequency">
+                            <option value="daily">Diario</option>
+                            <option value="weekly">Semanal</option>
+                            <option value="biweekly">Quinzenal</option>
+                            <option value="monthly">Mensal</option>
+                          </select>
+                        </label>
+                        <label>Horario do backup<input id="backup-time" type="time" value="02:00" /></label>
+                        <label>Retencao dos arquivos
+                          <select id="backup-retention">
+                            <option value="30">30 dias</option>
+                            <option value="60">60 dias</option>
+                            <option value="90">90 dias</option>
+                            <option value="180">180 dias</option>
+                            <option value="365">1 ano</option>
+                          </select>
+                        </label>
+                        <label>Dia da semana
+                          <select id="backup-weekday">
+                            <option value="1">Segunda-feira</option>
+                            <option value="2">Terca-feira</option>
+                            <option value="3">Quarta-feira</option>
+                            <option value="4">Quinta-feira</option>
+                            <option value="5">Sexta-feira</option>
+                            <option value="6">Sabado</option>
+                            <option value="0">Domingo</option>
+                          </select>
+                        </label>
+                        <label>Dia do mes<input id="backup-monthday" type="number" min="1" max="28" value="1" /></label>
+                        <label>Local de armazenamento
+                          <select id="backup-provider">
+                            <option value="supabase">Supabase Storage</option>
+                            <option value="vercel-blob">Vercel Blob</option>
+                            <option value="google-drive">Google Drive</option>
+                            <option value="onedrive">OneDrive/SharePoint</option>
+                            <option value="s3">Amazon S3</option>
+                            <option value="backblaze">Backblaze B2</option>
+                          </select>
+                        </label>
+                        <label>Bucket, pasta ou caminho<input id="backup-destination" placeholder="docgestor-backups/ambiental" /></label>
+                      </div>
+                      <div class="backup-summary" id="backup-summary"></div>
+                      <div class="modal-actions inline-actions">
+                        <button class="ghost" id="backup-test" type="button">Testar destino</button>
+                        <button class="ghost" id="backup-run-now" type="button">Gerar backup agora</button>
+                        <button class="primary" id="backup-save" type="button">Salvar configuracao</button>
+                      </div>
+                    </div>
+                    <aside class="backup-recommendations">
+                      <article>
+                        <span>Recomendado agora</span>
+                        <strong>Supabase Storage privado</strong>
+                        <small>Melhor primeira escolha porque o sistema ja usa Supabase e o backup fica no mesmo ecossistema, em bucket privado.</small>
+                      </article>
+                      <article>
+                        <span>Profissional escalavel</span>
+                        <strong>Amazon S3 ou Backblaze B2</strong>
+                        <small>Boa opcao para volume maior, retencao longa e politica de copias separadas do banco principal.</small>
+                      </article>
+                      <article>
+                        <span>Acesso manual</span>
+                        <strong>Google Drive ou OneDrive</strong>
+                        <small>Util quando a empresa quer localizar arquivos manualmente, mas exige integracao propria para automatizar.</small>
+                      </article>
+                    </aside>
+                  </div>
                 </section>
               </section>
             </div>
@@ -1717,9 +1809,9 @@
       </section>
     </div>
 
-    <script src="supabase-config.js?v=20260602-settings-profile"></script>
-    <script src="database.js?v=20260602-settings-profile"></script>
-    <script src="script.js?v=20260602-settings-profile"></script>
+    <script src="supabase-config.js?v=20260602-backup-settings"></script>
+    <script src="database.js?v=20260602-backup-settings"></script>
+    <script src="script.js?v=20260602-backup-settings"></script>
   </body>
 </html>
 
