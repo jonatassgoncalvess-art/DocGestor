@@ -1,4 +1,4 @@
-const navItems = document.querySelectorAll(".nav-item");
+﻿const navItems = document.querySelectorAll(".nav-item");
 const views = document.querySelectorAll(".view");
 const title = document.querySelector("#page-title");
 const adminSubnav = document.querySelector("#admin-subnav");
@@ -11,12 +11,12 @@ const titles = {
   admin: "Painel Admin",
   dashboard: "Painel geral",
   cadastros: "Cadastros",
-  modulos: "Modulos",
-  licencas: "03.1 Licencas Ambientais",
-  usuarios: "Usuarios e permissoes",
-  agenda: "04.1 Calendario",
-  "agenda-notes": "04.2 Anotacoes",
-  settings: "05 Configuracoes",
+  modulos: "Módulos",
+  licencas: "03.1 Licenças Ambientais",
+  usuarios: "Usuários e permissões",
+  agenda: "04.1 Calendário",
+  "agenda-notes": "04.2 Anotações",
+  settings: "05 Configurações",
   "profile-settings": "05.1 Perfil",
 };
 
@@ -198,30 +198,30 @@ const globalSearchResults = document.querySelector("#global-search-results");
 const searchableEnvironments = [
   { code: "00", title: "Home", detail: "Entrada principal do sistema", permission: "home", action: () => openView("home") },
   { code: "01", title: "Painel Admin", detail: "Ambiente administrativo", permission: "admin", action: () => openView("admin") },
-  { code: "01.1", title: "Usuarios", detail: "Cadastro, acesso, senha e permissoes", permission: "users", action: () => openAdminSearchPanel("usuarios-admin") },
-  { code: "01.2.1", title: "Socios", detail: "Socios e responsaveis legais", permission: "registries", action: () => openAdminSearchPanel("socios-admin") },
-  { code: "01.2.2", title: "Empresas e Filiais", detail: "Matrizes, filiais e socios vinculados", permission: "registries", action: () => openAdminSearchPanel("empresas-filiais") },
-  { code: "01.2.3", title: "Imoveis", detail: "Imoveis urbanos, rurais e proprietarios", permission: "registries", action: () => openAdminSearchPanel("imoveis-admin") },
-  { code: "01.2.4", title: "Empreendimento", detail: "Empresas vinculadas a imoveis", permission: "registries", action: () => openAdminSearchPanel("empreendimentos-admin") },
+  { code: "01.1", title: "Usuários", detail: "Cadastro, acesso, senha e permissões", permission: "users", action: () => openAdminSearchPanel("usuarios-admin") },
+  { code: "01.2.1", title: "Sócios", detail: "Sócios e responsáveis legais", permission: "registries", action: () => openAdminSearchPanel("socios-admin") },
+  { code: "01.2.2", title: "Empresas e Filiais", detail: "Matrizes, filiais e sócios vinculados", permission: "registries", action: () => openAdminSearchPanel("empresas-filiais") },
+  { code: "01.2.3", title: "Imóveis", detail: "Imóveis urbanos, rurais e proprietários", permission: "registries", action: () => openAdminSearchPanel("imoveis-admin") },
+  { code: "01.2.4", title: "Empreendimento", detail: "Empresas vinculadas a imóveis", permission: "registries", action: () => openAdminSearchPanel("empreendimentos-admin") },
   { code: "01.2.5", title: "Atividades", detail: "Atividades, CNAE, CNPJ e CTF/APP", permission: "registries", action: () => openAdminSearchPanel("atividades-admin") },
-  { code: "01.3.1", title: "Tipos de Licencas", detail: "Classificacao ambiental", permission: "adminEnvironmental", action: () => openAdminSearchPanel("tipos-licencas") },
-  { code: "01.3.2", title: "Documentos", detail: "Documentos ambientais por licenca", permission: "adminEnvironmental", action: () => openAdminSearchPanel("documentos-ambientais") },
+  { code: "01.3.1", title: "Tipos de Licenças", detail: "Classificação ambiental", permission: "adminEnvironmental", action: () => openAdminSearchPanel("tipos-licencas") },
+  { code: "01.3.2", title: "Documentos", detail: "Documentos ambientais por licença", permission: "adminEnvironmental", action: () => openAdminSearchPanel("documentos-ambientais") },
   { code: "01.3.3", title: "Modelos de Check-list", detail: "Modelos usados nos processos", permission: "adminEnvironmental", action: () => openAdminSearchPanel("modelos-checklist") },
-  { code: "01.4.1", title: "E-mail do Sistema", detail: "Remetente oficial e dominio", permission: "admin", action: () => openAdminSearchPanel("email-sistema") },
-  { code: "01.4.2", title: "E-mails por Modulo", detail: "Destinatarios dos alertas", permission: "admin", action: () => openAdminSearchPanel("envios-admin") },
-  { code: "01.4.3", title: "Historico de Alertas", detail: "Status dos envios no Resend", permission: "admin", action: () => openAdminSearchPanel("historico-alertas") },
+  { code: "01.4.1", title: "E-mail do Sistema", detail: "Remetente oficial e domínio", permission: "admin", action: () => openAdminSearchPanel("email-sistema") },
+  { code: "01.4.2", title: "E-mails por Módulo", detail: "Destinatários dos alertas", permission: "admin", action: () => openAdminSearchPanel("envios-admin") },
+  { code: "01.4.3", title: "Histórico de Alertas", detail: "Status dos envios no Resend", permission: "admin", action: () => openAdminSearchPanel("historico-alertas") },
   { code: "01.5.1", title: "Backup", detail: "Frequencia, horario e armazenamento", permission: "admin", action: () => openAdminSearchPanel("backup-sistema") },
   { code: "02", title: "Painel Geral", detail: "Indicadores e prazos reais", permission: "dashboard", action: () => openView("dashboard") },
-  { code: "03", title: "Modulos", detail: "Entrada dos modulos operacionais", permission: "modules", action: () => openView("modulos") },
-  { code: "03.1", title: "Licencas Ambientais", detail: "Relatorio geral de processos e licencas", permission: "environmental", action: () => openLicenseStatus("general") },
+  { code: "03", title: "Módulos", detail: "Entrada dos módulos operacionais", permission: "modules", action: () => openView("modulos") },
+  { code: "03.1", title: "Licenças Ambientais", detail: "Relatório geral de processos e licenças", permission: "environmental", action: () => openLicenseStatus("general") },
   { code: "03.1.1", title: "Abertas", detail: "Processos ambientais em aberto", permission: "environmental", action: () => openLicenseStatus("open") },
   { code: "03.1.2", title: "Pendentes", detail: "Processos pendentes", permission: "environmental", action: () => openLicenseStatus("pending") },
-  { code: "03.1.3", title: "Vencidas", detail: "Processos e licencas vencidos", permission: "environmental", action: () => openLicenseStatus("expired") },
-  { code: "03.1.4", title: "Concluidas", detail: "Processos concluidos", permission: "environmental", action: () => openLicenseStatus("done") },
-  { code: "03.1.5", title: "Licencas", detail: "Licencas ambientais geradas", permission: "environmental", action: () => openLicenseStatus("licenses") },
-  { code: "04.1", title: "Calendario", detail: "Agenda em formato calendario", permission: "agenda", action: () => openView("agenda") },
-  { code: "04.2", title: "Anotacoes", detail: "Agendamentos e alertas pendentes", permission: "agenda", action: () => openView("agenda-notes") },
-  { code: "05.1", title: "Perfil", detail: "Dados cadastrais e senha do usuario", permission: "profile", action: () => openView("profile-settings") },
+  { code: "03.1.3", title: "Vencidas", detail: "Processos e licenças vencidos", permission: "environmental", action: () => openLicenseStatus("expired") },
+  { code: "03.1.4", title: "Concluídas", detail: "Processos concluídos", permission: "environmental", action: () => openLicenseStatus("done") },
+  { code: "03.1.5", title: "Licenças", detail: "Licenças ambientais geradas", permission: "environmental", action: () => openLicenseStatus("licenses") },
+  { code: "04.1", title: "Calendário", detail: "Agenda em formato calendário", permission: "agenda", action: () => openView("agenda") },
+  { code: "04.2", title: "Anotações", detail: "Agendamentos e alertas pendentes", permission: "agenda", action: () => openView("agenda-notes") },
+  { code: "05.1", title: "Perfil", detail: "Dados cadastrais e senha do usuário", permission: "profile", action: () => openView("profile-settings") },
 ];
 
 function normalizeSearchText(value) {
@@ -236,7 +236,7 @@ function searchableProcessItems() {
   return environmentalProcesses.map((process) => ({
     code: process.internalNumber || process.number || "Processo",
     title: process.title || process.type || "Processo ambiental",
-    detail: `${process.statusLabel || processStatusLabel(process.status)} - ${process.company || "Empresa nao informada"} - ${process.type || "Licenca ambiental"}`,
+    detail: `${process.statusLabel || processStatusLabel(process.status)} - ${process.company || "Empresa não informada"} - ${process.type || "Licença ambiental"}`,
     kind: "Processo ambiental",
     permission: "environmental",
     action: () => {
@@ -280,7 +280,7 @@ function renderGlobalSearchResults() {
           `,
         )
         .join("")
-    : `<button type="button" disabled><span>Busca</span><strong>Nenhum resultado encontrado</strong><small>Digite outro termo ou numero do ambiente.</small></button>`;
+    : `<button type="button" disabled><span>Busca</span><strong>Nenhum resultado encontrado</strong><small>Digite outro termo ou número do ambiente.</small></button>`;
   globalSearchResults.dataset.results = JSON.stringify(results.map((item) => item.code));
   globalSearchResults.__docGestorResults = results;
 }
@@ -359,7 +359,7 @@ function addAgendaEvent(event) {
 }
 
 function agendaLinkedText(linkedTarget) {
-  return linkedTarget?.label || "Nenhum processo ou licenca selecionado.";
+  return linkedTarget?.label || "Nenhum processo ou licença selecionado.";
 }
 
 function updateAgendaLinkBox() {
@@ -367,7 +367,7 @@ function updateAgendaLinkBox() {
   const box = field("agenda-note-link-box");
   const summary = field("agenda-note-link-summary");
   if (box) box.hidden = !enabled;
-  if (summary) summary.textContent = enabled ? agendaLinkedText(agendaLinkSelection) : "Nenhum processo ou licenca selecionado.";
+  if (summary) summary.textContent = enabled ? agendaLinkedText(agendaLinkSelection) : "Nenhum processo ou licença selecionado.";
 }
 
 function pendingAgendaEvents() {
@@ -444,8 +444,8 @@ function renderAgendaNotes() {
               <div>
                 <strong>${eventItem.type}</strong>
                 <span>${eventItem.description || "Sem descricao"}</span>
-                ${eventItem.linkedTarget ? `<span>Vinculo: ${eventItem.linkedTarget.label}</span>` : ""}
-                <span class="pill ${eventItem.status === "danger" ? "red" : eventItem.status === "warning" ? "yellow" : "green"}">${eventItem.status === "danger" ? "Critico" : eventItem.status === "warning" ? "Atencao" : "Normal"}</span>
+                ${eventItem.linkedTarget ? `<span>Vínculo: ${eventItem.linkedTarget.label}</span>` : ""}
+                <span class="pill ${eventItem.status === "danger" ? "red" : eventItem.status === "warning" ? "yellow" : "green"}">${eventItem.status === "danger" ? "Crítico" : eventItem.status === "warning" ? "Atenção" : "Normal"}</span>
               </div>
               <div>
                 <button type="button" data-agenda-note-action="edit" data-agenda-note-id="${eventItem.id}">Editar</button>
@@ -490,7 +490,7 @@ function renderAgendaLinkPicker() {
             <article>
               <div>
                 <strong>${item.label}</strong>
-                <span>${item.type === "license" ? "Licenca" : "Processo"}</span>
+                <span>${item.type === "license" ? "Licença" : "Processo"}</span>
               </div>
               <div>
                 <span>${item.detail}</span>
@@ -503,7 +503,7 @@ function renderAgendaLinkPicker() {
           `,
         )
         .join("")
-    : `<article><strong>Nenhum registro</strong><span>Nao ha itens para o filtro selecionado.</span><div></div></article>`;
+    : `<article><strong>Nenhum registro</strong><span>Não há itens para o filtro selecionado.</span><div></div></article>`;
 }
 
 function openAgendaLinkPicker() {
@@ -555,7 +555,7 @@ function renderAgendaUpcoming() {
           `,
         )
         .join("")
-    : `<div class="agenda-empty">Nao ha proximos compromissos.</div>`;
+    : `<div class="agenda-empty">Não há próximos compromissos.</div>`;
 }
 
 function renderAgenda() {
@@ -773,7 +773,7 @@ function applyAccessControl() {
     element.hidden = !canAccess("admin");
   });
   const label = field("current-user-label");
-  if (label) label.textContent = currentUser ? `${currentUser.name} - ${currentUser.profile}` : "Usuario";
+  if (label) label.textContent = currentUser ? `${currentUser.name} - ${currentUser.profile}` : "Usuário";
 }
 
 function setPermissionChecks(user) {
@@ -831,7 +831,7 @@ function fillProfileForm() {
   field("profile-access-profile").value = currentUser.profile || "";
   const status = field("profile-status-pill");
   if (status) {
-    status.textContent = currentUser.status || "Usuario ativo";
+    status.textContent = currentUser.status || "Usuário ativo";
     status.className = `pill ${userStatusClass(currentUser.status || "Ativo")}`;
   }
 }
@@ -867,7 +867,7 @@ async function persistCurrentUserProfile(user) {
       role_title: user.roleTitle,
     });
   } catch (error) {
-    console.warn("Nao foi possivel salvar o perfil no Supabase.", error.message);
+    console.warn("Não foi possível salvar o perfil no Supabase.", error.message);
   }
 }
 
@@ -879,7 +879,7 @@ async function persistCurrentUserPassword(user) {
       status: user.status,
     });
   } catch (error) {
-    console.warn("Nao foi possivel salvar a senha no Supabase.", error.message);
+    console.warn("Não foi possível salvar a senha no Supabase.", error.message);
   }
 }
 
@@ -905,7 +905,7 @@ function saveProfilePassword() {
     return;
   }
   if (newPassword !== confirmation) {
-    alert("A confirmacao da nova senha nao confere.");
+    alert("A confirmação da nova senha não confere.");
     return;
   }
   currentUser.password = newPassword;
@@ -987,7 +987,7 @@ function renderUsers() {
           </div>
           <div class="user-row-actions">
             <button type="button" data-user-action="edit" data-user-id="${user.id}">Editar</button>
-            <button type="button" data-user-action="permissions" data-user-id="${user.id}">Permissoes</button>
+            <button type="button" data-user-action="permissions" data-user-id="${user.id}">Permissões</button>
             <button type="button" data-user-action="reset" data-user-id="${user.id}">Redefinir senha</button>
             <button type="button" data-user-action="block" data-user-id="${user.id}">Bloquear</button>
             <button type="button" data-user-action="delete" data-user-id="${user.id}">Excluir</button>
@@ -1019,11 +1019,11 @@ function saveCurrentUser() {
   if (existing) {
     Object.assign(existing, payload);
     selectedUserId = existing.id;
-    addUserLog("Usuario atualizado", `${existing.name} teve cadastro e nivel de acesso revisados.`);
+    addUserLog("Usuário atualizado", `${existing.name} teve cadastro e nível de acesso revisados.`);
   } else {
     users.push(payload);
     selectedUserId = payload.id;
-    addUserLog("Usuario criado", `${payload.name} foi incluido no sistema.`);
+    addUserLog("Usuário criado", `${payload.name} foi incluído no sistema.`);
   }
 
   renderUsers();
@@ -1044,11 +1044,11 @@ function newUser() {
   field("user-branch").value = "Todas";
   field("user-profile").value = "Consulta";
   field("user-status").value = "Convite enviado";
-  if (permissionUser) permissionUser.textContent = "Novo usuario";
+  if (permissionUser) permissionUser.textContent = "Novo usuário";
   renderUsers();
-  document.querySelector("#user-modal-title").textContent = "Novo usuario";
+  document.querySelector("#user-modal-title").textContent = "Novo usuário";
   openModal("user-modal");
-  addUserLog("Novo usuario", "Formulario limpo para cadastrar um novo acesso.");
+  addUserLog("Novo usuário", "Formulário limpo para cadastrar um novo acesso.");
 }
 
 function updateUserStatus(id, status, titleText) {
@@ -1058,7 +1058,7 @@ function updateUserStatus(id, status, titleText) {
   selectedUserId = id;
   fillUserForm(user);
   renderUsers();
-  addUserLog(titleText, `${user.name} agora esta com status: ${status}.`);
+  addUserLog(titleText, `${user.name} agora está com status: ${status}.`);
 }
 
 function generateSixDigitPassword() {
@@ -1073,7 +1073,7 @@ function openPasswordConfirmation(user) {
   const confirmButton = document.querySelector("#confirm-password-reset");
   const cancelButton = document.querySelector("#cancel-password-reset");
   const okButton = document.querySelector("#password-ok");
-  if (confirmText) confirmText.textContent = `Deseja Realmente Alterar a Senha do Usuario ${user.name}?`;
+  if (confirmText) confirmText.textContent = `Deseja Realmente Alterar a Senha do Usuário ${user.name}?`;
   if (generatedBox) generatedBox.hidden = true;
   if (generatedValue) generatedValue.textContent = "000000";
   if (confirmButton) confirmButton.hidden = false;
@@ -1088,11 +1088,11 @@ document.querySelector("#login-form")?.addEventListener("submit", (event) => {
   event.preventDefault();
   const result = authenticate(field("login-user")?.value, field("login-password")?.value);
   if (!result) {
-    loginError("Usuario ou senha invalidos.");
+    loginError("Usuário ou senha inválidos.");
     return;
   }
   if (result.blocked) {
-    loginError(`O usuario ${result.user.name} esta ${result.user.status.toLowerCase()}.`);
+    loginError(`O usuário ${result.user.name} está ${result.user.status.toLowerCase()}.`);
     return;
   }
   loginUser(result);
@@ -1108,7 +1108,7 @@ document.querySelector("#permissions-save")?.addEventListener("click", () => {
   const user = selectedUser();
   user.permissions = readPermissionChecks();
   closeModal("permissions-modal");
-  addUserLog("Permissoes salvas", `Permissoes exclusivas atualizadas para ${user.name}.`);
+  addUserLog("Permissões salvas", `Permissões exclusivas atualizadas para ${user.name}.`);
   if (currentUser && sameId(currentUser.id, user.id)) applyAccessControl();
 });
 document.querySelector("#confirm-password-reset")?.addEventListener("click", () => {
@@ -1158,7 +1158,7 @@ userList?.addEventListener("click", (event) => {
   if (button.dataset.userAction === "edit") {
     fillUserForm(user);
     renderUsers();
-    document.querySelector("#user-modal-title").textContent = "Editar usuario";
+    document.querySelector("#user-modal-title").textContent = "Editar usuário";
     openModal("user-modal");
     addUserLog("Edicao carregada", `${user.name} foi carregado no formulario.`);
   }
@@ -1168,7 +1168,7 @@ userList?.addEventListener("click", (event) => {
     setPermissionChecks(user);
     renderUsers();
     openModal("permissions-modal");
-    addUserLog("Permissoes abertas", `Matriz de permissoes exibida para ${user.name}.`);
+    addUserLog("Permissões abertas", `Matriz de permissões exibida para ${user.name}.`);
   }
 
   if (button.dataset.userAction === "reset") {
@@ -1179,11 +1179,11 @@ userList?.addEventListener("click", (event) => {
   }
 
   if (button.dataset.userAction === "block") {
-    updateUserStatus(id, "Bloqueado", "Usuario bloqueado");
+    updateUserStatus(id, "Bloqueado", "Usuário bloqueado");
   }
 
   if (button.dataset.userAction === "delete") {
-    confirmDelete(`Deseja realmente excluir o usuario ${user.name}?`, () => {
+    confirmDelete(`Deseja realmente excluir o usuário ${user.name}?`, () => {
       const index = users.findIndex((item) => sameId(item.id, id));
       if (index >= 0) users.splice(index, 1);
       selectedUserId = users[0]?.id ?? 0;
@@ -1206,7 +1206,7 @@ const systemEmailConfig = {
   host: "api.resend.com",
   port: "",
   user: "RESEND_API_KEY",
-  status: "Aguardando validacao",
+  status: "Aguardando validação",
   lastTest: "",
 };
 
@@ -1235,12 +1235,12 @@ function loadSystemEmailConfig() {
         host: "api.resend.com",
         port: "",
         user: "RESEND_API_KEY",
-        status: "Aguardando validacao",
+        status: "Aguardando validação",
       });
       persistSystemEmailConfig();
     }
   } catch (error) {
-    console.warn("Nao foi possivel carregar a configuracao de e-mail.", error);
+    console.warn("Não foi possível carregar a configuração de e-mail.", error);
   }
 }
 
@@ -1302,20 +1302,20 @@ function systemEmailHasChanges(payload) {
 function saveSystemEmailConfig() {
   const payload = systemEmailFormPayload();
   if (!payload.name || !payload.address || !payload.domain || !payload.provider) {
-    alert("Preencha nome do remetente, e-mail remetente, dominio autorizado e provedor.");
+    alert("Preencha nome do remetente, e-mail remetente, domínio autorizado e provedor.");
     return;
   }
   if (!systemEmailHasChanges(payload)) {
-    alert("Nenhuma alteracao encontrada na configuracao de e-mail.");
+    alert("Nenhuma alteração encontrada na configuração de e-mail.");
     return;
   }
   const confirmed = window.confirm(`Deseja alterar o e-mail de envio do sistema para ${payload.name} <${payload.address}>?`);
   if (!confirmed) return;
   Object.assign(systemEmailConfig, payload);
-  systemEmailConfig.status = "Aguardando validacao";
+  systemEmailConfig.status = "Aguardando validação";
   persistSystemEmailConfig();
   renderSystemEmailConfig();
-  alert("Configuracao de e-mail alterada no sistema. Verifique o dominio antes de liberar envios reais.");
+  alert("Configuracao de e-mail alterada no sistema. Verifique o domínio antes de liberar envios reais.");
 }
 
 function openSystemEmailTestModal() {
@@ -1343,7 +1343,7 @@ async function sendSystemEmail({ to, subject, html }) {
   });
   const result = await response.json();
   if (!response.ok || !result.success) {
-    throw new Error(result.error || "verifique a configuracao do provedor");
+    throw new Error(result.error || "verifique a configuração do provedor");
   }
   return result;
 }
@@ -1469,7 +1469,7 @@ function computeNextBackupDate(config = backupConfig) {
 }
 
 function formatBackupDate(value) {
-  if (!value) return "Ainda nao executado";
+  if (!value) return "Ainda não executado";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString("pt-BR", {
@@ -1486,7 +1486,7 @@ function loadBackupConfig() {
     const saved = JSON.parse(localStorage.getItem(BACKUP_CONFIG_KEY) || "null");
     if (saved) Object.assign(backupConfig, saved);
   } catch (error) {
-    console.warn("Nao foi possivel carregar a configuracao de backup.", error);
+    console.warn("Não foi possível carregar a configuração de backup.", error);
   }
   if (!backupConfig.nextBackup) backupConfig.nextBackup = computeNextBackupDate(backupConfig);
 }
@@ -1520,7 +1520,7 @@ async function persistBackupConfigSupabase() {
     if (saved?.id) backupConfig.id = saved.id;
     persistBackupConfigLocal();
   } catch (error) {
-    console.warn("Nao foi possivel salvar a configuracao de backup no Supabase.", error.message);
+    console.warn("Não foi possível salvar a configuração de backup no Supabase.", error.message);
   }
 }
 
@@ -1572,7 +1572,7 @@ function renderBackupConfig() {
 async function saveBackupConfig() {
   const payload = backupFormPayload();
   if (!payload.destination) {
-    alert("Informe o bucket, pasta ou caminho onde os backups serao armazenados.");
+    alert("Informe o bucket, pasta ou caminho onde os backups serão armazenados.");
     return;
   }
   const confirmed = window.confirm(`Deseja salvar a rotina de backup ${backupFrequencyLabel(payload.frequency)} as ${payload.time}?`);
@@ -1590,7 +1590,7 @@ function testBackupDestination() {
   const payload = backupFormPayload();
   const message = payload.provider === "supabase"
     ? "Destino valido para a primeira versao. Crie um bucket privado no Supabase Storage com esse nome/caminho antes de ativar a rotina real."
-    : "Destino registrado. Para envio automatico real, sera necessario configurar a credencial segura desse provedor no backend.";
+    : "Destino registrado. Para envio automático real, será necessário configurar a credencial segura desse provedor no backend.";
   alert(`${backupProviderLabel(payload.provider)}\n${payload.destination}\n\n${message}`);
 }
 
@@ -1604,7 +1604,7 @@ async function generateBackupNow() {
   persistBackupConfigLocal();
   renderBackupConfig();
   await persistBackupConfigSupabase();
-  alert("Backup manual registrado. A geracao real do arquivo sera feita quando conectarmos a rotina backend.");
+  alert("Backup manual registrado. A geração real do arquivo será feita quando conectarmos a rotina backend.");
 }
 
 ["backup-enabled", "backup-frequency", "backup-time", "backup-retention", "backup-weekday", "backup-monthday", "backup-provider", "backup-destination"].forEach((id) => {
@@ -1630,7 +1630,7 @@ let sendRecipients = [];
 let selectedSendRecipientId = 0;
 
 const availableAlertModules = [
-  { id: "environmental", name: "03.1 Licencas Ambientais" },
+  { id: "environmental", name: "03.1 Licenças Ambientais" },
 ];
 
 function sendModuleLabel(moduleKey) {
@@ -1646,7 +1646,7 @@ function sendRecipientModules(recipient) {
 function renderSendRecipientModuleChecks(selectedModules = ["environmental"]) {
   const wrapper = field("send-recipient-module-checks");
   if (!wrapper) return;
-  wrapper.innerHTML = `<span>Modulos vinculados</span>${availableAlertModules
+  wrapper.innerHTML = `<span>Módulos vinculados</span>${availableAlertModules
     .map(
       (module) => `
         <label>
@@ -1690,7 +1690,7 @@ function renderSendRecipients() {
           <div>
             <strong>${sendRecipientModules(recipient).map(sendModuleLabel).join(", ")}</strong>
             <span>${recipient.relation} - ${recipient.status}</span>
-            <span>Confirmacao de leitura: ${recipient.readConfirmation ? "Exigida" : "Nao exigida"}</span>
+            <span>Confirmação de leitura: ${recipient.readConfirmation ? "Exigida" : "Não exigida"}</span>
           </div>
           <div>
             <button type="button" data-send-recipient-action="edit" data-send-recipient-id="${recipient.id}">Editar</button>
@@ -1759,7 +1759,7 @@ field("send-recipient-list")?.addEventListener("click", (event) => {
     recipient.sent += 1;
     if (!recipient.readConfirmation) recipient.read += 1;
     renderSendRecipients();
-    alert(`E-mail teste registrado para ${recipient.email}. ${recipient.readConfirmation ? "Aguardando confirmacao de leitura." : "Confirmacao de leitura nao exigida."}`);
+    alert(`E-mail teste registrado para ${recipient.email}. ${recipient.readConfirmation ? "Aguardando confirmação de leitura." : "Confirmação de leitura não exigida."}`);
   }
   if (button.dataset.sendRecipientAction === "delete") {
     confirmDelete(`Deseja realmente excluir o e-mail ${recipient.email} dos envios?`, () => {
@@ -1799,7 +1799,7 @@ function alertHistoryStatusClass(status) {
 }
 
 function formatAlertHistoryDate(value) {
-  if (!value) return "Nao informado";
+  if (!value) return "Não informado";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return new Intl.DateTimeFormat("pt-BR", {
@@ -1837,7 +1837,7 @@ function renderAlertHistory(items = []) {
   list.innerHTML = items
     .map((item) => {
       const status = item.last_event || "sent";
-      const recipients = Array.isArray(item.to) ? item.to.join(", ") : item.to || "Nao informado";
+      const recipients = Array.isArray(item.to) ? item.to.join(", ") : item.to || "Não informado";
       return `
         <article>
           <div>
@@ -1845,9 +1845,9 @@ function renderAlertHistory(items = []) {
             <span>${escapeHtml(recipients)}</span>
           </div>
           <div>
-            <strong>${escapeHtml(item.from || "Remetente nao informado")}</strong>
+            <strong>${escapeHtml(item.from || "Remetente não informado")}</strong>
             <span>Enviado em ${escapeHtml(formatAlertHistoryDate(item.created_at))}</span>
-            <span>ID Resend: ${escapeHtml(item.id || "Nao informado")}</span>
+            <span>ID Resend: ${escapeHtml(item.id || "Não informado")}</span>
           </div>
           <div>
             <span class="pill ${alertHistoryStatusClass(status)}">${escapeHtml(alertHistoryStatusLabels[status] || status)}</span>
@@ -1862,17 +1862,17 @@ async function loadAlertHistory() {
   const button = field("alert-history-refresh");
   const summary = field("alert-history-summary");
   if (button) button.disabled = true;
-  if (summary) summary.innerHTML = "<span>Buscando historico no Resend...</span>";
+  if (summary) summary.innerHTML = "<span>Buscando histórico no Resend...</span>";
   try {
     const response = await fetch("/api/historico-alertas");
     const result = await response.json();
     if (!response.ok || !result.success) {
-      throw new Error(result.error || "Nao foi possivel carregar o historico.");
+      throw new Error(result.error || "Não foi possível carregar o histórico.");
     }
     renderAlertHistory(result.emails || []);
   } catch (error) {
     console.error(error);
-    if (summary) summary.innerHTML = `<span>Erro ao buscar historico: ${escapeHtml(error.message)}</span>`;
+    if (summary) summary.innerHTML = `<span>Erro ao buscar histórico: ${escapeHtml(error.message)}</span>`;
   } finally {
     if (button) button.disabled = false;
   }
@@ -1928,11 +1928,11 @@ function newPartner() {
   field("partner-id").value = id;
   field("partner-name").value = "";
   field("partner-document").value = "";
-  field("partner-role").value = "Socio";
+  field("partner-role").value = "Sócio";
   field("partner-contact").value = "";
   field("partner-phone").value = "";
   field("partner-status").value = "Ativo";
-  document.querySelector("#partner-modal-title").textContent = "Novo socio";
+  document.querySelector("#partner-modal-title").textContent = "Novo sócio";
   openModal("partner-modal");
 }
 
@@ -1977,18 +1977,18 @@ partnerList?.addEventListener("click", (event) => {
 
   if (button.dataset.partnerAction === "edit") {
     fillPartnerForm(partner);
-    document.querySelector("#partner-modal-title").textContent = "Editar socio";
+    document.querySelector("#partner-modal-title").textContent = "Editar sócio";
     openModal("partner-modal");
   }
 
   if (button.dataset.partnerAction === "delete") {
-    confirmDelete(`Deseja realmente excluir o socio ${partner.name}?`, () => {
+    confirmDelete(`Deseja realmente excluir o sócio ${partner.name}?`, () => {
       const index = partners.findIndex((item) => sameId(item.id, id));
       if (index >= 0) partners.splice(index, 1);
       selectedPartnerId = partners[0]?.id ?? 0;
       renderPartners();
       if (partners.length) fillPartnerForm(selectedPartner());
-      persistDelete("partners", id, "socio");
+      persistDelete("partners", id, "sócio");
     });
   }
 });
@@ -2032,12 +2032,12 @@ function selectedCompanyPartners() {
 function renderCompanyPartnerChecks(selectedPartners = []) {
   const wrapper = field("company-partner-checks");
   if (!wrapper) return;
-  wrapper.innerHTML = `<span>Socios vinculados</span>${
+  wrapper.innerHTML = `<span>Sócios vinculados</span>${
     partners.length
       ? partners
           .map((partner) => `<label><input type="checkbox" name="company-partner" value="${partner.name}" ${selectedPartners.includes(partner.name) ? "checked" : ""} /> ${partner.name}</label>`)
           .join("")
-      : "<small>Nenhum socio cadastrado.</small>"
+      : "<small>Nenhum sócio cadastrado.</small>"
   }`;
 }
 
@@ -2079,7 +2079,7 @@ function renderCompanies() {
                 <div class="branch-row">
                   <div><strong>${branch.name}</strong><span>Filial - ${branch.cnpj}</span></div>
                   <span>${branch.tradeName}</span>
-                  <span>Socios: ${branch.partners.join(", ")}</span>
+                  <span>Sócios: ${branch.partners.join(", ")}</span>
                   <div class="company-actions">
                     <button type="button" data-company-action="edit" data-company-id="${branch.id}">Editar</button>
                     <button type="button" data-company-action="delete" data-company-id="${branch.id}">Excluir</button>
@@ -2095,7 +2095,7 @@ function renderCompanies() {
           <div class="matrix-head">
             <div><strong>${matrix.name}</strong><span>Matriz - ${matrix.cnpj}</span></div>
             <span>${matrix.tradeName}</span>
-            <span>Socios: ${matrix.partners.join(", ")}</span>
+            <span>Sócios: ${matrix.partners.join(", ")}</span>
             <div class="company-actions">
               <button type="button" data-company-action="toggle" data-company-id="${matrix.id}">
                 ${matrix.showBranches ? "Ocultar filiais" : "Exibir filiais"} (${branches.length})
@@ -2292,16 +2292,16 @@ function renderProperties() {
       const typeLabel = property.type === "urban" ? `Urbano - ${property.block}` : `Rural - ${property.glebe}`;
       const areaLabel =
         property.type === "urban"
-          ? `${property.hasConstruction ? `Construcao ${property.constructionArea} m2` : "Sem construcao informada"}`
+          ? `${property.hasConstruction ? `Construção ${property.constructionArea} m2` : "Sem construção informada"}`
           : `${property.ruralArea} m2 total | RL ${property.legalReserve} m2 | APP ${property.appArea} m2`;
       const registryLabel =
         property.type === "urban"
-          ? `inscricao imobiliaria: ${property.municipalRegistration || "Nao informada"}`
-          : `CAR: ${property.carNumber || "Nao informado"} | CCIR/INCRA: ${property.ccirIncra || "Nao informado"}`;
+          ? `inscricao imobiliaria: ${property.municipalRegistration || "Não informada"}`
+          : `CAR: ${property.carNumber || "Não informado"} | CCIR/INCRA: ${property.ccirIncra || "Não informado"}`;
       return `
         <article>
-          <strong>Matricula ${property.registration}</strong>
-          <span>${typeLabel} - ${areaLabel} - ${registryLabel} - proprietario: ${property.owner} - referencia: ${property.reference || "Nao informada"}</span>
+          <strong>Matrícula ${property.registration}</strong>
+          <span>${typeLabel} - ${areaLabel} - ${registryLabel} - proprietário: ${property.owner} - referência: ${property.reference || "Não informada"}</span>
           <div>
             <button type="button" data-property-action="edit" data-property-id="${property.id}">Editar</button>
             <button type="button" data-property-action="delete" data-property-id="${property.id}">Excluir</button>
@@ -2367,7 +2367,7 @@ function newProperty() {
   field("property-rural-use").value = "Lavoura";
   field("property-has-construction").checked = false;
   field("property-construction-area").value = "";
-  document.querySelector("#property-modal-title").textContent = "Novo Imovel";
+  document.querySelector("#property-modal-title").textContent = "Novo Imóvel";
   updatePropertyFields();
   openModal("property-modal");
 }
@@ -2417,7 +2417,7 @@ document.querySelector("#property-delete-confirm")?.addEventListener("click", ()
   if (index >= 0) properties.splice(index, 1);
   pendingPropertyDeleteId = null;
   renderProperties();
-  persistDelete("properties", id, "imovel");
+  persistDelete("properties", id, "imóvel");
   closeModal("property-delete-modal");
 });
 propertyOwnerType?.addEventListener("change", () => populatePropertyOwners());
@@ -2452,14 +2452,14 @@ propertyList?.addEventListener("click", (event) => {
 
   if (button.dataset.propertyAction === "edit") {
     fillPropertyForm(property);
-    document.querySelector("#property-modal-title").textContent = "Editar Imovel";
+    document.querySelector("#property-modal-title").textContent = "Editar Imóvel";
     openModal("property-modal");
   }
 
   if (button.dataset.propertyAction === "delete") {
     pendingPropertyDeleteId = property.id;
     const text = document.querySelector("#property-delete-text");
-    if (text) text.textContent = `Deseja realmente excluir o imovel de matricula ${property.registration}?`;
+    if (text) text.textContent = `Deseja realmente excluir o imóvel de matrícula ${property.registration}?`;
     openModal("property-delete-modal");
   }
 });
@@ -2481,7 +2481,7 @@ const enterpriseProperty = document.querySelector("#enterprise-property");
 const enterprisePropertyList = document.querySelector("#enterprise-property-list");
 
 function activeSystemModules() {
-  return availableAlertModules.length ? availableAlertModules : [{ id: "environmental", name: "03.1 Licencas Ambientais" }];
+  return availableAlertModules.length ? availableAlertModules : [{ id: "environmental", name: "03.1 Licenças Ambientais" }];
 }
 
 function enterpriseModules(enterprise) {
@@ -2489,7 +2489,7 @@ function enterpriseModules(enterprise) {
 }
 
 function enterpriseModuleLabels(modules = []) {
-  return modules.length ? modules.map(sendModuleLabel).join(", ") : "Nenhum modulo vinculado";
+  return modules.length ? modules.map(sendModuleLabel).join(", ") : "Nenhum módulo vinculado";
 }
 
 function updateEnterpriseModuleSummary(modules = enterpriseModuleSelection) {
@@ -2500,7 +2500,7 @@ function updateEnterpriseModuleSummary(modules = enterpriseModuleSelection) {
 function renderEnterpriseModuleChecks(selectedModules = enterpriseModuleSelection) {
   const wrapper = field("enterprise-module-checks");
   if (!wrapper) return;
-  wrapper.innerHTML = `<span>Modulos disponiveis</span>${activeSystemModules()
+  wrapper.innerHTML = `<span>Módulos disponíveis</span>${activeSystemModules()
     .map(
       (module) => `
         <label>
@@ -2533,12 +2533,12 @@ function companyProperties(companyName = enterpriseCompany?.value) {
 
 function updateEnterprisePropertySummary(value = enterpriseProperty?.value) {
   const summary = field("enterprise-property-summary");
-  if (summary) summary.textContent = value || "Nenhum imovel selecionado";
+  if (summary) summary.textContent = value || "Nenhum imóvel selecionado";
 }
 
 function populateEnterpriseProperties(selectedProperty = "") {
   if (!enterpriseProperty || !enterpriseCompany) return;
-  const propertyNames = companyProperties().map((property) => `Matricula ${property.registration}`);
+  const propertyNames = companyProperties().map((property) => `Matrícula ${property.registration}`);
   enterpriseProperty.value = selectedProperty && propertyNames.includes(selectedProperty) ? selectedProperty : "";
   updateEnterprisePropertySummary();
 }
@@ -2552,15 +2552,15 @@ function renderEnterprisePropertyPicker() {
           (property) => `
             <article>
               <div>
-                <strong>Matricula ${property.registration}</strong>
+                <strong>Matrícula ${property.registration}</strong>
                 <span>${property.reference || propertyOwnerLabel(property)} - ${property.type === "rural" ? "Rural" : "Urbano"}</span>
               </div>
-              <button type="button" data-enterprise-property-pick="Matricula ${property.registration}">Selecionar</button>
+              <button type="button" data-enterprise-property-pick="Matrícula ${property.registration}">Selecionar</button>
             </article>
           `,
         )
         .join("")
-    : `<article><strong>Nenhum imovel encontrado</strong><span>Cadastre um imovel vinculado a ${enterpriseCompany?.value || "empresa selecionada"}.</span></article>`;
+    : `<article><strong>Nenhum imóvel encontrado</strong><span>Cadastre um imóvel vinculado a ${enterpriseCompany?.value || "empresa selecionada"}.</span></article>`;
 }
 
 function openEnterprisePropertyPicker() {
@@ -2588,7 +2588,7 @@ function renderEnterprises() {
         return `
           <article>
             <strong>${enterprise.name}</strong>
-            <span>${enterprise.company} - ${enterprise.property} - ${enterprise.type} - ${enterprise.status} - modulos: ${enterpriseModuleLabels(modules)} - ${enterprise.potentialPolluter ? "CTF/APP: potencialmente poluidor" : "CTF/APP: nao classificado"}</span>
+            <span>${enterprise.company} - ${enterprise.property} - ${enterprise.type} - ${enterprise.status} - modulos: ${enterpriseModuleLabels(modules)} - ${enterprise.potentialPolluter ? "CTF/APP: potencialmente poluidor" : "CTF/APP: não classificado"}</span>
             <div>
               <button type="button" data-enterprise-action="edit" data-enterprise-id="${enterprise.id}">Editar</button>
               <button type="button" data-enterprise-action="delete" data-enterprise-id="${enterprise.id}">Excluir</button>
@@ -2788,7 +2788,7 @@ async function persistEnterprisePolluterStatus() {
       potential_polluter: Boolean(enterprise.potentialPolluter),
     })));
   } catch (error) {
-    console.warn("Nao foi possivel atualizar a classificacao CTF/APP dos empreendimentos.", error.message);
+    console.warn("Não foi possível atualizar a classificação CTF/APP dos empreendimentos.", error.message);
   }
 }
 
@@ -2801,7 +2801,7 @@ function renderActivities() {
       (activity) => `
         <article>
           <strong>${activity.name}</strong>
-          <span>CNAE ${activity.cnae || "Nao informado"} - CNPJ ${activity.companyCnpj || "Nao informado"} - ${activity.ctfApp ? "CTF/APP: potencialmente poluidora" : "Sem CTF/APP"} - empreendimentos: ${activityEnterpriseLabels(activity.enterpriseIds || [])}</span>
+          <span>CNAE ${activity.cnae || "Não informado"} - CNPJ ${activity.companyCnpj || "Não informado"} - ${activity.ctfApp ? "CTF/APP: potencialmente poluidora" : "Sem CTF/APP"} - empreendimentos: ${activityEnterpriseLabels(activity.enterpriseIds || [])}</span>
           <div>
             <button type="button" data-activity-action="edit" data-activity-id="${activity.id}">Editar</button>
             <button type="button" data-activity-action="delete" data-activity-id="${activity.id}">Excluir</button>
@@ -2960,7 +2960,7 @@ function renderEnvironmentalDocuments() {
   environmentalDocumentList.innerHTML = environmentalDocuments.map((item) => `
     <article>
       <strong>${item.name}</strong>
-      <span>Licencas: ${item.licenses.join(", ")} - vencimento: ${item.expiration} - obrigatorio: ${item.required} - parametros: ${item.parameters || "Nao informado"}</span>
+      <span>Licenças: ${item.licenses.join(", ")} - vencimento: ${item.expiration} - obrigatório: ${item.required} - parâmetros: ${item.parameters || "Não informado"}</span>
       <div>
         <button type="button" data-document-action="edit" data-document-id="${item.id}">Editar</button>
         <button type="button" data-document-action="delete" data-document-id="${item.id}">Excluir</button>
@@ -2972,7 +2972,7 @@ function renderEnvironmentalDocuments() {
 function renderDocumentLicenseChecks(selectedLicenses = []) {
   const wrapper = document.querySelector("#document-license-checks");
   if (!wrapper) return;
-  wrapper.innerHTML = `<span>Licencas vinculadas</span>${environmentalLicenseTypes
+  wrapper.innerHTML = `<span>Licenças vinculadas</span>${environmentalLicenseTypes
     .map(
       (license) => `
         <label><input type="checkbox" name="document-license" value="${license.name}" ${selectedLicenses.includes(license.name) ? "checked" : ""} /> ${license.name}</label>
@@ -2990,7 +2990,7 @@ function renderChecklistDocumentChecks(licenseName, selectedDocuments = null) {
   if (!wrapper) return;
   const documents = documentsForLicense(licenseName);
   const selected = selectedDocuments || documents.map((item) => item.name);
-  wrapper.innerHTML = `<span>Documentos vinculados a licenca selecionada</span>${
+  wrapper.innerHTML = `<span>Documentos vinculados a licença selecionada</span>${
     documents.length
       ? documents
           .map(
@@ -2999,7 +2999,7 @@ function renderChecklistDocumentChecks(licenseName, selectedDocuments = null) {
             `,
           )
           .join("")
-      : "<small>Nenhum documento vinculado a esta licenca.</small>"
+      : "<small>Nenhum documento vinculado a está licença.</small>"
   }`;
 }
 
@@ -3032,7 +3032,7 @@ document.querySelector("#license-type-new")?.addEventListener("click", () => {
   field("license-type-name").value = "";
   field("license-type-code").value = "";
   setCheckedValues('input[name="license-phase"]', []);
-  document.querySelector("#license-type-modal-title").textContent = "Novo Tipo de Licenca";
+  document.querySelector("#license-type-modal-title").textContent = "Novo Tipo de Licença";
   openModal("license-type-modal");
 });
 
@@ -3067,16 +3067,16 @@ licenseTypeList?.addEventListener("click", (event) => {
     field("license-type-name").value = item.name;
     field("license-type-code").value = item.code;
     setCheckedValues('input[name="license-phase"]', item.phases);
-    document.querySelector("#license-type-modal-title").textContent = "Editar Tipo de Licenca";
+    document.querySelector("#license-type-modal-title").textContent = "Editar Tipo de Licença";
     openModal("license-type-modal");
   }
   if (button.dataset.licenseTypeAction === "delete") {
-    confirmDelete(`Deseja realmente excluir o tipo de licenca ${item.name}?`, () => {
+    confirmDelete(`Deseja realmente excluir o tipo de licença ${item.name}?`, () => {
       const index = environmentalLicenseTypes.findIndex((entry) => sameId(entry.id, id));
       if (index >= 0) environmentalLicenseTypes.splice(index, 1);
       renderEnvironmentalLicenseTypes();
       populateChecklistModelSelects();
-      persistDelete("environmental_license_types", id, "tipo de licenca");
+      persistDelete("environmental_license_types", id, "tipo de licença");
     });
   }
 });
@@ -3208,7 +3208,7 @@ let activeStageNumber = null;
 
 const licenseStatusMeta = {
   general: {
-    title: "03.1 Licencas Ambientais",
+    title: "03.1 Licenças Ambientais",
     subtitle: "Gestao geral dos processos ambientais, abertura de novos processos e acompanhamento operacional.",
     pill: "green",
   },
@@ -3219,29 +3219,29 @@ const licenseStatusMeta = {
   },
   pending: {
     title: "03.1.2 Pendentes",
-    subtitle: "Processos com exigencias, documentos ou retorno de orgao ambiental pendente.",
+    subtitle: "Processos com exigências, documentos ou retorno de órgão ambiental pendente.",
     pill: "yellow",
   },
   done: {
-    title: "03.1.4 Concluidas",
+    title: "03.1.4 Concluídas",
     subtitle: "Processos finalizados, deferidos ou encerrados.",
     pill: "green",
   },
   expired: {
     title: "03.1.3 Vencidas",
-    subtitle: "Processos com licenca vencida ou prazo critico ultrapassado.",
+    subtitle: "Processos com licença vencida ou prazo crítico ultrapassado.",
     pill: "red",
   },
   licenses: {
-    title: "03.1.5 Licencas",
-    subtitle: "Relacao das licencas ambientais vinculadas aos processos cadastrados.",
+    title: "03.1.5 Licenças",
+    subtitle: "Relação das licenças ambientais vinculadas aos processos cadastrados.",
     pill: "green",
   },
 };
 
 function renderChecklist(type) {
   if (!generatedChecklist) return;
-  const items = checklistModels[type] || checklistModels["Licenca de Operacao"];
+  const items = checklistModels[type] || checklistModels["Licença de Operação"];
   generatedChecklist.innerHTML = items
     .map(
       ([label, source, checked]) => `
@@ -3264,7 +3264,7 @@ function processPillClass(process) {
   if (process.status === "done") return "green";
   if (process.status === "pending") return "yellow";
   if (process.status === "expired") return "red";
-  return process.risk.toLowerCase().includes("critico") ? "red" : "green";
+  return process.risk.toLowerCase().includes("crítico") ? "red" : "green";
 }
 
 function processSortValue(process) {
@@ -3292,7 +3292,7 @@ function findActiveLicense(processId, stageNumber = null) {
 }
 
 function isOperationLicense(license) {
-  return String(license?.type || "").toLowerCase().includes("operacao");
+  return String(license?.type || "").toLowerCase().includes("operação");
 }
 
 function licensePhaseForFormat(format) {
@@ -3317,9 +3317,9 @@ function licenseSelectionCountForFormat(format) {
 }
 
 function licensePhaseLabel(format, index) {
-  if (format === "bifasico") return index === 0 ? "Primeira licenca" : "Ultima licenca";
-  if (format === "trifasico") return ["Primeira licenca", "Licenca 2", "Licenca final"][index] || `Licenca ${index + 1}`;
-  return "Licenca ambiental";
+  if (format === "bifasico") return index === 0 ? "Primeira licença" : "Última licença";
+  if (format === "trifasico") return ["Primeira licença", "Licença 2", "Licença final"][index] || `Licença ${index + 1}`;
+  return "Licença ambiental";
 }
 
 function selectedEnvironmentalProcessLicenses() {
@@ -3377,7 +3377,7 @@ function isProtocolStage(stage) {
 }
 
 function isLicenseStage(stage) {
-  return stage?.name?.toLowerCase().includes("licenca");
+  return stage?.name?.toLowerCase().includes("licença");
 }
 
 function stageRecord(process, stageNumber) {
@@ -3413,8 +3413,8 @@ function canCompleteStage(process, stage) {
 }
 
 function stageRequiredMessage(process, stage) {
-  if (isProtocolStage(stage) && !canCompleteStage(process, stage)) return "Informe o numero e a data do protocolo ambiental.";
-  if (isLicenseStage(stage) && !canCompleteStage(process, stage)) return "Informe o numero da licenca e a data de vencimento.";
+  if (isProtocolStage(stage) && !canCompleteStage(process, stage)) return "Informe o número e a data do protocolo ambiental.";
+  if (isLicenseStage(stage) && !canCompleteStage(process, stage)) return "Informe o número da licença e a data de vencimento.";
   return stageGateMessage(process, stage);
 }
 
@@ -3422,7 +3422,7 @@ function canOpenProcessStage(process, stageNumber) {
   const stages = ensureProcessStages(process);
   if (stageNumber <= 1) return true;
   const previousStage = stages.find((stage) => stage.number === stageNumber - 1);
-  return previousStage?.status === "Concluida";
+  return previousStage?.status === "Concluída";
 }
 
 function showStageAccessMessage(stageNumber) {
@@ -3458,19 +3458,19 @@ const licensingFormatStages = {
     label: "Monofasico",
     stages: [
       ["Juntada de documentos", "Organizar documentos e checklist inicial."],
-      ["Protocolo", "Registrar protocolo no orgao ambiental."],
-      ["Licenca ambiental", "Informar numero, emissao, vencimento e condicionantes."],
+      ["Protocolo", "Registrar protocolo no órgão ambiental."],
+      ["Licença ambiental", "Informar número, emissão, vencimento e condicionantes."],
     ],
   },
   bifasico: {
     label: "Bifasico",
     stages: [
       ["Juntada de documentos 1", "Preparar documentos da primeira fase."],
-      ["Protocolo 1", "Protocolar a primeira etapa no orgao ambiental."],
-      ["Primeira licenca", "Cadastrar a primeira licenca emitida."],
+      ["Protocolo 1", "Protocolar a primeira etapa no órgão ambiental."],
+      ["Primeira licença", "Cadastrar a primeira licença emitida."],
       ["Juntada de documentos 2", "Preparar documentos complementares."],
       ["Protocolo 2", "Protocolar a etapa final."],
-      ["Ultima licenca", "Cadastrar a licenca final e seus vencimentos."],
+      ["Última licença", "Cadastrar a licença final e seus vencimentos."],
     ],
   },
   trifasico: {
@@ -3478,13 +3478,13 @@ const licensingFormatStages = {
     stages: [
       ["Juntada de documentos 1", "Preparar documentos da primeira fase."],
       ["Protocolo 1", "Protocolar a primeira fase."],
-      ["Primeira licenca", "Cadastrar primeira licenca emitida."],
+      ["Primeira licença", "Cadastrar primeira licença emitida."],
       ["Juntada de documentos 2", "Preparar documentos da segunda fase."],
       ["Protocolo 2", "Protocolar a segunda fase."],
-      ["Licenca 2", "Cadastrar segunda licenca emitida."],
+      ["Licença 2", "Cadastrar segunda licença emitida."],
       ["Juntada de documentos 3", "Preparar documentos da fase final."],
       ["Protocolo 3", "Protocolar a fase final."],
-      ["Licenca final", "Cadastrar licenca final, vencimentos e condicionantes."],
+      ["Licença final", "Cadastrar licença final, vencimentos e condicionantes."],
     ],
   },
 };
@@ -3495,7 +3495,7 @@ function processStagesForFormat(format) {
     number: index + 1,
     name,
     description,
-    status: index === 0 ? "Em andamento" : "Nao iniciada",
+    status: index === 0 ? "Em andamento" : "Não iniciada",
     validityDate: "",
     warningDays: 60,
     criticalDays: 15,
@@ -3514,7 +3514,7 @@ function daysUntil(dateValue) {
 
 function updateStageDeadlineStatus(stage) {
   const remaining = daysUntil(stage.validityDate);
-  if (stage.status === "Concluida") {
+  if (stage.status === "Concluída") {
     stage.deadlineStatus = "completed";
     return stage.deadlineStatus;
   }
@@ -3535,15 +3535,15 @@ function updateStageDeadlineStatus(stage) {
 function applyProcessDeadlineRules(process) {
   const stages = ensureProcessStages(process);
   stages.forEach(updateStageDeadlineStatus);
-  const expiredStage2 = stages.some((stage) => stage.number === 2 && stage.deadlineStatus === "expired" && stage.status !== "Concluida");
+  const expiredStage2 = stages.some((stage) => stage.number === 2 && stage.deadlineStatus === "expired" && stage.status !== "Concluída");
   const expiredLicenseStage = stages.some((stage) => isLicenseStage(stage) && stage.deadlineStatus === "expired");
-  const criticalStage = stages.some((stage) => ["warning", "critical"].includes(stage.deadlineStatus) && stage.status !== "Concluida");
+  const criticalStage = stages.some((stage) => ["warning", "critical"].includes(stage.deadlineStatus) && stage.status !== "Concluída");
 
   if (expiredLicenseStage) {
     process.status = "expired";
     process.statusLabel = processStatusLabel("expired");
-    process.risk = "Licenca vencida";
-    process.due = "Licenca ambiental vencida";
+    process.risk = "Licença vencida";
+    process.due = "Licença ambiental vencida";
     return;
   }
 
@@ -3556,8 +3556,8 @@ function applyProcessDeadlineRules(process) {
   }
 
   if (criticalStage && process.status === "open") {
-    process.risk = "Prazo em atencao";
-    process.due = "Ha etapa proxima do vencimento";
+    process.risk = "Prazo em atenção";
+    process.due = "Há etapa próxima do vencimento";
   }
 }
 
@@ -3566,7 +3566,7 @@ function processStatusLabel(status) {
     open: "Aberta",
     pending: "Pendente",
     expired: "Vencida",
-    done: "Concluida",
+    done: "Concluída",
   }[status] || "Aberta";
 }
 
@@ -3575,13 +3575,13 @@ function ensureProcessStages(process) {
     const stages = processStagesForFormat(process.licensingFormat);
     const completedCount = Math.min(stages.length, Math.floor(((process.progress || 0) / 100) * stages.length));
     stages.forEach((stage, index) => {
-      if (index < completedCount) stage.status = "Concluida";
+      if (index < completedCount) stage.status = "Concluída";
       if (index === completedCount && completedCount < stages.length) stage.status = "Em andamento";
-      if (index > completedCount) stage.status = "Nao iniciada";
+      if (index > completedCount) stage.status = "Não iniciada";
     });
     if ((process.progress || 0) >= 100) {
       stages.forEach((stage) => {
-        stage.status = "Concluida";
+        stage.status = "Concluída";
       });
     }
     process.stages = stages;
@@ -3591,18 +3591,18 @@ function ensureProcessStages(process) {
 
 function currentProcessStage(process) {
   const stages = ensureProcessStages(process);
-  return stages.find((stage) => stage.status === "Em andamento") || stages.find((stage) => stage.status !== "Concluida") || stages[stages.length - 1];
+  return stages.find((stage) => stage.status === "Em andamento") || stages.find((stage) => stage.status !== "Concluída") || stages[stages.length - 1];
 }
 
 function updateProcessProgress(process) {
   const stages = ensureProcessStages(process);
-  const completed = stages.filter((stage) => stage.status === "Concluida").length;
+  const completed = stages.filter((stage) => stage.status === "Concluída").length;
   process.progress = Math.round((completed / stages.length) * 100);
   if (completed === stages.length) {
     process.status = "done";
     process.statusLabel = processStatusLabel("done");
-    process.risk = "Processo concluido";
-    process.due = "Sem pendencias";
+    process.risk = "Processo concluído";
+    process.due = "Sem pendências";
   }
   applyProcessDeadlineRules(process);
   return process.progress;
@@ -3611,9 +3611,9 @@ function updateProcessProgress(process) {
 function setProcessCurrentStage(process, stageNumber) {
   const stages = ensureProcessStages(process);
   stages.forEach((stage) => {
-    if (stage.number < stageNumber) stage.status = "Concluida";
+    if (stage.number < stageNumber) stage.status = "Concluída";
     if (stage.number === stageNumber) stage.status = "Em andamento";
-    if (stage.number > stageNumber) stage.status = "Nao iniciada";
+    if (stage.number > stageNumber) stage.status = "Não iniciada";
   });
   if (process.status === "done") {
     process.status = "open";
@@ -3630,20 +3630,20 @@ function completeProcessStage(process, stageNumber) {
   if (!stage) return;
   if (!canCompleteStage(process, stage)) return;
   registerStageData(process, stage);
-  stage.status = "Concluida";
+  stage.status = "Concluída";
   const nextStage = stages.find((item) => item.number > stageNumber);
   if (nextStage) {
     setProcessCurrentStage(process, nextStage.number);
   } else {
     stages.forEach((item) => {
-      item.status = "Concluida";
+      item.status = "Concluída";
     });
     updateProcessProgress(process);
   }
 }
 
 function processStageClass(stage) {
-  if (stage.status === "Concluida") return "done";
+  if (stage.status === "Concluída") return "done";
   if (stage.status === "Em andamento") return "current";
   if (stage.status === "Pendente") return "blocked";
   return "";
@@ -3652,7 +3652,7 @@ function processStageClass(stage) {
 function stageStatusPill(stage) {
   if (stage.deadlineStatus === "expired") return "red";
   if (stage.deadlineStatus === "critical" || stage.deadlineStatus === "warning") return "yellow";
-  if (stage.status === "Concluida") return "green";
+  if (stage.status === "Concluída") return "green";
   if (stage.status === "Em andamento") return "yellow";
   if (stage.status === "Pendente") return "red";
   return "muted";
@@ -3663,9 +3663,9 @@ function stageDeadlineLabel(stage) {
   const labels = {
     open: "Prazo normal",
     warning: "Aviso minimo",
-    critical: "Prazo critico",
+    critical: "Prazo crítico",
     expired: "Vencida",
-    completed: "Concluida",
+    completed: "Concluída",
   };
   const validity = stage.validityDate ? `Validade: ${formatAgendaDate(stage.validityDate)}` : "Sem validade definida";
   return `${validity} - ${labels[stage.deadlineStatus] || "Prazo normal"}`;
@@ -3705,7 +3705,7 @@ function populateEnvironmentalProcessSelects() {
     const environmentalEnterprises = enterprisesForModule("environmental");
     enterpriseSelect.innerHTML = environmentalEnterprises.length
       ? environmentalEnterprises.map((enterprise) => `<option value="${enterprise.name}">${enterprise.name}</option>`).join("")
-      : `<option value="">Nenhum empreendimento vinculado ao modulo Ambiental</option>`;
+      : `<option value="">Nenhum empreendimento vinculado ao módulo Ambiental</option>`;
   }
   if (companySelect) {
     companySelect.innerHTML = companies
@@ -3720,7 +3720,7 @@ function populateEnvironmentalProcessSelects() {
       .join("");
   }
   if (propertySelect) {
-    propertySelect.innerHTML = properties.map((property) => `<option value="Matricula ${property.registration}">Matricula ${property.registration} - ${property.reference || propertyOwnerLabel(property)}</option>`).join("");
+    propertySelect.innerHTML = properties.map((property) => `<option value="Matrícula ${property.registration}">Matrícula ${property.registration} - ${property.reference || propertyOwnerLabel(property)}</option>`).join("");
   }
   if (responsibleSelect) {
     responsibleSelect.innerHTML = partners.map((partner) => `<option value="${partner.name}">${partner.name}</option>`).join("");
@@ -3751,7 +3751,7 @@ function updateEnvironmentalProcessLicenseOptions() {
   const count = licenseSelectionCountForFormat(format);
   const options = linkedLicenses.length
     ? linkedLicenses.map((type) => `<option value="${type.name}">${type.name}</option>`).join("")
-    : `<option value="">Nenhum tipo de licenca vinculado</option>`;
+    : `<option value="">Nenhum tipo de licença vinculado</option>`;
   wrapper.innerHTML = Array.from({ length: count })
     .map(
       (_, index) => `
@@ -3796,7 +3796,7 @@ function saveEnvironmentalProcess() {
   const licensingFormat = field("environmental-process-format").value;
   const formatConfig = licensingFormatStages[licensingFormat] || licensingFormatStages.monofasico;
   const selectedLicenses = selectedEnvironmentalProcessLicenses();
-  const type = selectedLicenses.join(" / ") || "Tipo de licenca nao definido";
+  const type = selectedLicenses.join(" / ") || "Tipo de licença não definido";
   const company = field("environmental-process-company").value;
   const branch = field("environmental-process-branch").value;
   const enterprise = selectedEnvironmentalEnterprise();
@@ -3815,10 +3815,10 @@ function saveEnvironmentalProcess() {
     company,
     type,
     licenseTypes: selectedLicenses,
-    agency: "Nao especificado",
+    agency: "Não especificado",
     status,
     statusLabel: processStatusLabel(status),
-    risk: priority === "Critica" ? "Risco critico" : priority === "Alta" ? "Prioridade alta" : "Aberto",
+    risk: priority === "Critica" ? "Risco crítico" : priority === "Alta" ? "Prioridade alta" : "Aberto",
     due: field("environmental-process-forecast").value ? `Protocolo previsto para ${field("environmental-process-forecast").value}` : "Sem protocolo definido",
     responsible,
     progress: 0,
@@ -3832,7 +3832,7 @@ function saveEnvironmentalProcess() {
     addAgendaEvent({
       date: field("environmental-process-forecast").value,
       time: "09:00",
-      title: `Previsao de protocolo - ${internalNumber}`,
+      title: `Previsão de protocolo - ${internalNumber}`,
       type: "Prazo do processo",
       status: "warning",
       description: `${process.title} - ${process.type}`,
@@ -3931,13 +3931,13 @@ function renderEnvironmentalProcessDocuments(process) {
             <article class="process-document-row">
               <div>
                 <strong>${documentItem.name}</strong>
-                <small>${documentItem.notes ? documentItem.notes : "Sem observacoes"}</small>
+                <small>${documentItem.notes ? documentItem.notes : "Sem observações"}</small>
               </div>
               <label>
                 <input type="checkbox" data-process-document-prepared="${index}" ${documentItem.prepared ? "checked" : ""} />
                 Elaborado
               </label>
-              <button type="button" data-process-document-note="${index}">Observacoes</button>
+              <button type="button" data-process-document-note="${index}">Observações</button>
             </article>
           `,
         )
@@ -3967,7 +3967,7 @@ function renderCurrentStageScreen(process, stage) {
   field("environmental-stage-critical-days").value = stage.criticalDays ?? 15;
   const gateText = stageRequiredMessage(process, stage);
   if (gate) gate.hidden = !gateText;
-  if (gateMessage) gateMessage.textContent = gateText || "Etapa liberada para avancar.";
+  if (gateMessage) gateMessage.textContent = gateText || "Etapa liberada para avançar.";
   if (completeButton) {
     completeButton.disabled = Boolean(gateText);
     completeButton.textContent = gateText ? "Etapa bloqueada" : "Concluir etapa";
@@ -3985,11 +3985,11 @@ function renderCurrentStageScreen(process, stage) {
     const protocolStage = isProtocolStage(stage);
     const licenseStage = isLicenseStage(stage);
     const record = stageRecord(process, stage.number);
-    field("environmental-process-generic-label").textContent = protocolStage ? "Protocolo ambiental" : "Licenca ambiental";
+    field("environmental-process-generic-label").textContent = protocolStage ? "Protocolo ambiental" : "Licença ambiental";
     field("environmental-process-generic-title").textContent = stage.name;
     field("environmental-process-generic-help").textContent = protocolStage
-      ? "Registre o protocolo, data e comprovantes desta fase antes de concluir a etapa."
-      : "Registre numero da licenca, emissao, validade e condicionantes antes de concluir a etapa.";
+      ? "Registre o protocolo, data e comprovantes destá fase antes de concluir a etapa."
+      : "Registre número da licença, emissão, validade e condicionantes antes de concluir a etapa.";
     if (protocolStage && protocolFields) {
       protocolFields.hidden = false;
       field("environmental-stage-protocol-number").value = record.protocolNumber || "";
@@ -4015,7 +4015,7 @@ function refreshActiveStageGate() {
   const gateMessage = field("environmental-process-stage-gate-message");
   const completeButton = field("environmental-process-complete-stage");
   if (gate) gate.hidden = !gateText;
-  if (gateMessage) gateMessage.textContent = gateText || "Etapa liberada para avancar.";
+  if (gateMessage) gateMessage.textContent = gateText || "Etapa liberada para avançar.";
   if (completeButton) {
     completeButton.disabled = Boolean(gateText);
     completeButton.textContent = gateText ? "Etapa bloqueada" : "Concluir etapa";
@@ -4077,7 +4077,7 @@ function registerStageData(process, stage) {
       date: license.expiryDate,
       time: "09:00",
       title: `Vencimento ${license.number}`,
-      type: "Vencimento de licenca",
+      type: "Vencimento de licença",
       status: "danger",
       description: `${license.type} - ${process.title}`,
     });
@@ -4091,13 +4091,13 @@ function renderProcessDetail(process) {
   field("environmental-process-detail-id").value = process.id;
   field("environmental-process-detail-title").textContent = `${process.internalNumber || process.number} - ${process.title}`;
   field("environmental-process-detail-subtitle").textContent = process.type;
-  field("environmental-process-detail-format").textContent = process.licensingFormatLabel || "Formato nao definido";
-  field("environmental-process-detail-current-stage").textContent = currentStage?.name || "Concluido";
+  field("environmental-process-detail-format").textContent = process.licensingFormatLabel || "Formato não definido";
+  field("environmental-process-detail-current-stage").textContent = currentStage?.name || "Concluído";
   field("environmental-process-detail-progress").textContent = `${process.progress || 0}%`;
   field("environmental-process-detail-status").value = process.status;
   field("environmental-process-detail-company").textContent = `Empresa: ${process.company}`;
-  field("environmental-process-detail-property").textContent = `Imovel: ${process.property || "Nao informado"}`;
-  field("environmental-process-detail-responsible").textContent = `Responsavel: ${process.responsible}`;
+  field("environmental-process-detail-property").textContent = `Imóvel: ${process.property || "Não informado"}`;
+  field("environmental-process-detail-responsible").textContent = `Responsável: ${process.responsible}`;
   field("environmental-process-detail-stage-summary").textContent = `${process.licensingFormatLabel || "Processo"} - ${process.stages.length} etapas`;
   field("environmental-process-detail-stage-list").innerHTML = process.stages
     .map(
@@ -4138,7 +4138,7 @@ function openEnvironmentalStage(processId, stageNumber) {
     return;
   }
   hideStageAccessMessage();
-  if (stage.status === "Nao iniciada") {
+  if (stage.status === "Não iniciada") {
     stage.status = "Em andamento";
   }
   renderProcessDetail(process);
@@ -4161,19 +4161,19 @@ function saveEnvironmentalProcessDetail() {
       return;
     }
     ensureProcessStages(process).forEach((stage) => {
-      stage.status = "Concluida";
+      stage.status = "Concluída";
     });
   }
   if (process.status === "pending") {
     process.risk = "Pendente";
-    process.due = "Aguardando regularizacao da etapa atual";
+    process.due = "Aguardando regularização da etapa atual";
   }
   if (process.status === "expired") {
     process.risk = "Vencida";
     process.due = "Prazo vencido";
   }
   if (process.status === "open" && process.progress < 100) {
-    process.risk = process.risk === "Processo concluido" ? "Aberto" : process.risk;
+    process.risk = process.risk === "Processo concluído" ? "Aberto" : process.risk;
   }
   updateProcessProgress(process);
   closeModal("environmental-process-detail-modal");
@@ -4191,8 +4191,8 @@ function renderEnvironmentalLicenseCard(license) {
       <div>
         <strong>${license.type}</strong>
         <span>${license.company}</span>
-        <small>Substitui a licenca anterior do mesmo processo</small>
-        <small>Responsavel: ${license.responsible}</small>
+        <small>Substitui a licença anterior do mesmo processo</small>
+        <small>Responsável: ${license.responsible}</small>
       </div>
       <div>
         <span>Vencimento</span>
@@ -4202,8 +4202,8 @@ function renderEnvironmentalLicenseCard(license) {
       <div>
         <span class="pill green">${license.status}</span>
         <button type="button" class="ghost small" data-license-pdf="${license.processId}" data-stage-number="${license.stageNumber}">Baixar dossie PDF</button>
-        <button type="button" class="ghost small" data-license-action="renew" data-process-id="${license.processId}" data-stage-number="${license.stageNumber}">Renovacao</button>
-        ${isOperationLicense(license) ? `<button type="button" class="ghost small" data-license-action="expand" data-process-id="${license.processId}">Ampliacao</button>` : ""}
+        <button type="button" class="ghost small" data-license-action="renew" data-process-id="${license.processId}" data-stage-number="${license.stageNumber}">Renovação</button>
+        ${isOperationLicense(license) ? `<button type="button" class="ghost small" data-license-action="expand" data-process-id="${license.processId}">Ampliação</button>` : ""}
         <button type="button" class="ghost small danger-action" data-delete-license="${license.processId}" data-stage-number="${license.stageNumber}">Excluir</button>
       </div>
     </article>
@@ -4217,18 +4217,18 @@ function renderEnvironmentalProcessCard(process) {
       <div>
         <strong>${process.internalNumber || process.number}</strong>
         <span>${process.title}</span>
-        <small>${process.number && process.number !== process.internalNumber ? process.number : "Sem numero oficial"}</small>
+        <small>${process.number && process.number !== process.internalNumber ? process.number : "Sem número oficial"}</small>
       </div>
       <div>
         <strong>${process.type}</strong>
         <span>${process.company}</span>
-        <small>${process.licensingFormatLabel || "Formato nao definido"} - etapa atual: ${currentStage?.name || "Acompanhamento"}</small>
-        <small>Responsavel: ${process.responsible}</small>
+        <small>${process.licensingFormatLabel || "Formato não definido"} - etapa atual: ${currentStage?.name || "Acompanhamento"}</small>
+        <small>Responsável: ${process.responsible}</small>
       </div>
       <div>
         <span>${process.documents}</span>
         <progress value="${process.progress}" max="100"></progress>
-        <small>${process.progress}% concluido</small>
+        <small>${process.progress}% concluído</small>
       </div>
       <div>
         <span class="pill ${processPillClass(process)}">${process.risk}</span>
@@ -4282,10 +4282,10 @@ function renderLicenseStatus(status = "open") {
       ? activeLicenses()
       : sortedProcesses(status === "general" ? environmentalProcesses : environmentalProcesses.filter((process) => process.status === status));
   if (titleTarget) titleTarget.textContent = meta.title;
-  if (subtitleTarget) subtitleTarget.textContent = status === "general" ? "Relatorio geral com processos abertos, pendentes, vencidos e licencas ativas." : meta.subtitle;
+  if (subtitleTarget) subtitleTarget.textContent = status === "general" ? "Relatório geral com processos abertos, pendentes, vencidos e licenças ativas." : meta.subtitle;
   if (newProcessButton) newProcessButton.hidden = status !== "general";
   document.querySelectorAll('[data-pdf-report="environmentalModule"]').forEach((button) => {
-    button.textContent = status === "general" ? "Baixar relatorio geral" : "Baixar relatorio";
+    button.textContent = status === "general" ? "Baixar relatório geral" : "Baixar relatório";
   });
   if (countTarget) {
     const generalCount = reportGroups.open.length + reportGroups.pending.length + reportGroups.expired.length + reportGroups.licenses.length;
@@ -4293,16 +4293,16 @@ function renderLicenseStatus(status = "open") {
       status === "general"
         ? `${generalCount} registro${generalCount === 1 ? "" : "s"}`
         : status === "licenses"
-          ? `${items.length} licenca${items.length === 1 ? "" : "s"}`
+          ? `${items.length} licença${items.length === 1 ? "" : "s"}`
           : `${items.length} processo${items.length === 1 ? "" : "s"}`;
     countTarget.className = `pill ${meta.pill}`;
   }
   if (status === "general") {
     list.innerHTML = `
-      ${renderEnvironmentalReportSection("03.1.1 Abertas", "Processos ambientais em andamento, sem licenca final gerada.", reportGroups.open, renderEnvironmentalProcessCard, "Nao ha processos abertos.")}
-      ${renderEnvironmentalReportSection("03.1.2 Pendentes", "Processos com exigencias, documentos ou retorno pendente.", reportGroups.pending, renderEnvironmentalProcessCard, "Nao ha processos pendentes.")}
-      ${renderEnvironmentalReportSection("03.1.3 Vencidas", "Processos com prazo critico ultrapassado ou licenca vencida.", reportGroups.expired, renderEnvironmentalProcessCard, "Nao ha processos vencidos.")}
-      ${renderEnvironmentalReportSection("03.1.5 Licencas", "Licencas ambientais geradas pelos processos finalizados ou por etapas concluidas.", reportGroups.licenses, renderEnvironmentalLicenseCard, "Nao ha licencas cadastradas.")}
+      ${renderEnvironmentalReportSection("03.1.1 Abertas", "Processos ambientais em andamento, sem licença final gerada.", reportGroups.open, renderEnvironmentalProcessCard, "Não há processos abertos.")}
+      ${renderEnvironmentalReportSection("03.1.2 Pendentes", "Processos com exigências, documentos ou retorno pendente.", reportGroups.pending, renderEnvironmentalProcessCard, "Não há processos pendentes.")}
+      ${renderEnvironmentalReportSection("03.1.3 Vencidas", "Processos com prazo crítico ultrapassado ou licença vencida.", reportGroups.expired, renderEnvironmentalProcessCard, "Não há processos vencidos.")}
+      ${renderEnvironmentalReportSection("03.1.5 Licenças", "Licenças ambientais geradas pelos processos finalizados ou por etapas concluídas.", reportGroups.licenses, renderEnvironmentalLicenseCard, "Não há licenças cadastradas.")}
     `;
     return;
   }
@@ -4310,7 +4310,7 @@ function renderLicenseStatus(status = "open") {
     ? items
         .map((item) => (status === "licenses" ? renderEnvironmentalLicenseCard(item) : renderEnvironmentalProcessCard(item)))
         .join("")
-    : `<article class="status-process-card"><strong>Nenhum registro</strong><span>Nao ha ${status === "licenses" ? "licencas" : "processos"} nesta categoria.</span></article>`;
+    : `<article class="status-process-card"><strong>Nenhum registro</strong><span>Não há ${status === "licenses" ? "licenças" : "processos"} nesta categoria.</span></article>`;
 }
 
 function openLicenseStatus(status = "open") {
@@ -4348,7 +4348,7 @@ document.querySelector("#license-status-list")?.addEventListener("click", (event
   if (deleteLicense) {
     const license = findActiveLicense(deleteLicense.dataset.deleteLicense, deleteLicense.dataset.stageNumber);
     if (!license) return;
-    const confirmed = window.confirm(`Deseja realmente excluir a licenca ${license.number}?`);
+    const confirmed = window.confirm(`Deseja realmente excluir a licença ${license.number}?`);
     if (!confirmed) return;
     const process = environmentalProcesses.find((item) => String(item.id) === String(license.processId));
     if (process) {
@@ -4357,7 +4357,7 @@ document.querySelector("#license-status-list")?.addEventListener("click", (event
       }
       process.licenseHistory = (process.licenseHistory || []).filter((item) => String(item.stageNumber) !== String(license.stageNumber));
       process.number = process.internalNumber || process.number;
-      process.due = process.status === "done" ? "Sem pendencias" : "Licenca removida do cadastro";
+      process.due = process.status === "done" ? "Sem pendências" : "Licença removida do cadastro";
     }
     renderLicenseStatus(currentLicenseStatus);
     return;
@@ -4366,14 +4366,14 @@ document.querySelector("#license-status-list")?.addEventListener("click", (event
   const processPdf = event.target.closest("[data-process-pdf]");
   if (processPdf) {
     const process = environmentalProcesses.find((item) => String(item.id) === String(processPdf.dataset.processPdf));
-    if (process) openPdfReport(buildEnvironmentalProcessDossier(process));
+    if (process) openPdfReport(buildEnvironmentalProcessDossiêr(process));
     return;
   }
 
   const licensePdf = event.target.closest("[data-license-pdf]");
   if (licensePdf) {
     const license = findActiveLicense(licensePdf.dataset.licensePdf, licensePdf.dataset.stageNumber);
-    if (license) openPdfReport(buildEnvironmentalLicenseDossier(license));
+    if (license) openPdfReport(buildEnvironmentalLicenseDossiêr(license));
     return;
   }
 
@@ -4385,8 +4385,8 @@ document.querySelector("#license-status-list")?.addEventListener("click", (event
       setProcessCurrentStage(process, 1);
       process.status = "open";
       process.statusLabel = processStatusLabel("open");
-      process.risk = "Ampliacao";
-      process.due = "Processo reaberto para ampliacao";
+      process.risk = "Ampliação";
+      process.due = "Processo reaberto para ampliação";
       openEnvironmentalProcessDetail(process.id);
       return;
     }
@@ -4396,8 +4396,8 @@ document.querySelector("#license-status-list")?.addEventListener("click", (event
       setProcessCurrentStage(process, documentStage?.number || licenseStageNumber);
       process.status = "open";
       process.statusLabel = processStatusLabel("open");
-      process.risk = "Renovacao";
-      process.due = "Renovacao da licenca em andamento";
+      process.risk = "Renovação";
+      process.due = "Renovação da licença em andamento";
       openEnvironmentalProcessDetail(process.id);
       return;
     }
@@ -4441,7 +4441,7 @@ field("environmental-process-previous-stage")?.addEventListener("click", () => {
   if (!previousStage) return;
   previousStage.status = "Em andamento";
   ensureProcessStages(process).forEach((stage) => {
-    if (stage.number >= stageNumber) stage.status = "Nao iniciada";
+    if (stage.number >= stageNumber) stage.status = "Não iniciada";
   });
   process.status = "open";
   process.statusLabel = processStatusLabel("open");
@@ -4547,7 +4547,7 @@ const PDF_STANDARD = {
   portraitContinuationLimit: 1010,
   landscapeLimit: 545,
   landscapeContinuationLimit: 735,
-  generatedBy: "Usuario DocGestor by Carminatti",
+  generatedBy: "Usuário DocGestor by Carminatti",
   organization: "DocGestor",
   exclusive: "DocGestor by Carminatti",
 };
@@ -4586,7 +4586,7 @@ function pdfFieldsSection(titleText, fields, options = {}) {
           ([label, value]) => `
             <div>
               <span>${escapePdfText(label)}</span>
-              <strong>${escapePdfText(value || "Nao informado")}</strong>
+              <strong>${escapePdfText(value || "Não informado")}</strong>
             </div>
           `,
         )
@@ -4620,7 +4620,7 @@ function renderPdfTable(section, rows) {
           ${rows
             .map(
               (row) => `
-                <tr>${row.map((cell) => `<td>${escapePdfText(cell || "Nao informado")}</td>`).join("")}</tr>
+                <tr>${row.map((cell) => `<td>${escapePdfText(cell || "Não informado")}</td>`).join("")}</tr>
               `,
             )
             .join("")}
@@ -4930,7 +4930,7 @@ function pdfDocumentHtml(report) {
                           </span>
                         </div>
                         <div class="pdf-meta">
-                          <strong>${escapePdfText(report.module || "Relatorio")}</strong>
+                          <strong>${escapePdfText(report.module || "Relatório")}</strong>
                           <span>Formato ${PDF_STANDARD.page} - ${orientation === "landscape" ? "Paisagem" : "Retrato"}</span>
                           <span>Gerado em ${escapePdfText(generatedAt)}</span>
                         </div>
@@ -4966,7 +4966,7 @@ function pdfDocumentHtml(report) {
 function openPdfReport(report) {
   const pdfWindow = window.open("", "_blank");
   if (!pdfWindow) {
-    alert("O navegador bloqueou a janela do PDF. Autorize pop-ups para baixar o relatorio.");
+    alert("O navegador bloqueou a janela do PDF. Autorize pop-ups para baixar o relatório.");
     return;
   }
   pdfWindow.document.open();
@@ -4975,11 +4975,11 @@ function openPdfReport(report) {
 }
 
 function companyNameById(id) {
-  return companies.find((company) => sameId(company.id, id))?.name || "Nao informado";
+  return companies.find((company) => sameId(company.id, id))?.name || "Não informado";
 }
 
 function partnerNameById(id) {
-  return partners.find((partner) => sameId(partner.id, id))?.name || "Nao informado";
+  return partners.find((partner) => sameId(partner.id, id))?.name || "Não informado";
 }
 
 function propertyOwnerLabel(property) {
@@ -5009,13 +5009,13 @@ function propertyReserveOk(property) {
 
 function buildPartnersReport() {
   return {
-    title: "Relatorio de Socios e Responsaveis Legais",
-    module: "01.2.1 Socios",
-    subtitle: "Listagem administrativa usada para alimentar empresas, imoveis, empreendimentos e licencas.",
+    title: "Relatório de Sócios e Responsaveis Legais",
+    module: "01.2.1 Sócios",
+    subtitle: "Listagem administrativa usada para alimentar empresas, imóveis, empreendimentos e licenças.",
     sections: [
       pdfTableSection(
-        "Socios cadastrados",
-        ["Nome", "Documento", "Funcao", "Contato", "Telefone", "Status"],
+        "Sócios cadastrados",
+        ["Nome", "Documento", "Função", "Contato", "Telefone", "Status"],
         partners.map((partner) => [partner.name, partner.document, partner.role, partner.contact, partner.phone, partner.status]),
       ),
     ],
@@ -5040,38 +5040,38 @@ function buildCompaniesReport(filters = {}) {
   });
 
   return {
-    title: "Relatorio de Empresas e Filiais",
+    title: "Relatório de Empresas e Filiais",
     module: "01.2.2 Empresas e Filiais",
-    subtitle: filters.summary || "Matrizes e filiais ordenadas por CNPJ, com vinculo de socios.",
+    subtitle: filters.summary || "Matrizes e filiais ordenadas por CNPJ, com vinculo de sócios.",
     orientation: "landscape",
-    sections: [pdfTableSection("Empresas cadastradas", ["CNPJ", "Razao social / filial", "Tipo", "Nome fantasia", "Socios", "Status"], rows, { rowEstimate: 32 })],
+    sections: [pdfTableSection("Empresas cadastradas", ["CNPJ", "Razão social / filial", "Tipo", "Nome fantasia", "Sócios", "Status"], rows, { rowEstimate: 32 })],
   };
 }
 
 function buildPropertiesRelationReport(filteredProperties, filters = {}) {
   return {
-    title: "Relacao de Imoveis",
-    module: "01.2.3 Imoveis",
-    subtitle: filters.summary || "Ficha consolidada dos imoveis cadastrados.",
+    title: "Relação de Imóveis",
+    module: "01.2.3 Imóveis",
+    subtitle: filters.summary || "Ficha consolidada dos imóveis cadastrados.",
     sections: filteredProperties.map((property) => {
       const isRural = property.type === "rural";
       const reserveRequired = propertyReserveRequired(property);
       const reserveOk = propertyReserveOk(property);
-      return pdfFieldsSection(`Matricula ${property.registration}`, [
-        ["Proprietario", propertyOwnerLabel(property)],
-        ["Tipo de proprietario", property.ownerType === "pf" ? "Pessoa fisica" : "Pessoa juridica"],
-        ["Tipo de imovel", isRural ? "Rural" : "Urbano"],
-        ["Referencia", property.reference],
+      return pdfFieldsSection(`Matrícula ${property.registration}`, [
+        ["Proprietário", propertyOwnerLabel(property)],
+        ["Tipo de proprietário", property.ownerType === "pf" ? "Pessoa física" : "Pessoa jurídica"],
+        ["Tipo de imóvel", isRural ? "Rural" : "Urbano"],
+        ["Referência", property.reference],
         ["Lote", property.lot],
         [isRural ? "Gleba" : "Quadra", isRural ? property.glebe : property.block],
-        [isRural ? "Numero do CAR" : "Inscricao imobiliaria", isRural ? property.carNumber : property.municipalRegistration],
-        ...(isRural ? [["Numero CCIR/INCRA", property.ccirIncra]] : []),
-        ["Area total", isRural ? `${formatAreaM2(property.ruralArea)} / ${formatAreaHa(property.ruralArea)}` : formatAreaM2(property.urbanArea)],
-        ["Reserva legal", isRural ? `${formatAreaM2(property.legalReserve)} / ${formatAreaHa(property.legalReserve)}` : "Nao aplicavel"],
-        ["APP", isRural ? `${formatAreaM2(property.appArea)} / ${formatAreaHa(property.appArea)}` : "Nao aplicavel"],
-        ["Reserva exigida", isRural ? `${formatAreaM2(reserveRequired)} / ${formatAreaHa(reserveRequired)}` : "Nao aplicavel"],
+        [isRural ? "Número do CAR" : "Inscrição imobiliária", isRural ? property.carNumber : property.municipalRegistration],
+        ...(isRural ? [["Número CCIR/INCRA", property.ccirIncra]] : []),
+        ["Área total", isRural ? `${formatAreaM2(property.ruralArea)} / ${formatAreaHa(property.ruralArea)}` : formatAreaM2(property.urbanArea)],
+        ["Reserva legal", isRural ? `${formatAreaM2(property.legalReserve)} / ${formatAreaHa(property.legalReserve)}` : "Não aplicável"],
+        ["APP", isRural ? `${formatAreaM2(property.appArea)} / ${formatAreaHa(property.appArea)}` : "Não aplicável"],
+        ["Reserva exigida", isRural ? `${formatAreaM2(reserveRequired)} / ${formatAreaHa(reserveRequired)}` : "Não aplicável"],
         ["Conformidade ambiental", reserveOk ? "Reserva legal em conformidade" : "Reserva legal abaixo de 20%"],
-        ["Construcao", property.hasConstruction ? `${property.constructionArea || 0} m2` : "Nao informada"],
+        ["Construção", property.hasConstruction ? `${property.constructionArea || 0} m2` : "Não informada"],
       ], { estimate: 270 });
     }),
   };
@@ -5093,9 +5093,9 @@ function buildPropertiesEnvironmentalReport(filteredProperties, filters = {}) {
   const rows = ruralProperties.map((property) => {
     const requiredByProperty = propertyReserveRequired(property);
     return [
-      `Matricula ${property.registration}`,
+      `Matrícula ${property.registration}`,
       propertyOwnerLabel(property),
-      property.reference || "Nao informada",
+      property.reference || "Não informada",
       `${formatAreaM2(property.ruralArea)} / ${formatAreaHa(property.ruralArea)}`,
       `${formatAreaM2(property.legalReserve)} / ${formatAreaHa(property.legalReserve)}`,
       `${formatAreaM2(property.appArea)} / ${formatAreaHa(property.appArea)}`,
@@ -5105,28 +5105,28 @@ function buildPropertiesEnvironmentalReport(filteredProperties, filters = {}) {
   });
 
   return {
-    title: "Relatorio Ambiental de Imoveis",
-    module: "01.2.3 Imoveis",
-    subtitle: filters.summary || "Analise consolidada de area rural, reserva legal e APP.",
+    title: "Relatório Ambiental de Imóveis",
+    module: "01.2.3 Imóveis",
+    subtitle: filters.summary || "Análise consolidada de área rural, reserva legal e APP.",
     orientation: "landscape",
     sections: [
       pdfTableSection(
-        "Imoveis rurais analisados",
-        ["Imovel", "Proprietario", "Referencia", "Area total", "Reserva legal", "APP", "Reserva exigida", "Situacao"],
-        rows.length ? rows : [["Nenhum imovel rural encontrado", "", "", "", "", "", "", ""]],
+        "Imóveis rurais analisados",
+        ["Imóvel", "Proprietário", "Referência", "Área total", "Reserva legal", "APP", "Reserva exigida", "Situação"],
+        rows.length ? rows : [["Nenhum imóvel rural encontrado", "", "", "", "", "", "", ""]],
         { rowEstimate: 42, headerEstimate: 82 },
       ),
       pdfFieldsSection("Totalizador ambiental", [
-        ["Quantidade de imoveis", ruralProperties.length],
-        ["Area total somada", `${formatAreaM2(totals.area)} / ${formatAreaHa(totals.area)}`],
+        ["Quantidade de imóveis", ruralProperties.length],
+        ["Área total somada", `${formatAreaM2(totals.area)} / ${formatAreaHa(totals.area)}`],
         ["Reserva legal somada", `${formatAreaM2(totals.reserve)} / ${formatAreaHa(totals.reserve)}`],
         ["APP somada", `${formatAreaM2(totals.app)} / ${formatAreaHa(totals.app)}`],
         ["Reserva legal exigida 20%", `${formatAreaM2(required)} / ${formatAreaHa(required)}`],
-        ["Resultado consolidado", isOk ? "Conforme a exigencia minima de 20%" : "Reserva legal consolidada abaixo de 20%"],
+        ["Resultado consolidado", isOk ? "Conforme a exigência minima de 20%" : "Reserva legal consolidada abaixo de 20%"],
       ], { estimate: 160 }),
       pdfSection(
         "Criterio tecnico aplicado",
-        `<p class="pdf-note">A APP foi demonstrada separadamente para indicar existencia de area ambiental protegida. Ela esta contida na reserva legal e nao foi somada novamente ao calculo consolidado.</p>`,
+        `<p class="pdf-note">A APP foi demonstrada separadamente para indicar existência de área ambiental protegida. Ela está contida na reserva legal e não foi somada novamente ao calculo consolidado.</p>`,
         90,
       ),
     ],
@@ -5141,14 +5141,14 @@ function buildPropertiesReport(filters = {}) {
 
 function buildEnterprisesReport() {
   return {
-    title: "Relatorio de Empreendimentos",
+    title: "Relatório de Empreendimentos",
     module: "01.2.4 Empreendimento",
-    subtitle: "Empreendimentos vinculados a empresas e imoveis.",
+    subtitle: "Empreendimentos vinculados a empresas e imóveis.",
     sections: [
       pdfTableSection(
         "Empreendimentos cadastrados",
-        ["Nome", "Empresa", "Imovel", "Tipo", "Status", "Modulos", "CTF/APP", "Referencia"],
-        enterprises.map((enterprise) => [enterprise.name, enterprise.company, enterprise.property, enterprise.type, enterprise.status, enterpriseModuleLabels(enterpriseModules(enterprise)), enterprise.potentialPolluter ? "Potencialmente poluidor" : "Nao classificado", enterprise.reference]),
+        ["Nome", "Empresa", "Imóvel", "Tipo", "Status", "Módulos", "CTF/APP", "Referência"],
+        enterprises.map((enterprise) => [enterprise.name, enterprise.company, enterprise.property, enterprise.type, enterprise.status, enterpriseModuleLabels(enterpriseModules(enterprise)), enterprise.potentialPolluter ? "Potencialmente poluidor" : "Não classificado", enterprise.reference]),
         { rowEstimate: 38 },
       ),
     ],
@@ -5158,13 +5158,13 @@ function buildEnterprisesReport() {
 
 function buildLicenseTypesReport() {
   return {
-    title: "Relatorio de Tipos de Licencas Ambientais",
-    module: "01.3.1 Tipos de Licencas",
-    subtitle: "Classificacao dos tipos de licenca.",
+    title: "Relatório de Tipos de Licenças Ambientais",
+    module: "01.3.1 Tipos de Licenças",
+    subtitle: "Classificação dos tipos de licença.",
     sections: [
       pdfTableSection(
         "Tipos cadastrados",
-        ["Nome", "Sigla", "Classificacao"],
+        ["Nome", "Sigla", "Classificação"],
         environmentalLicenseTypes.map((item) => [item.name, item.code, item.phases.join(", ")]),
       ),
     ],
@@ -5173,15 +5173,15 @@ function buildLicenseTypesReport() {
 
 function buildEnvironmentalDocumentsReport() {
   return {
-    title: "Relatorio de Documentos Ambientais",
+    title: "Relatório de Documentos Ambientais",
     module: "01.3.2 Documentos",
-    subtitle: "Documentos vinculados aos tipos de licenca ambiental.",
+    subtitle: "Documentos vinculados aos tipos de licença ambiental.",
     orientation: "landscape",
     sections: [
       pdfTableSection(
         "Documentos cadastrados",
-        ["Documento", "Licencas vinculadas", "Exige vencimento", "Obrigatorio", "Parametros"],
-        environmentalDocuments.map((item) => [item.name, item.licenses.join(", "), item.expiration, item.required, item.parameters || "Nao informado"]),
+        ["Documento", "Licenças vinculadas", "Exige vencimento", "Obrigatorio", "Parâmetros"],
+        environmentalDocuments.map((item) => [item.name, item.licenses.join(", "), item.expiration, item.required, item.parameters || "Não informado"]),
         { rowEstimate: 38 },
       ),
     ],
@@ -5190,14 +5190,14 @@ function buildEnvironmentalDocumentsReport() {
 
 function buildChecklistModelsReport() {
   return {
-    title: "Relatorio de Modelos de Check-list",
+    title: "Relatório de Modelos de Check-list",
     module: "01.3.3 Modelos de Check-list",
-    subtitle: "Modelos que alimentam a criacao de novas licencas ambientais.",
+    subtitle: "Modelos que alimentam a criação de novas licenças ambientais.",
     orientation: "landscape",
     sections: [
       pdfTableSection(
         "Modelos cadastrados",
-        ["Modelo", "Tipo de licenca", "Documentos selecionados"],
+        ["Modelo", "Tipo de licença", "Documentos selecionados"],
         checklistModelsAdmin.map((item) => [item.name, item.license, item.documents.join(", ")]),
         { rowEstimate: 42 },
       ),
@@ -5206,7 +5206,7 @@ function buildChecklistModelsReport() {
 }
 
 function formatPdfDate(value) {
-  return value ? formatAgendaDate(value) : "Nao informado";
+  return value ? formatAgendaDate(value) : "Não informado";
 }
 
 function fallbackPdfRows(rows, columns) {
@@ -5252,17 +5252,17 @@ function buildEnvironmentalModuleReport() {
     formatPdfDate(license.expiryDate),
     license.status,
   ]);
-  const processColumns = ["Processo", "Empreendimento", "Tipo de licenca", "Etapa atual", "Progresso", "Prazo / situacao"];
+  const processColumns = ["Processo", "Empreendimento", "Tipo de licença", "Etapa atual", "Progresso", "Prazo / situação"];
 
   return {
-    title: "Relatorio do Modulo Ambiental",
-    module: "03.1 Modulo operacional",
-    subtitle: "Processos ambientais em aberto, pendentes, vencidos e licencas ativas.",
+    title: "Relatório do Módulo Ambiental",
+    module: "03.1 Módulo operacional",
+    subtitle: "Processos ambientais em aberto, pendentes, vencidos e licenças ativas.",
     orientation: "landscape",
     sections: [
       pdfFieldsSection("Resumo operacional", [
         ["Processos relacionados", openRows.length + pendingRows.length + expiredRows.length],
-        ["Licencas ativas", activeLicenses().length],
+        ["Licenças ativas", activeLicenses().length],
         ["Abertas", openRows.length],
         ["Pendentes", pendingRows.length],
         ["Vencidas", expiredRows.length],
@@ -5270,7 +5270,7 @@ function buildEnvironmentalModuleReport() {
       pdfTableSection("Abertas", processColumns, fallbackPdfRows(openRows, processColumns), { rowEstimate: 38 }),
       pdfTableSection("Pendentes", processColumns, fallbackPdfRows(pendingRows, processColumns), { rowEstimate: 38 }),
       pdfTableSection("Vencidas", processColumns, fallbackPdfRows(expiredRows, processColumns), { rowEstimate: 38 }),
-      pdfTableSection("Licencas", ["Licenca", "Tipo", "Processo", "Empresa", "Vencimento", "Status"], fallbackPdfRows(licenseRows, ["Licenca", "Tipo", "Processo", "Empresa", "Vencimento", "Status"]), { rowEstimate: 36 }),
+      pdfTableSection("Licenças", ["Licença", "Tipo", "Processo", "Empresa", "Vencimento", "Status"], fallbackPdfRows(licenseRows, ["Licença", "Tipo", "Processo", "Empresa", "Vencimento", "Status"]), { rowEstimate: 36 }),
     ],
   };
 }
@@ -5281,7 +5281,7 @@ function buildEnvironmentalStatusReport(status = currentLicenseStatus) {
     updateProcessProgress(process);
   });
   const meta = licenseStatusMeta[status] || licenseStatusMeta.general;
-  const processColumns = ["Processo", "Empreendimento", "Tipo de licenca", "Etapa atual", "Progresso", "Prazo / situacao"];
+  const processColumns = ["Processo", "Empreendimento", "Tipo de licença", "Etapa atual", "Progresso", "Prazo / situação"];
 
   if (status === "licenses") {
     const licenseRows = activeLicenses().map((license) => [
@@ -5293,30 +5293,30 @@ function buildEnvironmentalStatusReport(status = currentLicenseStatus) {
       license.status,
     ]);
     return {
-      title: "Relatorio de Licencas",
-      module: "03.1.5 Licencas",
-      subtitle: "Licencas ambientais ativas geradas pelos processos ambientais.",
+      title: "Relatório de Licenças",
+      module: "03.1.5 Licenças",
+      subtitle: "Licenças ambientais ativas geradas pelos processos ambientais.",
       orientation: "landscape",
       sections: [
         pdfFieldsSection("Resumo", [
-          ["Licencas listadas", licenseRows.length],
-          ["Modulo", "03.1.5 Licencas"],
+          ["Licenças listadas", licenseRows.length],
+          ["Módulo", "03.1.5 Licenças"],
         ], { estimate: 120 }),
-        pdfTableSection("Licencas", ["Licenca", "Tipo", "Processo", "Empresa", "Vencimento", "Status"], fallbackPdfRows(licenseRows, ["Licenca", "Tipo", "Processo", "Empresa", "Vencimento", "Status"]), { rowEstimate: 36 }),
+        pdfTableSection("Licenças", ["Licença", "Tipo", "Processo", "Empresa", "Vencimento", "Status"], fallbackPdfRows(licenseRows, ["Licença", "Tipo", "Processo", "Empresa", "Vencimento", "Status"]), { rowEstimate: 36 }),
       ],
     };
   }
 
   const processRows = environmentalProcessReportRows(status);
   return {
-    title: `Relatorio - ${meta.title}`,
+    title: `Relatório - ${meta.title}`,
     module: meta.title,
     subtitle: meta.subtitle,
     orientation: "landscape",
     sections: [
       pdfFieldsSection("Resumo", [
         ["Processos listados", processRows.length],
-        ["Modulo", meta.title],
+        ["Módulo", meta.title],
       ], { estimate: 120 }),
       pdfTableSection(meta.title.replace(/^03\.1\.\d+\s+/, ""), processColumns, fallbackPdfRows(processRows, processColumns), { rowEstimate: 38 }),
     ],
@@ -5327,7 +5327,7 @@ function buildEnvironmentalContextReport() {
   return currentLicenseStatus === "general" ? buildEnvironmentalModuleReport() : buildEnvironmentalStatusReport(currentLicenseStatus);
 }
 
-function buildEnvironmentalProcessDossier(process) {
+function buildEnvironmentalProcessDossiêr(process) {
   ensureProcessStages(process);
   updateProcessProgress(process);
   const currentStage = currentProcessStage(process);
@@ -5338,7 +5338,7 @@ function buildEnvironmentalProcessDossier(process) {
     const detail = isProtocolStage(stage)
       ? `${record.protocolNumber || "Sem protocolo"} - ${formatPdfDate(record.protocolDate)}`
       : isLicenseStage(stage)
-        ? `${record.licenseNumber || "Sem licenca"} - venc. ${formatPdfDate(record.expiryDate)}`
+        ? `${record.licenseNumber || "Sem licença"} - venc. ${formatPdfDate(record.expiryDate)}`
         : documentCount
           ? `${preparedCount} de ${documentCount} documento(s) elaborado(s)`
           : "Sem check-list selecionado";
@@ -5349,7 +5349,7 @@ function buildEnvironmentalProcessDossier(process) {
       `Etapa ${stage.number}`,
       documentItem.name,
       documentItem.prepared ? "Elaborado" : "Pendente",
-      documentItem.notes || "Sem observacoes",
+      documentItem.notes || "Sem observações",
     ]),
   );
   const licenseRows = (process.licenseHistory || []).map((license) => [
@@ -5361,67 +5361,67 @@ function buildEnvironmentalProcessDossier(process) {
   ]);
 
   return {
-    title: `Dossie do Processo ${process.internalNumber || process.number}`,
-    module: "03.1 Licencas Ambientais",
+    title: `Dossiê do Processo ${process.internalNumber || process.number}`,
+    module: "03.1 Licenças Ambientais",
     subtitle: process.title,
     orientation: "portrait",
     sections: [
       pdfFieldsSection("Dados principais", [
         ["Processo interno", process.internalNumber || process.number],
-        ["Numero oficial / licenca atual", process.number || "Nao informado"],
-        ["Formato", process.licensingFormatLabel || "Nao definido"],
-        ["Tipo de licenca", process.type],
+        ["Número oficial / licença atual", process.number || "Não informado"],
+        ["Formato", process.licensingFormatLabel || "Não definido"],
+        ["Tipo de licença", process.type],
         ["Empresa", process.company],
-        ["Imovel", process.property || "Nao informado"],
-        ["Responsavel", process.responsible],
+        ["Imóvel", process.property || "Não informado"],
+        ["Responsável", process.responsible],
         ["Status", process.statusLabel || processStatusLabel(process.status)],
-        ["Etapa atual", currentStage?.name || "Concluido"],
+        ["Etapa atual", currentStage?.name || "Concluído"],
         ["Progresso", `${process.progress || 0}%`],
-        ["Prazo / situacao", process.due],
-        ["Observacoes", process.notes || "Sem observacoes"],
+        ["Prazo / situação", process.due],
+        ["Observações", process.notes || "Sem observações"],
       ], { estimate: 260 }),
       pdfTableSection("Etapas do processo", ["Etapa", "Nome", "Status", "Detalhe"], stageRows, { rowEstimate: 38 }),
-      pdfTableSection("Documentos do processo", ["Etapa", "Documento", "Situacao", "Observacoes"], fallbackPdfRows(documentRows, ["Etapa", "Documento", "Situacao", "Observacoes"]), { rowEstimate: 38 }),
-      pdfTableSection("Licencas geradas no processo", ["Licenca", "Tipo", "Etapa", "Vencimento", "Status"], fallbackPdfRows(licenseRows, ["Licenca", "Tipo", "Etapa", "Vencimento", "Status"]), { rowEstimate: 34 }),
+      pdfTableSection("Documentos do processo", ["Etapa", "Documento", "Situação", "Observações"], fallbackPdfRows(documentRows, ["Etapa", "Documento", "Situação", "Observações"]), { rowEstimate: 38 }),
+      pdfTableSection("Licenças geradas no processo", ["Licença", "Tipo", "Etapa", "Vencimento", "Status"], fallbackPdfRows(licenseRows, ["Licença", "Tipo", "Etapa", "Vencimento", "Status"]), { rowEstimate: 34 }),
     ],
   };
 }
 
-function buildEnvironmentalLicenseDossier(license) {
+function buildEnvironmentalLicenseDossiêr(license) {
   const process = license.process || environmentalProcesses.find((item) => String(item.id) === String(license.processId));
   const stage = process ? ensureProcessStages(process).find((item) => item.number === Number(license.stageNumber)) : null;
   const record = process?.stageRecords?.[license.stageNumber] || {};
   const previousLicenses = (process?.licenseHistory || []).filter((item) => item.stageNumber <= license.stageNumber);
 
   return {
-    title: `Dossie da Licenca ${license.number}`,
-    module: "03.1.5 Licencas",
+    title: `Dossiê da Licença ${license.number}`,
+    module: "03.1.5 Licenças",
     subtitle: `${license.type} - ${license.company}`,
     orientation: "portrait",
     sections: [
-      pdfFieldsSection("Licenca ambiental", [
-        ["Numero da licenca", license.number],
+      pdfFieldsSection("Licença ambiental", [
+        ["Número da licença", license.number],
         ["Tipo", license.type],
         ["Status", license.status],
         ["Vencimento", formatPdfDate(license.expiryDate)],
         ["Processo interno", license.processNumber],
         ["Empreendimento", license.title],
         ["Empresa", license.company],
-        ["Responsavel", license.responsible],
+        ["Responsável", license.responsible],
         ["Etapa de origem", stage ? `${stage.number} - ${stage.name}` : `Etapa ${license.stageNumber}`],
         ["Registro da etapa", record.licenseNumber || license.number],
       ], { estimate: 230 }),
       pdfFieldsSection("Processo vinculado", [
-        ["Formato", process?.licensingFormatLabel || "Nao informado"],
+        ["Formato", process?.licensingFormatLabel || "Não informado"],
         ["Tipos previstos", process?.type || license.type],
-        ["Imovel", process?.property || "Nao informado"],
-        ["Progresso", process ? `${process.progress || 0}%` : "Nao informado"],
-        ["Situacao", process?.statusLabel || processStatusLabel(process?.status)],
-        ["Prazo / situacao", process?.due || "Nao informado"],
+        ["Imóvel", process?.property || "Não informado"],
+        ["Progresso", process ? `${process.progress || 0}%` : "Não informado"],
+        ["Situação", process?.statusLabel || processStatusLabel(process?.status)],
+        ["Prazo / situação", process?.due || "Não informado"],
       ], { estimate: 180 }),
-      pdfTableSection("Historico de licencas do processo", ["Licenca", "Tipo", "Etapa", "Vencimento", "Status"], fallbackPdfRows(
+      pdfTableSection("Histórico de licenças do processo", ["Licença", "Tipo", "Etapa", "Vencimento", "Status"], fallbackPdfRows(
         previousLicenses.map((item) => [item.number, item.type, `Etapa ${item.stageNumber}`, formatPdfDate(item.expiryDate), item.status]),
-        ["Licenca", "Tipo", "Etapa", "Vencimento", "Status"],
+        ["Licença", "Tipo", "Etapa", "Vencimento", "Status"],
       ), { rowEstimate: 34 }),
     ],
   };
@@ -5436,7 +5436,7 @@ const pdfFilterState = {
 };
 
 function summarizeSelection(selectedCount, totalCount, allText, itemText) {
-  if (!totalCount) return "Nenhum disponivel";
+  if (!totalCount) return "Nenhum disponível";
   if (selectedCount === totalCount) return allText;
   if (selectedCount === 0) return "Nenhum selecionado";
   return `${selectedCount} ${itemText}`;
@@ -5465,7 +5465,7 @@ function updateCompanyPdfBranches() {
 function companyPdfSummary() {
   const matrixText = summarizeSelection(pdfFilterState.companyMatrixIds.length, matrixCompanies().length, "todas as matrizes", "matriz(es)");
   const availableBranches = companyPdfBranches(pdfFilterState.companyMatrixIds);
-  const branchText = summarizeSelection(pdfFilterState.companyBranchIds.length, availableBranches.length, "todas as filiais disponiveis", "filial(is)");
+  const branchText = summarizeSelection(pdfFilterState.companyBranchIds.length, availableBranches.length, "todas as filiais disponíveis", "filial(is)");
   return `PDF com ${matrixText} e ${branchText}`;
 }
 
@@ -5474,7 +5474,7 @@ function updateCompanyPdfSummaries() {
   const branchSummary = field("company-pdf-branch-summary");
   const preview = field("company-pdf-preview");
   if (matrixSummary) matrixSummary.textContent = summarizeSelection(pdfFilterState.companyMatrixIds.length, matrixCompanies().length, "Todas as matrizes", "matriz(es)");
-  if (branchSummary) branchSummary.textContent = summarizeSelection(pdfFilterState.companyBranchIds.length, companyPdfBranches(pdfFilterState.companyMatrixIds).length, "Todas as filiais disponiveis", "filial(is)");
+  if (branchSummary) branchSummary.textContent = summarizeSelection(pdfFilterState.companyBranchIds.length, companyPdfBranches(pdfFilterState.companyMatrixIds).length, "Todas as filiais disponíveis", "filial(is)");
   if (preview) preview.textContent = companyPdfSummary();
 }
 
@@ -5535,8 +5535,8 @@ function propertyPdfSummary(filters = basePropertyPdfFilterValues()) {
     ...filters,
     selectedPropertyIds: pdfFilterState.propertyIds,
   });
-  const type = filters.reportType === "environmental" ? "Ambiental" : "Relacao de Imoveis";
-  const scope = filters.selectionMode === "selected" ? "imoveis selecionados" : "imoveis filtrados";
+  const type = filters.reportType === "environmental" ? "Ambiental" : "Relação de Imóveis";
+  const scope = filters.selectionMode === "selected" ? "imóveis selecionados" : "imóveis filtrados";
   return `${type}: ${filtered.length} ${scope}`;
 }
 
@@ -5549,8 +5549,8 @@ function updatePropertyPdfSummaries() {
   const availableProperties = filterPropertiesForPdf({ ...filters, selectionMode: "all" });
   pdfFilterState.propertyIds = pdfFilterState.propertyIds.filter((id) => availableProperties.some((property) => String(property.id) === id));
   if (!pdfFilterState.propertyIds.length) pdfFilterState.propertyIds = availableProperties.map((property) => String(property.id));
-  if (ownerSummary) ownerSummary.textContent = summarizeSelection(pdfFilterState.propertyOwners.length, propertyOwnersForPdf().length, "Todos os proprietarios", "proprietario(s)");
-  if (propertySummary) propertySummary.textContent = summarizeSelection(pdfFilterState.propertyIds.length, availableProperties.length, "Todos os imoveis filtrados", "imovel(is)");
+  if (ownerSummary) ownerSummary.textContent = summarizeSelection(pdfFilterState.propertyOwners.length, propertyOwnersForPdf().length, "Todos os proprietários", "proprietário(s)");
+  if (propertySummary) propertySummary.textContent = summarizeSelection(pdfFilterState.propertyIds.length, availableProperties.length, "Todos os imóveis filtrados", "imóvel(is)");
   if (propertyCard) propertyCard.hidden = filters.selectionMode !== "selected";
   if (preview) preview.textContent = propertyPdfSummary(filters);
 }
@@ -5566,8 +5566,8 @@ function updatePropertyPdfFilters() {
   if (help) {
     help.textContent =
       filters.reportType === "environmental"
-        ? "No relatorio ambiental, o sistema totaliza area, reserva legal e APP, validando a exigencia de 20%."
-        : "Na relacao de imoveis, o PDF monta fichas cadastrais completas dos imoveis filtrados.";
+        ? "No relatório ambiental, o sistema totaliza área, reserva legal e APP, validando a exigência de 20%."
+        : "Na relacao de imóveis, o PDF monta fichas cadastrais completas dos imóveis filtrados.";
   }
   updatePropertyPdfSummaries();
 }
@@ -5617,8 +5617,8 @@ function pickerConfig(kind) {
   }
   if (kind === "property-owners") {
     return {
-      title: "Selecionar proprietarios",
-      context: "01.2.3 Imoveis",
+      title: "Selecionar proprietários",
+      context: "01.2.3 Imóveis",
       options: propertyOwnersForPdf().map((owner) => ({ value: owner, label: owner })),
       selected: pdfFilterState.propertyOwners,
       apply(values) {
@@ -5630,11 +5630,11 @@ function pickerConfig(kind) {
   if (kind === "property-properties") {
     const available = filterPropertiesForPdf({ ...basePropertyPdfFilterValues(), selectionMode: "all" });
     return {
-      title: "Selecionar imoveis",
-      context: "01.2.3 Imoveis",
+      title: "Selecionar imóveis",
+      context: "01.2.3 Imóveis",
       options: available.map((property) => ({
         value: String(property.id),
-        label: `Matricula ${property.registration} - ${propertyOwnerLabel(property)}`,
+        label: `Matrícula ${property.registration} - ${propertyOwnerLabel(property)}`,
         detail: property.reference || "Sem referencia informada",
       })),
       selected: pdfFilterState.propertyIds,
@@ -5670,7 +5670,7 @@ function openPdfPicker(kind) {
               `,
             )
             .join("")
-        : "<small>Nenhuma opcao disponivel para o filtro atual.</small>"
+        : "<small>Nenhuma opcao disponível para o filtro atual.</small>"
     }`;
   }
   openModal("pdf-picker-modal");
@@ -5766,7 +5766,7 @@ function installPdfButtons() {
   if (environmentalHead && !environmentalHead.querySelector('[data-pdf-report="environmentalModule"]')) {
     const actionWrap = document.createElement("div");
     actionWrap.className = "title-actions";
-    addPdfButton(actionWrap, "Baixar relatorio", "environmentalModule");
+    addPdfButton(actionWrap, "Baixar relatório", "environmentalModule");
     environmentalHead.appendChild(actionWrap);
   }
 }
@@ -5778,7 +5778,7 @@ async function dbList(table, query = "select=*") {
   try {
     return await window.DocGestorDB.list(table, query);
   } catch (error) {
-    console.warn(`Tabela ${table} indisponivel no Supabase.`, error.message);
+    console.warn(`Tabela ${table} indisponível no Supabase.`, error.message);
     return [];
   }
 }
@@ -5794,7 +5794,7 @@ function statusFromSupabase(value) {
 function renderDashboard() {
   environmentalProcesses.forEach(applyProcessDeadlineRules);
   const activeProcesses = environmentalProcesses.filter((process) => process.status !== "done");
-  const criticalProcesses = activeProcesses.filter((process) => process.status === "expired" || process.risk?.toLowerCase().includes("critico") || process.risk?.toLowerCase().includes("vencida"));
+  const criticalProcesses = activeProcesses.filter((process) => process.status === "expired" || process.risk?.toLowerCase().includes("crítico") || process.risk?.toLowerCase().includes("vencida"));
   const warningProcesses = activeProcesses.filter((process) => process.status === "pending" || process.risk?.toLowerCase().includes("atencao"));
   const concluded = environmentalProcesses.filter((process) => process.status === "done").length;
   const compliance = environmentalProcesses.length ? Math.round((concluded / environmentalProcesses.length) * 100) : 0;
@@ -5859,7 +5859,7 @@ async function defaultOrganizationId() {
     cachedOrganizationId = created?.id || null;
     return cachedOrganizationId;
   } catch (error) {
-    console.warn("Nao foi possivel obter a organizacao padrao no Supabase.", error.message);
+    console.warn("Não foi possível obter a organização padrão no Supabase.", error.message);
     return null;
   }
 }
@@ -5883,8 +5883,8 @@ function companyIdByCnpj(cnpj) {
 }
 
 function propertyIdByLabel(label) {
-  const registration = String(label || "").replace(/^Matricula\s+/i, "").trim();
-  return properties.find((property) => property.registration === registration || `Matricula ${property.registration}` === label)?.id || null;
+  const registration = String(label || "").replace(/^Matrícula\s+/i, "").trim();
+  return properties.find((property) => property.registration === registration || `Matrícula ${property.registration}` === label)?.id || null;
 }
 
 function licenseTypeIdByName(name) {
@@ -5900,7 +5900,7 @@ async function persistDelete(table, id, label) {
   try {
     await window.DocGestorDB.remove(table, id);
   } catch (error) {
-    console.warn(`Nao foi possivel excluir ${label} no Supabase.`, error.message);
+    console.warn(`Não foi possível excluir ${label} no Supabase.`, error.message);
   }
 }
 
@@ -5931,8 +5931,8 @@ async function persistPartner(partner, wasExisting) {
       renderPartners();
     }
   } catch (error) {
-    console.warn("Nao foi possivel salvar o socio no Supabase.", error.message);
-    alert(`Nao foi possivel salvar o socio no banco: ${error.message}`);
+    console.warn("Não foi possível salvar o sócio no Supabase.", error.message);
+    alert(`Não foi possível salvar o sócio no banco: ${error.message}`);
   }
 }
 
@@ -5942,7 +5942,7 @@ async function persistCompany(company, wasExisting) {
   if (!organizationId) return;
   const parentId = company.kind === "branch" ? company.parentId : null;
   if (company.kind === "branch" && !looksLikeUuid(parentId)) {
-    alert("Nao foi possivel salvar a filial no banco porque a matriz ainda nao possui ID valido no Supabase.");
+    alert("Não foi possível salvar a filial no banco porque a matriz ainda não possui ID válido no Supabase.");
     return;
   }
   const payload = {
@@ -5971,14 +5971,14 @@ async function persistCompany(company, wasExisting) {
       await Promise.all(partnerIds.map((partnerId) => window.DocGestorDB.create("company_partners", {
         company_id: saved.id,
         partner_id: partnerId,
-        role: "Socio",
+        role: "Sócio",
       })));
       populateCompanyParents();
       renderCompanies();
     }
   } catch (error) {
-    console.warn("Nao foi possivel salvar a empresa no Supabase.", error.message);
-    alert(`Nao foi possivel salvar a empresa no banco: ${error.message}`);
+    console.warn("Não foi possível salvar a empresa no Supabase.", error.message);
+    alert(`Não foi possível salvar a empresa no banco: ${error.message}`);
   }
 }
 
@@ -5989,7 +5989,7 @@ async function persistProperty(property, wasExisting) {
   const ownerPartnerId = property.ownerType === "pf" ? partnerIdByName(property.owner) : null;
   const ownerCompanyId = property.ownerType === "pj" ? companyIdByName(property.owner) : null;
   if ((property.ownerType === "pf" && !looksLikeUuid(ownerPartnerId)) || (property.ownerType === "pj" && !looksLikeUuid(ownerCompanyId))) {
-    alert("Nao foi possivel salvar o imovel no banco porque o proprietario ainda nao possui ID valido no Supabase.");
+    alert("Não foi possível salvar o imóvel no banco porque o proprietário ainda não possui ID válido no Supabase.");
     return;
   }
   const payload = {
@@ -6029,8 +6029,8 @@ async function persistProperty(property, wasExisting) {
       renderProperties();
     }
   } catch (error) {
-    console.warn("Nao foi possivel salvar o imovel no Supabase.", error.message);
-    alert(`Nao foi possivel salvar o imovel no banco: ${error.message}`);
+    console.warn("Não foi possível salvar o imóvel no Supabase.", error.message);
+    alert(`Não foi possível salvar o imóvel no banco: ${error.message}`);
   }
 }
 
@@ -6042,7 +6042,7 @@ async function persistEnterprise(enterprise, wasExisting) {
   const propertyId = propertyIdByLabel(enterprise.property);
   const responsibleId = partnerIdByName(enterprise.responsible);
   if (!looksLikeUuid(companyId) || !looksLikeUuid(propertyId)) {
-    alert("Nao foi possivel salvar o empreendimento no banco porque empresa ou imovel ainda nao possui ID valido no Supabase.");
+    alert("Não foi possível salvar o empreendimento no banco porque empresa ou imóvel ainda não possui ID válido no Supabase.");
     return;
   }
   const payload = {
@@ -6076,8 +6076,8 @@ async function persistEnterprise(enterprise, wasExisting) {
       populateEnvironmentalProcessSelects();
     }
   } catch (error) {
-    console.warn("Nao foi possivel salvar o empreendimento no Supabase.", error.message);
-    alert(`Nao foi possivel salvar o empreendimento no banco: ${error.message}`);
+    console.warn("Não foi possível salvar o empreendimento no Supabase.", error.message);
+    alert(`Não foi possível salvar o empreendimento no banco: ${error.message}`);
   }
 }
 
@@ -6109,8 +6109,8 @@ async function persistEnvironmentalLicenseType(licenseType, wasExisting) {
       populateChecklistModelSelects();
     }
   } catch (error) {
-    console.warn("Nao foi possivel salvar o tipo de licenca no Supabase.", error.message);
-    alert(`Nao foi possivel salvar o tipo de licenca no banco: ${error.message}`);
+    console.warn("Não foi possível salvar o tipo de licença no Supabase.", error.message);
+    alert(`Não foi possível salvar o tipo de licença no banco: ${error.message}`);
   }
 }
 
@@ -6145,8 +6145,8 @@ async function persistEnvironmentalDocument(documentItem, wasExisting) {
       populateChecklistModelSelects();
     }
   } catch (error) {
-    console.warn("Nao foi possivel salvar o documento ambiental no Supabase.", error.message);
-    alert(`Nao foi possivel salvar o documento ambiental no banco: ${error.message}`);
+    console.warn("Não foi possível salvar o documento ambiental no Supabase.", error.message);
+    alert(`Não foi possível salvar o documento ambiental no banco: ${error.message}`);
   }
 }
 
@@ -6156,7 +6156,7 @@ async function persistActivity(activity, wasExisting) {
   if (!organizationId) return;
   const companyId = companyIdByCnpj(activity.companyCnpj);
   if (!looksLikeUuid(companyId)) {
-    alert("Nao foi possivel salvar a atividade no banco porque o CNPJ selecionado ainda nao possui ID valido no Supabase.");
+    alert("Não foi possível salvar a atividade no banco porque o CNPJ selecionado ainda não possui ID válido no Supabase.");
     return;
   }
   const payload = {
@@ -6188,8 +6188,8 @@ async function persistActivity(activity, wasExisting) {
       renderActivities();
     }
   } catch (error) {
-    console.warn("Nao foi possivel salvar a atividade no Supabase.", error.message);
-    alert(`Nao foi possivel salvar a atividade no banco: ${error.message}`);
+    console.warn("Não foi possível salvar a atividade no Supabase.", error.message);
+    alert(`Não foi possível salvar a atividade no banco: ${error.message}`);
   }
 }
 
@@ -6199,7 +6199,7 @@ async function persistChecklistModel(model, wasExisting) {
   if (!organizationId) return;
   const licenseTypeId = licenseTypeIdByName(model.license);
   if (!looksLikeUuid(licenseTypeId)) {
-    alert("Nao foi possivel salvar o modelo no banco porque o tipo de licenca ainda nao possui ID valido no Supabase.");
+    alert("Não foi possível salvar o modelo no banco porque o tipo de licença ainda não possui ID válido no Supabase.");
     return;
   }
   const payload = {
@@ -6227,8 +6227,8 @@ async function persistChecklistModel(model, wasExisting) {
       renderChecklistModelsAdmin();
     }
   } catch (error) {
-    console.warn("Nao foi possivel salvar o modelo de check-list no Supabase.", error.message);
-    alert(`Nao foi possivel salvar o modelo de check-list no banco: ${error.message}`);
+    console.warn("Não foi possível salvar o modelo de check-list no Supabase.", error.message);
+    alert(`Não foi possível salvar o modelo de check-list no banco: ${error.message}`);
   }
 }
 
@@ -6265,7 +6265,7 @@ async function persistSendRecipient(recipient, wasExisting) {
     })));
     renderSendRecipients();
   } catch (error) {
-    console.warn("Nao foi possivel salvar o e-mail de alerta no Supabase.", error.message);
+    console.warn("Não foi possível salvar o e-mail de alerta no Supabase.", error.message);
   }
 }
 
@@ -6363,7 +6363,7 @@ async function loadSupabaseData() {
     return {
       id: row.id,
       ownerType: row.owner_type,
-      owner: ownerRow?.name || "Proprietario nao encontrado",
+      owner: ownerRow?.name || "Proprietário não encontrado",
       type: row.type,
       registration: row.registration,
       reference: row.reference || "",
@@ -6387,8 +6387,8 @@ async function loadSupabaseData() {
   enterprises = enterpriseRows.map((row) => ({
     id: row.id,
     name: row.name,
-    company: companyById[row.company_id]?.name || "Empresa nao encontrada",
-    property: propertyById[row.property_id] ? `Matricula ${propertyById[row.property_id].registration}` : "Imovel nao encontrado",
+    company: companyById[row.company_id]?.name || "Empresa não encontrada",
+    property: propertyById[row.property_id] ? `Matrícula ${propertyById[row.property_id].registration}` : "Imóvel não encontrado",
     type: row.type || "",
     status: row.status || "Planejado",
     responsible: partnerById[row.responsible_partner_id]?.name || "",
@@ -6441,15 +6441,15 @@ async function loadSupabaseData() {
 
   environmentalProcesses = licenseRows.map((row) => {
     const status = daysUntil(row.expiration_date) !== null && daysUntil(row.expiration_date) < 0 ? "expired" : statusFromSupabase(row.status);
-    const licenseType = licenseTypeById[row.license_type_id]?.name || "Licenca ambiental";
-    const company = companyById[row.company_id]?.name || "Empresa nao encontrada";
-    const property = propertyById[row.property_id] ? `Matricula ${propertyById[row.property_id].registration}` : "";
+    const licenseType = licenseTypeById[row.license_type_id]?.name || "Licença ambiental";
+    const company = companyById[row.company_id]?.name || "Empresa não encontrada";
+    const property = propertyById[row.property_id] ? `Matrícula ${propertyById[row.property_id].registration}` : "";
     return {
       id: row.id,
-      internalNumber: row.process_number || row.license_number || "Sem numero",
+      internalNumber: row.process_number || row.license_number || "Sem número",
       licensingFormat: "monofasico",
       licensingFormatLabel: "Monofasico",
-      number: row.license_number || row.process_number || "Sem numero",
+      number: row.license_number || row.process_number || "Sem número",
       title: enterprises.find((enterprise) => sameId(enterprise.id, row.enterprise_id))?.name || company,
       company,
       type: licenseType,
@@ -6570,3 +6570,10 @@ async function loadSupabaseData() {
 
 renderDashboard();
 loadSupabaseData();
+
+
+
+
+
+
+

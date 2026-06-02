@@ -1802,6 +1802,16 @@ button {
   justify-content: flex-end;
 }
 
+.profile-footnote {
+  color: var(--muted);
+  display: grid;
+  gap: 3px;
+  font-size: 12px;
+  line-height: 1.35;
+  margin-top: 14px;
+  text-align: right;
+}
+
 .linked-process-box {
   align-items: center;
   background: var(--green-soft);

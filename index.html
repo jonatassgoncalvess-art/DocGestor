@@ -1,10 +1,10 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DocGestor by Carminatti | Previa</title>
-    <link rel="stylesheet" href="styles.css?v=20260602-activities-adjustments" />
+    <title>DocGestor by Carminatti | Prévia</title>
+    <link rel="stylesheet" href="styles.css?v=20260602-acentos" />
   </head>
   <body>
     <section class="login-screen" id="login-screen">
@@ -21,16 +21,16 @@
         <div>
           <p class="eyebrow">Acesso ao sistema</p>
           <h1>Entrar no DocGestor</h1>
-          <p>Informe seu usuario e senha para acessar os ambientes liberados.</p>
+          <p>Informe seu usuário e senha para acessar os ambientes liberados.</p>
         </div>
         <form class="login-form" id="login-form">
-          <label>Usuario
+          <label>Usuário
             <input id="login-user" autocomplete="username" placeholder="Admin ou e-mail cadastrado" />
           </label>
           <label>Senha
             <input id="login-password" type="password" autocomplete="current-password" placeholder="Digite sua senha" />
           </label>
-          <span class="login-error" id="login-error" hidden>Usuario ou senha invalidos.</span>
+          <span class="login-error" id="login-error" hidden>Usuário ou senha inválidos.</span>
           <button class="primary" id="login-submit">Entrar</button>
         </form>
       </div>
@@ -56,29 +56,29 @@
             <span>01</span> Painel Admin
           </button>
           <div class="admin-subnav" id="admin-subnav" data-permission-view="admin">
-            <button class="admin-link active" data-admin-target="usuarios-admin">01.1 Usuarios</button>
+            <button class="admin-link active" data-admin-target="usuarios-admin">01.1 Usuários</button>
             <div class="side-tree-group">
               <strong>01.2 Cadastros</strong>
-              <button class="admin-link" data-admin-target="socios-admin">01.2.1 Socios</button>
+              <button class="admin-link" data-admin-target="socios-admin">01.2.1 Sócios</button>
               <button class="admin-link" data-admin-target="empresas-filiais">01.2.2 Empresas e Filiais</button>
-              <button class="admin-link" data-admin-target="imoveis-admin">01.2.3 Imoveis</button>
+              <button class="admin-link" data-admin-target="imoveis-admin">01.2.3 Imóveis</button>
               <button class="admin-link" data-admin-target="empreendimentos-admin">01.2.4 Empreendimento</button>
               <button class="admin-link" data-admin-target="atividades-admin">01.2.5 Atividades</button>
             </div>
             <div class="side-tree-group">
               <strong>01.3 Ambiental</strong>
-              <button class="admin-link" data-admin-target="tipos-licencas">01.3.1 Tipos de Licencas</button>
+              <button class="admin-link" data-admin-target="tipos-licencas">01.3.1 Tipos de Licenças</button>
               <button class="admin-link" data-admin-target="documentos-ambientais">01.3.2 Documentos</button>
               <button class="admin-link" data-admin-target="modelos-checklist">01.3.3 Modelos de Check-list</button>
             </div>
             <div class="side-tree-group">
               <strong>01.4 Envios</strong>
               <button class="admin-link" data-admin-target="email-sistema">01.4.1 E-mail do Sistema</button>
-              <button class="admin-link" data-admin-target="envios-admin">01.4.2 E-mails por Modulo</button>
-              <button class="admin-link" data-admin-target="historico-alertas">01.4.3 Historico de Alertas</button>
+              <button class="admin-link" data-admin-target="envios-admin">01.4.2 E-mails por Módulo</button>
+              <button class="admin-link" data-admin-target="historico-alertas">01.4.3 Histórico de Alertas</button>
             </div>
             <div class="side-tree-group">
-              <strong>01.5 Configuracoes do Sistema</strong>
+              <strong>01.5 Configurações do Sistema</strong>
               <button class="admin-link" data-admin-target="backup-sistema">01.5.1 Backup</button>
             </div>
           </div>
@@ -86,27 +86,27 @@
             <span>02</span> Painel geral
           </button>
           <button class="nav-item" data-view="modulos" data-module-menu-toggle="true" data-permission-view="modules" aria-expanded="false">
-            <span>03</span> Modulos
+            <span>03</span> Módulos
           </button>
           <div class="admin-subnav module-subnav" id="module-subnav" data-permission-view="environmental">
-            <button class="admin-link module-parent-link" data-view-target="licencas" data-module-root="licencas">03.1 Licencas Ambientais</button>
+            <button class="admin-link module-parent-link" data-view-target="licencas" data-module-root="licencas">03.1 Licenças Ambientais</button>
             <div class="side-tree-group module-child-group">
               <button class="admin-link" data-module-license-status="open">03.1.1 Abertas</button>
               <button class="admin-link" data-module-license-status="pending">03.1.2 Pendentes</button>
               <button class="admin-link" data-module-license-status="expired">03.1.3 Vencidas</button>
-              <button class="admin-link" data-module-license-status="done">03.1.4 Concluidas</button>
-              <button class="admin-link" data-module-license-status="licenses">03.1.5 Licencas</button>
+              <button class="admin-link" data-module-license-status="done">03.1.4 Concluídas</button>
+              <button class="admin-link" data-module-license-status="licenses">03.1.5 Licenças</button>
             </div>
           </div>
           <button class="nav-item" data-view="agenda" data-agenda-menu-toggle="true" data-permission-view="agenda" aria-expanded="false">
             <span>04</span> Agenda
           </button>
           <div class="admin-subnav agenda-subnav" id="agenda-subnav" data-permission-view="agenda">
-            <button class="admin-link active" data-agenda-target="agenda">04.1 Calendario</button>
-            <button class="admin-link" data-agenda-target="agenda-notes">04.2 Anotacoes</button>
+            <button class="admin-link active" data-agenda-target="agenda">04.1 Calendário</button>
+            <button class="admin-link" data-agenda-target="agenda-notes">04.2 Anotações</button>
           </div>
           <button class="nav-item" data-view="settings" data-settings-menu-toggle="true" aria-expanded="false">
-            <span>05</span> Configuracoes
+            <span>05</span> Configurações
           </button>
           <div class="admin-subnav settings-subnav" id="settings-subnav">
             <button class="admin-link" data-settings-target="profile-settings">05.1 Perfil</button>
@@ -131,7 +131,7 @@
               <input id="global-search-input" type="search" placeholder="Buscar ambientes ou processos" autocomplete="off" />
               <div class="global-search-results" id="global-search-results" hidden></div>
             </div>
-            <span class="current-user" id="current-user-label">Usuario</span>
+            <span class="current-user" id="current-user-label">Usuário</span>
             <button class="ghost" id="logout-button">Sair</button>
           </div>
         </header>
@@ -157,8 +157,8 @@
             </button>
             <button class="home-action-card" data-module-license-status="licenses" data-permission-view="environmental">
               <span>03.1.5</span>
-              <strong>Licencas</strong>
-              <small>Consultar licencas geradas apos a conclusao dos processos.</small>
+              <strong>Licenças</strong>
+              <small>Consultar licenças geradas após a conclusão dos processos.</small>
             </button>
             <button class="home-action-card" data-view-target="agenda" data-permission-view="agenda">
               <span>04</span>
@@ -173,9 +173,9 @@
                 <h2>Acesso administrativo</h2>
               </div>
               <div class="home-link-list" data-permission-view="admin">
-                <button class="ghost" data-admin-target="usuarios-admin">Usuarios e acessos</button>
+                <button class="ghost" data-admin-target="usuarios-admin">Usuários e acessos</button>
                 <button class="ghost" data-admin-target="empresas-filiais">Empresas e filiais</button>
-                <button class="ghost" data-admin-target="imoveis-admin">Imoveis</button>
+                <button class="ghost" data-admin-target="imoveis-admin">Imóveis</button>
                 <button class="ghost" data-admin-target="modelos-checklist">Modelos de check-list</button>
               </div>
             </section>
@@ -186,7 +186,7 @@
               </div>
               <div class="home-link-list">
                 <button class="primary" id="home-new-process" data-permission-view="environmental">Novo processo ambiental</button>
-                <button class="ghost" data-view-target="modulos" data-permission-view="modules">Abrir modulos</button>
+                <button class="ghost" data-view-target="modulos" data-permission-view="modules">Abrir módulos</button>
                 <button class="ghost" data-view-target="agenda" data-permission-view="agenda">Abrir agenda</button>
               </div>
             </section>
@@ -199,17 +199,17 @@
               <section class="admin-panel active" id="admin-usuarios-admin">
                 <div class="section-title">
                   <div>
-                    <p class="eyebrow">01.1 Usuarios</p>
-                    <h2>Cadastro de usuarios e niveis de acesso</h2>
+                    <p class="eyebrow">01.1 Usuários</p>
+                    <h2>Cadastro de usuários e níveis de acesso</h2>
                   </div>
                   <div class="title-actions">
-                    <button class="ghost" id="user-new">Novo usuario</button>
+                    <button class="ghost" id="user-new">Novo usuário</button>
                   </div>
                 </div>
 
                 <div class="user-admin-grid single-column">
                   <section class="panel">
-                    <div class="list-head"><h3>Usuarios cadastrados</h3><span id="user-count">3 itens</span></div>
+                    <div class="list-head"><h3>Usuários cadastrados</h3><span id="user-count">3 itens</span></div>
                     <div class="user-list" id="user-list"></div>
                   </section>
 
@@ -219,13 +219,13 @@
               <section class="admin-panel" id="admin-socios-admin">
                 <div class="section-title">
                   <div>
-                    <p class="eyebrow">01.2.1 Socios</p>
-                    <h2>Cadastro de socios e responsaveis legais</h2>
+                    <p class="eyebrow">01.2.1 Sócios</p>
+                    <h2>Cadastro de sócios e responsáveis legais</h2>
                   </div>
                   <button class="primary" id="partner-new">Novo socio</button>
                 </div>
                 <section class="panel">
-                  <div class="list-head"><h3>Socios cadastrados</h3><span id="partner-count">2 itens</span></div>
+                  <div class="list-head"><h3>Sócios cadastrados</h3><span id="partner-count">2 itens</span></div>
                   <div class="crud-list" id="partner-list"></div>
                 </section>
               </section>
@@ -234,7 +234,7 @@
                 <div class="section-title">
                   <div>
                     <p class="eyebrow">01.2.2 Empresas e Filiais</p>
-                    <h2>Vinculo de empresas, filiais e socios</h2>
+                    <h2>Vínculo de empresas, filiais e sócios</h2>
                   </div>
                   <button class="primary" id="company-new">Nova Empresa/Filial</button>
                 </div>
@@ -247,13 +247,13 @@
               <section class="admin-panel" id="admin-imoveis-admin">
                 <div class="section-title">
                   <div>
-                    <p class="eyebrow">01.2.3 Imoveis</p>
-                    <h2>Imoveis urbanos ou rurais vinculados ao proprietario</h2>
+                    <p class="eyebrow">01.2.3 Imóveis</p>
+                    <h2>Imóveis urbanos ou rurais vinculados ao proprietário</h2>
                   </div>
-                  <button class="primary" id="property-new">Novo Imovel</button>
+                  <button class="primary" id="property-new">Novo Imóvel</button>
                 </div>
                 <section class="panel">
-                  <div class="list-head"><h3>Imoveis cadastrados</h3><span id="property-count">2 itens</span></div>
+                  <div class="list-head"><h3>Imóveis cadastrados</h3><span id="property-count">2 itens</span></div>
                   <div class="crud-list" id="property-list"></div>
                 </section>
               </section>
@@ -262,7 +262,7 @@
                 <div class="section-title">
                   <div>
                     <p class="eyebrow">01.2.4 Empreendimento</p>
-                    <h2>Vinculo entre empresa e imovel onde o empreendimento sera construido</h2>
+                    <h2>Vínculo entre empresa e imóvel onde o empreendimento será construído</h2>
                   </div>
                   <button class="primary" id="enterprise-new">Novo Empreendimento</button>
                 </div>
@@ -289,10 +289,10 @@
               <section class="admin-panel" id="admin-tipos-licencas">
                 <div class="section-title">
                   <div>
-                    <p class="eyebrow">01.3.1 Tipos de Licencas</p>
-                    <h2>Tipos ambientais disponiveis para o modulo</h2>
+                    <p class="eyebrow">01.3.1 Tipos de Licenças</p>
+                    <h2>Tipos ambientais disponíveis para o módulo</h2>
                   </div>
-                  <button class="primary" id="license-type-new">Novo Tipo de Licenca</button>
+                  <button class="primary" id="license-type-new">Novo Tipo de Licença</button>
                 </div>
                 <section class="panel">
                   <div class="list-head"><h3>Tipos cadastrados</h3><span id="license-type-count">3 itens</span></div>
@@ -318,7 +318,7 @@
                 <div class="section-title">
                   <div>
                     <p class="eyebrow">01.3.3 Modelos de Check-list</p>
-                    <h2>Modelo que sera copiado para cada nova licenca ambiental</h2>
+                    <h2>Modelo que será copiado para cada nova licença ambiental</h2>
                   </div>
                   <button class="primary" id="checklist-model-new">Novo Modelo</button>
                 </div>
@@ -334,7 +334,7 @@
                     <p class="eyebrow">01.4.1 E-mail do Sistema</p>
                     <h2>Remetente oficial dos avisos do DocGestor</h2>
                   </div>
-                  <span class="pill yellow" id="system-email-status">Aguardando validacao</span>
+                  <span class="pill yellow" id="system-email-status">Aguardando validação</span>
                 </div>
                 <section class="panel">
                   <div class="form-grid">
@@ -353,7 +353,7 @@
                     </label>
                     <label>Host SMTP<input id="system-email-host" placeholder="smtp.seudominio.com.br" /></label>
                     <label>Porta<input id="system-email-port" value="587" /></label>
-                    <label>Usuario/API key<input id="system-email-user" placeholder="usuario ou chave de API" /></label>
+                    <label>Usuário/API key<input id="system-email-user" placeholder="usuário ou chave de API" /></label>
                     <label>Senha/segredo<input id="system-email-secret" type="password" placeholder="armazenar no backend futuramente" /></label>
                   </div>
                   <div class="dns-grid">
@@ -379,7 +379,7 @@
                       onclick="event.preventDefault(); document.querySelector('#system-email-test-modal')?.classList.add('open'); document.querySelector('#system-email-test-modal')?.setAttribute('aria-hidden', 'false');"
                     >Testar envio</button>
                     <button class="ghost" id="system-email-verify" type="button">Verificar dominio</button>
-                    <button class="primary" id="system-email-save" type="button">Salvar configuracao</button>
+                    <button class="primary" id="system-email-save" type="button">Salvar configuração</button>
                   </div>
                 </section>
               </section>
@@ -387,13 +387,13 @@
               <section class="admin-panel" id="admin-envios-admin">
                 <div class="section-title">
                   <div>
-                    <p class="eyebrow">01.4.2 E-mails por Modulo</p>
-                    <h2>E-mails que recebem avisos por modulo</h2>
+                    <p class="eyebrow">01.4.2 E-mails por Módulo</p>
+                    <h2>E-mails que recebem avisos por módulo</h2>
                   </div>
                   <button class="primary" id="send-recipient-new">Novo e-mail</button>
                 </div>
                 <section class="panel">
-                  <div class="list-head"><h3>Destinatarios por modulo</h3><span id="send-recipient-count">0 itens</span></div>
+                  <div class="list-head"><h3>Destinatários por módulo</h3><span id="send-recipient-count">0 itens</span></div>
                   <div class="crud-list" id="send-recipient-list"></div>
                 </section>
               </section>
@@ -401,10 +401,10 @@
               <section class="admin-panel" id="admin-historico-alertas">
                 <div class="section-title">
                   <div>
-                    <p class="eyebrow">01.4.3 Historico de Alertas</p>
+                    <p class="eyebrow">01.4.3 Histórico de Alertas</p>
                     <h2>Status dos e-mails enviados pelo Resend</h2>
                   </div>
-                  <button class="primary" id="alert-history-refresh" type="button">Atualizar historico</button>
+                  <button class="primary" id="alert-history-refresh" type="button">Atualizar histórico</button>
                 </div>
                 <section class="panel">
                   <div class="list-head">
@@ -412,7 +412,7 @@
                     <span id="alert-history-count">0 itens</span>
                   </div>
                   <div class="alert-history-summary" id="alert-history-summary">
-                    <span>Use atualizar historico para buscar os envios diretamente no Resend.</span>
+                    <span>Use atualizar histórico para buscar os envios diretamente no Resend.</span>
                   </div>
                   <div class="crud-list alert-history-list" id="alert-history-list"></div>
                 </section>
@@ -482,7 +482,7 @@
                       <div class="modal-actions inline-actions">
                         <button class="ghost" id="backup-test" type="button">Testar destino</button>
                         <button class="ghost" id="backup-run-now" type="button">Gerar backup agora</button>
-                        <button class="primary" id="backup-save" type="button">Salvar configuracao</button>
+                        <button class="primary" id="backup-save" type="button">Salvar configuração</button>
                       </div>
                     </div>
                     <aside class="backup-recommendations">
@@ -515,19 +515,19 @@
               <p class="eyebrow">Sistema principal</p>
               <h2>Painel Geral</h2>
             </div>
-            <span class="pill green">Modulo ativo: Ambiental</span>
+              <span class="pill green">Módulo ativo: Ambiental</span>
           </div>
 
           <div class="metric-grid">
             <article class="metric danger">
-              <span>Prazos criticos</span>
+              <span>Prazos críticos</span>
               <strong id="dashboard-critical-count">0</strong>
-              <small id="dashboard-critical-label">Sem prazos criticos cadastrados</small>
+              <small id="dashboard-critical-label">Sem prazos críticos cadastrados</small>
             </article>
             <article class="metric warning">
               <span>Vencem em 90 dias</span>
               <strong id="dashboard-warning-count">0</strong>
-              <small id="dashboard-warning-label">Sem vencimentos proximos</small>
+              <small id="dashboard-warning-label">Sem vencimentos próximos</small>
             </article>
             <article class="metric">
               <span>Processos em andamento</span>
@@ -544,12 +544,12 @@
           <div class="content-grid">
             <section class="panel wide">
               <div class="panel-head">
-                <h2>Fila de risco por modulo</h2>
+                <h2>Fila de risco por módulo</h2>
                 <button class="ghost">Ver matriz</button>
               </div>
               <div class="table" id="dashboard-risk-table">
                 <div class="table-row table-head">
-                  <span>Modulo</span>
+                  <span>Módulo</span>
                   <span>Processo</span>
                   <span>Prazo</span>
                   <span>Status</span>
@@ -559,7 +559,7 @@
 
             <section class="panel">
               <div class="panel-head">
-                <h2>Acoes do dia</h2>
+                <h2>Ações do dia</h2>
               </div>
               <ul class="task-list" id="dashboard-task-list"></ul>
             </section>
@@ -571,16 +571,16 @@
             <p class="eyebrow">Fonte da verdade do sistema</p>
             <h2>Cadastros mestres do Painel Admin</h2>
             <p>
-              Empresas, filiais, imoveis, socios, tipos de licenca, documentos e modelos de checklist sao cadastrados
-              aqui. Os modulos apenas selecionam e utilizam esses dados.
+              Empresas, filiais, imóveis, sócios, tipos de licença, documentos e modelos de checklist são cadastrados
+              aqui. Os módulos apenas selecionam e utilizam esses dados.
             </p>
           </div>
 
           <div class="module-tabs" role="tablist" aria-label="Cadastros">
             <button class="tab active">Empresas e filiais</button>
-            <button class="tab">Socios</button>
-            <button class="tab">Imoveis</button>
-            <button class="tab">Tipos de licenca</button>
+            <button class="tab">Sócios</button>
+            <button class="tab">Imóveis</button>
+            <button class="tab">Tipos de licença</button>
             <button class="tab">Tipos de documento</button>
             <button class="tab">Modelos de checklist</button>
           </div>
@@ -592,7 +592,7 @@
                 <button class="ghost">+ Filial</button>
               </div>
               <div class="form-grid">
-                <label>Razao social<input /></label>
+                <label>Razão social<input /></label>
                 <label>CNPJ<input /></label>
                 <label>Inscricao estadual<input /></label>
                 <label>Status<select><option>Ativa</option></select></label>
@@ -601,43 +601,43 @@
 
             <section class="panel">
               <div class="panel-head">
-                <h2>Imovel vinculado</h2>
+                <h2>Imóvel vinculado</h2>
                 <button class="ghost">Editar</button>
               </div>
               <dl class="details">
-                <dt>Matricula</dt>
-                <dd>Nenhum imovel selecionado</dd>
+                <dt>Matrícula</dt>
+                <dd>Nenhum imóvel selecionado</dd>
                 <dt>Localizacao</dt>
-                <dd>Nao informado</dd>
+                <dd>Não informado</dd>
                 <dt>Coordenadas</dt>
-                <dd>Nao informado</dd>
+                <dd>Não informado</dd>
               </dl>
             </section>
 
             <section class="panel">
               <div class="panel-head">
-                <h2>Socio administrador</h2>
-                <button class="ghost">+ Socio</button>
+                <h2>Sócio administrador</h2>
+                <button class="ghost">+ Sócio</button>
               </div>
               <dl class="details">
                 <dt>Nome</dt>
                 <dd>Nenhum socio selecionado</dd>
                 <dt>CPF</dt>
-                <dd>Nao informado</dd>
-                <dt>Vinculo</dt>
-                <dd>Nao informado</dd>
+                <dd>Não informado</dd>
+                <dt>Vínculo</dt>
+                <dd>Não informado</dd>
               </dl>
             </section>
 
             <section class="panel">
               <div class="panel-head">
-                <h2>Tipos de licenca ambiental</h2>
+                <h2>Tipos de licença ambiental</h2>
                 <button class="primary small">Novo tipo</button>
               </div>
               <div class="chips">
-                <span>Licenca Previa</span>
-                <span>Licenca de Instalacao</span>
-                <span>Licenca de Operacao</span>
+                <span>Licença Prévia</span>
+                <span>Licença de Instalacao</span>
+                <span>Licença de Operação</span>
                 <span>LAS</span>
                 <span>Outorga</span>
                 <span>Autorizacao ambiental</span>
@@ -652,7 +652,7 @@
               <div class="chips">
                 <span>CNPJ</span>
                 <span>Contrato social</span>
-                <span>Matricula do imovel</span>
+                <span>Matrícula do imóvel</span>
                 <span>Planta/layout</span>
                 <span>Memorial descritivo</span>
                 <span>Nenhum documento cadastrado</span>
@@ -663,23 +663,23 @@
 
             <section class="panel wide-panel">
               <div class="panel-head">
-                <h2>Modelo de checklist por tipo de licenca</h2>
+                <h2>Modelo de checklist por tipo de licença</h2>
                 <button class="primary small">Novo modelo</button>
               </div>
               <div class="table compact">
                 <div class="table-row table-head">
-                  <span>Tipo de licenca</span>
+                  <span>Tipo de licença</span>
                   <span>Documentos exigidos</span>
-                  <span>Regra de renovacao</span>
+                  <span>Regra de renovação</span>
                 </div>
                 <div class="table-row">
-                  <span>Licenca de Operacao</span>
+                  <span>Licença de Operação</span>
                   <span>Cadastre documentos no Painel Admin para alimentar os check-lists.</span>
                   <span>180 dias antes</span>
                 </div>
                 <div class="table-row">
                   <span>LAS</span>
-                  <span>CNPJ, matricula, croqui, memorial, declaracoes, comprovante de taxa</span>
+                  <span>CNPJ, matrícula, croqui, memorial, declarações, comprovante de taxa</span>
                   <span>120 dias antes</span>
                 </div>
               </div>
@@ -690,15 +690,15 @@
         <section class="view" id="modulos">
           <div class="section-title">
             <div>
-              <p class="eyebrow">03 Modulos</p>
+              <p class="eyebrow">03 Módulos</p>
               <h2>Ambientes operacionais</h2>
             </div>
           </div>
           <div class="module-grid">
             <article class="module-card active-module">
-              <span>03.1 Modulo ativo</span>
-              <h3>Licencas Ambientais</h3>
-              <p>Processos ambientais, etapas, checklists, documentos, protocolos, licencas e vencimentos.</p>
+              <span>03.1 Módulo ativo</span>
+              <h3>Licenças Ambientais</h3>
+              <p>Processos ambientais, etapas, checklists, documentos, protocolos, licenças e vencimentos.</p>
               <button class="primary small" data-view-target="licencas">Abrir 03.1</button>
             </article>
           </div>
@@ -706,14 +706,14 @@
 
         <section class="view" id="licencas">
           <div class="module-context">
-            <p class="eyebrow">03.1 Modulo operacional</p>
+            <p class="eyebrow">03.1 Módulo operacional</p>
             <h2>Processos Ambientais</h2>
           </div>
 
           <section class="panel license-status-panel">
             <div class="panel-head">
               <div>
-                <h2 id="license-status-title">03.1 Licencas Ambientais</h2>
+                <h2 id="license-status-title">03.1 Licenças Ambientais</h2>
                 <span class="muted" id="license-status-subtitle">Gestao geral dos processos ambientais e abertura de novos processos.</span>
               </div>
               <div class="list-head-actions">
@@ -728,8 +728,8 @@
         <section class="view" id="agenda">
           <div class="section-title">
             <div>
-              <p class="eyebrow">04.1 Calendario</p>
-              <h2>Calendario operacional</h2>
+              <p class="eyebrow">04.1 Calendário</p>
+              <h2>Calendário operacional</h2>
             </div>
             <div class="list-head-actions">
               <button class="ghost small" id="agenda-prev-month">Mes anterior</button>
@@ -742,7 +742,7 @@
             <section class="panel agenda-calendar-panel">
               <div class="agenda-head">
                 <div>
-                  <span>Calendario</span>
+                  <span>Calendário</span>
                   <strong id="agenda-month-label">Maio 2026</strong>
                 </div>
                 <span class="pill green" id="agenda-month-count">0 eventos</span>
@@ -765,25 +765,25 @@
         <section class="view" id="agenda-notes">
           <div class="section-title">
             <div>
-              <p class="eyebrow">04.2 Anotacoes</p>
+              <p class="eyebrow">04.2 Anotações</p>
               <h2>Agendamentos pendentes</h2>
             </div>
             <button class="primary" id="agenda-note-new">Novo agendamento</button>
           </div>
           <section class="panel">
-            <div class="list-head"><h3>Anotacoes e compromissos</h3><span id="agenda-note-count">0 itens</span></div>
+            <div class="list-head"><h3>Anotações e compromissos</h3><span id="agenda-note-count">0 itens</span></div>
             <div class="crud-list agenda-note-list" id="agenda-note-list"></div>
           </section>
         </section>
 
         <section class="view" id="settings">
           <div class="module-context">
-            <p class="eyebrow">05 Configuracoes</p>
-            <h2>Configuracoes do usuario</h2>
+            <p class="eyebrow">05 Configurações</p>
+            <h2>Configurações do usuário</h2>
           </div>
           <section class="panel">
             <div class="list-head">
-              <h3>Ambientes disponiveis</h3>
+              <h3>Ambientes disponíveis</h3>
               <span>1 item</span>
             </div>
             <div class="crud-list">
@@ -806,7 +806,7 @@
               <p class="eyebrow">05.1 Perfil</p>
               <h2>Meu perfil</h2>
             </div>
-            <span class="pill green" id="profile-status-pill">Usuario ativo</span>
+            <span class="pill green" id="profile-status-pill">Usuário ativo</span>
           </div>
           <section class="panel">
             <form class="user-form" id="profile-form">
@@ -814,7 +814,7 @@
               <label>E-mail<input id="profile-email" type="email" /></label>
               <label>Telefone<input id="profile-phone" /></label>
               <label>CPF<input id="profile-cpf" /></label>
-              <label>Cargo/funcao<input id="profile-role-title" /></label>
+              <label>Cargo/função<input id="profile-role-title" /></label>
               <label>Perfil de acesso<input id="profile-access-profile" disabled /></label>
             </form>
             <div class="modal-actions inline-actions">
@@ -835,6 +835,10 @@
               <button class="primary" id="profile-password-save" type="button">Alterar senha</button>
             </div>
           </section>
+          <footer class="profile-footnote">
+            <span>Idealizado por Jônatas Gonçalves</span>
+            <span>Desenvolvido por IA.CODEX</span>
+          </footer>
         </section>
 
         <div class="modal-backdrop" id="agenda-day-modal" aria-hidden="true">
@@ -864,7 +868,7 @@
           <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="agenda-note-modal-title">
             <div class="modal-head">
               <div>
-                <p class="eyebrow">04.2 Anotacoes</p>
+                <p class="eyebrow">04.2 Anotações</p>
                 <h2 id="agenda-note-modal-title">Novo agendamento</h2>
               </div>
               <button class="ghost small" data-close-modal="agenda-note-modal">Fechar</button>
@@ -877,10 +881,10 @@
               <label>Tipo
                 <select id="agenda-note-type">
                   <option>Ambiental</option>
-                  <option>Licencas Ambientais</option>
+                  <option>Licenças Ambientais</option>
                   <option>Prazo do processo</option>
                   <option>Vencimento</option>
-                  <option>Pendencia</option>
+                  <option>Pendência</option>
                   <option>Reuniao</option>
                   <option>Outro</option>
                 </select>
@@ -889,7 +893,7 @@
                 <select id="agenda-note-status">
                   <option value="green">Normal</option>
                   <option value="warning">Atencao</option>
-                  <option value="danger">Critico</option>
+                  <option value="danger">Crítico</option>
                 </select>
               </label>
               <label class="wide-field checkbox-line">
@@ -897,15 +901,15 @@
                 Vincular Processo
               </label>
               <div class="wide-field linked-process-box" id="agenda-note-link-box" hidden>
-                <label>Modulo
+                <label>Módulo
                   <select id="agenda-note-link-module">
-                    <option value="environmental">03.1 Licencas Ambientais</option>
+                    <option value="environmental">03.1 Licenças Ambientais</option>
                   </select>
                 </label>
                 <button class="ghost" type="button" id="agenda-note-link-select">Selecionar</button>
-                <span id="agenda-note-link-summary">Nenhum processo ou licenca selecionado.</span>
+                <span id="agenda-note-link-summary">Nenhum processo ou licença selecionado.</span>
               </div>
-              <label class="wide-field">Descricao<textarea id="agenda-note-description"></textarea></label>
+              <label class="wide-field">Descrição<textarea id="agenda-note-description"></textarea></label>
             </form>
             <div class="modal-actions">
               <button class="ghost" data-close-modal="agenda-note-modal">Cancelar</button>
@@ -919,7 +923,7 @@
             <div class="modal-head">
               <div>
                 <p class="eyebrow">Vincular ao agendamento</p>
-                <h2 id="agenda-link-picker-title">Selecionar processo ou licenca</h2>
+                <h2 id="agenda-link-picker-title">Selecionar processo ou licença</h2>
               </div>
               <button class="ghost small" data-close-modal="agenda-link-picker-modal">Fechar</button>
             </div>
@@ -929,7 +933,7 @@
                   <option value="open">Abertas</option>
                   <option value="pending">Pendentes</option>
                   <option value="expired">Vencidas</option>
-                  <option value="licenses">Licencas</option>
+                  <option value="licenses">Licenças</option>
                 </select>
               </label>
             </div>
@@ -941,20 +945,20 @@
           <div class="section-title">
             <div>
               <p class="eyebrow">Controle de acesso</p>
-              <h2>Usuarios, empresas e permissoes por modulo</h2>
+              <h2>Usuários, empresas e permissões por módulo</h2>
             </div>
-            <button class="primary">Novo usuario</button>
+            <button class="primary">Novo usuário</button>
           </div>
           <section class="panel">
             <div class="table">
               <div class="table-row table-head">
-                <span>Usuario</span>
+                <span>Usuário</span>
                 <span>Empresa</span>
                 <span>Perfil</span>
-                <span>Modulos</span>
+                <span>Módulos</span>
               </div>
               <div class="table-row">
-                <span>Nenhum usuario carregado</span>
+                <span>Nenhum usuário carregado</span>
                 <span>Supabase</span>
                 <span>-</span>
                 <span class="pill yellow">Aguardando dados</span>
@@ -969,8 +973,8 @@
       <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="user-modal-title">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">01.1 Usuarios</p>
-            <h2 id="user-modal-title">Novo usuario</h2>
+            <p class="eyebrow">01.1 Usuários</p>
+            <h2 id="user-modal-title">Novo usuário</h2>
           </div>
           <button class="ghost small" data-close-modal="user-modal">Fechar</button>
         </div>
@@ -980,7 +984,7 @@
           <label>E-mail<input id="user-email" /></label>
           <label>Telefone<input id="user-phone" /></label>
           <label>CPF<input id="user-cpf" /></label>
-          <label>Cargo/funcao<input id="user-role-title" /></label>
+          <label>Cargo/função<input id="user-role-title" /></label>
           <label>Empresa vinculada
             <select id="user-company">
               <option></option>
@@ -1014,7 +1018,7 @@
         </form>
         <div class="modal-actions">
           <button class="ghost" data-close-modal="user-modal">Cancelar</button>
-          <button class="primary" id="user-save">Salvar usuario</button>
+          <button class="primary" id="user-save">Salvar usuário</button>
         </div>
       </section>
     </div>
@@ -1023,25 +1027,25 @@
       <section class="modal-panel wide-modal" role="dialog" aria-modal="true" aria-labelledby="permissions-modal-title">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">Permissoes exclusivas</p>
-            <h2 id="permissions-modal-title">Permissoes do usuario</h2>
-            <span id="permission-user">Usuario selecionado</span>
+            <p class="eyebrow">Permissões exclusivas</p>
+            <h2 id="permissions-modal-title">Permissões do usuário</h2>
+            <span id="permission-user">Usuário selecionado</span>
           </div>
           <button class="ghost small" data-close-modal="permissions-modal">Fechar</button>
         </div>
         <div class="permission-grid">
           <label><input type="checkbox" data-permission-key="admin" /> 01 Painel Admin</label>
           <label><input type="checkbox" data-permission-key="dashboard" /> 02 Painel Geral</label>
-          <label><input type="checkbox" data-permission-key="modules" /> 03 Modulos</label>
-          <label><input type="checkbox" data-permission-key="environmental" /> 03.1 Licencas Ambientais</label>
+          <label><input type="checkbox" data-permission-key="modules" /> 03 Módulos</label>
+          <label><input type="checkbox" data-permission-key="environmental" /> 03.1 Licenças Ambientais</label>
           <label><input type="checkbox" data-permission-key="agenda" /> 04 Agenda</label>
-          <label><input type="checkbox" data-permission-key="users" /> 01.1 Usuarios</label>
+          <label><input type="checkbox" data-permission-key="users" /> 01.1 Usuários</label>
           <label><input type="checkbox" data-permission-key="registries" /> 01.2 Cadastros</label>
           <label><input type="checkbox" data-permission-key="adminEnvironmental" /> 01.3 Ambiental</label>
         </div>
         <div class="modal-actions">
           <button class="ghost" data-close-modal="permissions-modal">Cancelar</button>
-          <button class="primary" id="permissions-save">Salvar permissoes</button>
+          <button class="primary" id="permissions-save">Salvar permissões</button>
         </div>
       </section>
     </div>
@@ -1051,17 +1055,17 @@
         <div class="modal-head">
           <div>
             <p class="eyebrow">Redefinir senha</p>
-            <h2 id="password-modal-title">Confirmar alteracao</h2>
+            <h2 id="password-modal-title">Confirmar alteração</h2>
           </div>
           <button class="ghost small" data-close-modal="password-modal">Fechar</button>
         </div>
-        <p id="password-confirm-text">Deseja realmente alterar a senha do usuario?</p>
+        <p id="password-confirm-text">Deseja realmente alterar a senha do usuário?</p>
         <div class="generated-password" id="generated-password" hidden>
           <span>A nova senha e:</span>
           <strong id="new-password-value">000000</strong>
         </div>
         <div class="modal-actions">
-          <button class="ghost" id="cancel-password-reset" data-close-modal="password-modal">Nao</button>
+          <button class="ghost" id="cancel-password-reset" data-close-modal="password-modal">Não</button>
           <button class="primary" id="confirm-password-reset">Sim</button>
           <button class="primary" id="password-ok" hidden>Okay</button>
         </div>
@@ -1082,16 +1086,16 @@
           <label>Nome<input id="send-recipient-name" /></label>
           <label>E-mail<input id="send-recipient-email" type="email" /></label>
           <div class="wide-field">
-            <span class="field-label">Modulos que este e-mail recebera</span>
+            <span class="field-label">Módulos que este e-mail recebera</span>
             <div class="partner-checks" id="send-recipient-module-checks"></div>
           </div>
-          <label>Vinculo
+          <label>Vínculo
             <select id="send-recipient-relation">
               <option>Administrativo</option>
               <option>Ambiental</option>
               <option>Consultor</option>
-              <option>Juridico</option>
-              <option>Socio</option>
+              <option>Jurídico</option>
+              <option>Sócio</option>
               <option>Outro</option>
             </select>
           </label>
@@ -1103,7 +1107,7 @@
           </label>
           <label class="wide-field checkbox-line">
             <input id="send-recipient-read-confirmation" type="checkbox" checked />
-            Exigir confirmacao de leitura dos avisos enviados
+            Exigir confirmação de leitura dos avisos enviados
           </label>
         </form>
         <div class="modal-actions">
@@ -1139,7 +1143,7 @@
       <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="partner-modal-title">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">01.2.1 Socios</p>
+            <p class="eyebrow">01.2.1 Sócios</p>
             <h2 id="partner-modal-title">Novo socio</h2>
           </div>
           <button class="ghost small" data-close-modal="partner-modal">Fechar</button>
@@ -1150,10 +1154,10 @@
           <label>CPF/CNPJ<input id="partner-document" /></label>
           <label>Qualificacao
             <select id="partner-role">
-              <option>Socio administrador</option>
-              <option>Socio</option>
+              <option>Sócio administrador</option>
+              <option>Sócio</option>
               <option>Procurador</option>
-              <option>Responsavel legal</option>
+              <option>Responsável legal</option>
             </select>
           </label>
           <label>Contato<input id="partner-contact" /></label>
@@ -1192,7 +1196,7 @@
           <label id="matrix-link-field" hidden>Matriz vinculada
             <select id="company-parent"></select>
           </label>
-          <label>Razao social / Nome da filial<input id="company-name" /></label>
+          <label>Razão social / Nome da filial<input id="company-name" /></label>
           <label>CNPJ<input id="company-cnpj" /></label>
           <label>Nome fantasia<input id="company-trade-name" /></label>
           <label>Status
@@ -1203,7 +1207,7 @@
           </label>
         </form>
         <div class="partner-checks" id="company-partner-checks">
-          <span>Socios vinculados</span>
+          <span>Sócios vinculados</span>
         </div>
         <div class="modal-actions">
           <button class="ghost" data-close-modal="company-modal">Cancelar</button>
@@ -1216,8 +1220,8 @@
       <section class="modal-panel wide-modal" role="dialog" aria-modal="true" aria-labelledby="property-modal-title">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">01.2.3 Imoveis</p>
-            <h2 id="property-modal-title">Novo Imovel</h2>
+            <p class="eyebrow">01.2.3 Imóveis</p>
+            <h2 id="property-modal-title">Novo Imóvel</h2>
           </div>
           <button class="ghost small" data-close-modal="property-modal">Fechar</button>
         </div>
@@ -1225,29 +1229,29 @@
           <input type="hidden" id="property-id" value="0" />
           <label>Tipo de propriedade
             <select id="property-owner-type">
-              <option value="pf">Pessoas Fisicas</option>
-              <option value="pj">Pessoas Juridicas</option>
+              <option value="pf">Pessoas Físicas</option>
+              <option value="pj">Pessoas Jurídicas</option>
             </select>
           </label>
-          <label>Proprietario
+          <label>Proprietário
             <select id="property-owner"></select>
           </label>
-          <label>Tipo de imovel
+          <label>Tipo de imóvel
             <select id="property-type">
               <option value="urban">Urbano</option>
               <option value="rural">Rural</option>
             </select>
           </label>
-          <label>Matricula<input id="property-registration" /></label>
-          <label>Referencia de localizacao<input id="property-reference" /></label>
+          <label>Matrícula<input id="property-registration" /></label>
+          <label>Referência de localização<input id="property-reference" /></label>
           <label class="urban-field">Inscricao imobiliaria<input id="property-municipal-registration" /></label>
           <label>Lote<input id="property-lot" /></label>
           <label class="urban-field">Quadra<input id="property-block" /></label>
           <label class="rural-field" hidden>Gleba<input id="property-glebe" /></label>
-          <label class="rural-field" hidden>Numero do CAR<input id="property-car-number" /></label>
-          <label class="rural-field" hidden>Numero CCIR/INCRA<input id="property-ccir-incra" /></label>
-          <label class="urban-area-field" hidden>m2 do imovel<input id="property-urban-area" type="number" min="0" /></label>
-          <label class="rural-field" hidden>m2 total do imovel<input id="property-rural-area" type="number" min="0" /></label>
+          <label class="rural-field" hidden>Número do CAR<input id="property-car-number" /></label>
+          <label class="rural-field" hidden>Número CCIR/INCRA<input id="property-ccir-incra" /></label>
+          <label class="urban-area-field" hidden>m2 do imóvel<input id="property-urban-area" type="number" min="0" /></label>
+          <label class="rural-field" hidden>m2 total do imóvel<input id="property-rural-area" type="number" min="0" /></label>
           <label class="rural-field" hidden>Ha<input id="property-hectares" type="number" min="0" disabled /></label>
           <label class="rural-field" hidden>m2 de reserva legal<input id="property-legal-reserve" type="number" min="0" /></label>
           <label class="rural-field" hidden>Ha de reserva legal<input id="property-legal-reserve-ha" type="number" min="0" step="0.0001" /></label>
@@ -1259,17 +1263,17 @@
               <option>Empreendimento</option>
             </select>
           </label>
-          <label class="construction-toggle"><input type="checkbox" id="property-has-construction" /> Construcao</label>
-          <label id="construction-area-field" hidden>m2 total da construcao<input id="property-construction-area" type="number" min="0" value="0" /></label>
+          <label class="construction-toggle"><input type="checkbox" id="property-has-construction" /> Construção</label>
+          <label id="construction-area-field" hidden>m2 total da construção<input id="property-construction-area" type="number" min="0" value="0" /></label>
         </form>
         <div class="reserve-result rural-field" id="reserve-result" hidden>
-          <span>Calculo automatico da reserva legal</span>
+          <span>Cálculo automático da reserva legal</span>
           <strong id="reserve-status">Reserva legal em conformidade</strong>
           <small>APP informada apenas indica existencia de rio/corpo hidrico e ja esta contida na reserva legal.</small>
         </div>
         <div class="modal-actions">
           <button class="ghost" data-close-modal="property-modal">Cancelar</button>
-          <button class="primary" id="property-save">Salvar imovel</button>
+          <button class="primary" id="property-save">Salvar imóvel</button>
         </div>
       </section>
     </div>
@@ -1278,14 +1282,14 @@
       <section class="modal-panel confirm-modal" role="dialog" aria-modal="true" aria-labelledby="property-delete-title">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">Excluir imovel</p>
-            <h2 id="property-delete-title">Confirmar exclusao</h2>
+            <p class="eyebrow">Excluir imóvel</p>
+            <h2 id="property-delete-title">Confirmar exclusão</h2>
           </div>
           <button class="ghost small" data-close-modal="property-delete-modal">Fechar</button>
         </div>
-        <p id="property-delete-text">Deseja realmente excluir este imovel?</p>
+        <p id="property-delete-text">Deseja realmente excluir este imóvel?</p>
         <div class="modal-actions">
-          <button class="ghost" data-close-modal="property-delete-modal">Nao</button>
+          <button class="ghost" data-close-modal="property-delete-modal">Não</button>
           <button class="primary" id="property-delete-confirm">Sim, excluir</button>
         </div>
       </section>
@@ -1321,21 +1325,21 @@
               <option>Paralisado</option>
             </select>
           </label>
-          <label>Referencia<input id="enterprise-reference" /></label>
+          <label>Referência<input id="enterprise-reference" /></label>
         </form>
         <div class="module-link-box">
           <div>
-            <span>Imovel vinculado</span>
-            <strong id="enterprise-property-summary">Nenhum imovel selecionado</strong>
+            <span>Imóvel vinculado</span>
+            <strong id="enterprise-property-summary">Nenhum imóvel selecionado</strong>
           </div>
           <button class="ghost" id="enterprise-property-open" type="button">Selecionar</button>
         </div>
         <div class="module-link-box">
           <div>
-            <span>Modulos vinculados</span>
-            <strong id="enterprise-module-summary">Nenhum modulo selecionado</strong>
+            <span>Módulos vinculados</span>
+            <strong id="enterprise-module-summary">Nenhum módulo selecionado</strong>
           </div>
-          <button class="ghost" id="enterprise-modules-open" type="button">Inserir modulos</button>
+          <button class="ghost" id="enterprise-modules-open" type="button">Inserir módulos</button>
         </div>
         <div class="modal-actions">
           <button class="ghost" data-close-modal="enterprise-modal">Cancelar</button>
@@ -1349,7 +1353,7 @@
         <div class="modal-head">
           <div>
             <p class="eyebrow">01.2.4 Empreendimento</p>
-            <h2 id="enterprise-property-title">Selecionar imovel</h2>
+            <h2 id="enterprise-property-title">Selecionar imóvel</h2>
           </div>
           <button class="ghost small" data-close-modal="enterprise-property-modal">Fechar</button>
         </div>
@@ -1362,13 +1366,13 @@
         <div class="modal-head">
           <div>
             <p class="eyebrow">Excluir empreendimento</p>
-            <h2 id="enterprise-delete-title">Confirmar exclusao</h2>
+            <h2 id="enterprise-delete-title">Confirmar exclusão</h2>
           </div>
           <button class="ghost small" data-close-modal="enterprise-delete-modal">Fechar</button>
         </div>
         <p id="enterprise-delete-text">Deseja realmente excluir este empreendimento?</p>
         <div class="modal-actions">
-          <button class="ghost" data-close-modal="enterprise-delete-modal">Nao</button>
+          <button class="ghost" data-close-modal="enterprise-delete-modal">Não</button>
           <button class="primary" id="enterprise-delete-confirm">Sim, excluir</button>
         </div>
       </section>
@@ -1379,13 +1383,13 @@
         <div class="modal-head">
           <div>
             <p class="eyebrow">Excluir registro</p>
-            <h2 id="generic-delete-title">Confirmar exclusao</h2>
+            <h2 id="generic-delete-title">Confirmar exclusão</h2>
           </div>
           <button class="ghost small" data-close-modal="generic-delete-modal">Fechar</button>
         </div>
         <p id="generic-delete-text">Deseja realmente excluir este registro?</p>
         <div class="modal-actions">
-          <button class="ghost" data-close-modal="generic-delete-modal">Nao</button>
+          <button class="ghost" data-close-modal="generic-delete-modal">Não</button>
           <button class="primary" id="generic-delete-confirm">Sim, excluir</button>
         </div>
       </section>
@@ -1395,8 +1399,8 @@
       <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="license-type-modal-title">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">01.3.1 Tipos de Licencas</p>
-            <h2 id="license-type-modal-title">Novo Tipo de Licenca</h2>
+            <p class="eyebrow">01.3.1 Tipos de Licenças</p>
+            <h2 id="license-type-modal-title">Novo Tipo de Licença</h2>
           </div>
           <button class="ghost small" data-close-modal="license-type-modal">Fechar</button>
         </div>
@@ -1406,7 +1410,7 @@
           <label>Sigla<input id="license-type-code" /></label>
         </form>
         <div class="partner-checks">
-          <span>Classificacao da licenca</span>
+          <span>Classificação da licença</span>
           <label><input type="checkbox" name="license-phase" value="Monofasica" checked /> Monofasica</label>
           <label><input type="checkbox" name="license-phase" value="Bifasica" /> Bifasica</label>
           <label><input type="checkbox" name="license-phase" value="Trifasica" /> Trifasica</label>
@@ -1430,12 +1434,12 @@
         <form class="user-form">
           <input type="hidden" id="environmental-document-id" value="0" />
           <label>Nome<input id="environmental-document-name" /></label>
-          <label>Exige vencimento<select id="environmental-document-expiration"><option>Nao</option><option>Sim</option></select></label>
-          <label>Obrigatorio por padrao<select id="environmental-document-required"><option>Sim</option><option>Nao</option></select></label>
-          <label class="wide-field">Parametros do Documento<textarea id="environmental-document-parameters" rows="4" placeholder="Informe parametros, criterios ou observacoes tecnicas do documento"></textarea></label>
+          <label>Exige vencimento<select id="environmental-document-expiration"><option value="Nao">Não</option><option>Sim</option></select></label>
+          <label>Obrigatório por padrão<select id="environmental-document-required"><option>Sim</option><option value="Nao">Não</option></select></label>
+          <label class="wide-field">Parâmetros do Documento<textarea id="environmental-document-parameters" rows="4" placeholder="Informe parâmetros, critérios ou observações técnicas do documento"></textarea></label>
         </form>
         <div class="partner-checks" id="document-license-checks">
-          <span>Licencas vinculadas</span>
+          <span>Licenças vinculadas</span>
         </div>
         <div class="modal-actions">
           <button class="ghost" data-close-modal="environmental-document-modal">Cancelar</button>
@@ -1455,11 +1459,11 @@
         </div>
         <form class="user-form">
           <input type="hidden" id="checklist-model-id" value="0" />
-          <label>Tipo de licenca<select id="checklist-model-license"></select></label>
+          <label>Tipo de licença<select id="checklist-model-license"></select></label>
           <label>Nome do modelo<input id="checklist-model-name" /></label>
         </form>
         <div class="partner-checks" id="checklist-document-checks">
-          <span>Documentos vinculados a licenca selecionada</span>
+          <span>Documentos vinculados à licença selecionada</span>
         </div>
         <div class="modal-actions">
           <button class="ghost" data-close-modal="checklist-model-modal">Cancelar</button>
@@ -1485,14 +1489,14 @@
           </div>
           <div class="pdf-filter-card">
             <span>Filiais</span>
-            <strong id="company-pdf-branch-summary">Todas as filiais disponiveis</strong>
+            <strong id="company-pdf-branch-summary">Todas as filiais disponíveis</strong>
             <button type="button" class="ghost small" data-pdf-picker="company-branches">Selecionar filiais</button>
           </div>
         </div>
         <div class="reserve-result">
           <span>Resumo do filtro</span>
           <strong id="company-pdf-preview">Todas as matrizes e filiais</strong>
-          <small>O PDF sera gerado somente com as empresas contempladas pelo recorte selecionado.</small>
+          <small>O PDF será gerado somente com as empresas contempladas pelo recorte selecionado.</small>
         </div>
         <div class="modal-actions">
           <button class="ghost" data-close-modal="company-pdf-modal">Cancelar</button>
@@ -1505,19 +1509,19 @@
       <section class="modal-panel wide-modal" role="dialog" aria-modal="true" aria-labelledby="property-pdf-title">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">01.2.3 Imoveis</p>
+            <p class="eyebrow">01.2.3 Imóveis</p>
             <h2 id="property-pdf-title">Filtros do PDF</h2>
           </div>
           <button class="ghost small" data-close-modal="property-pdf-modal">Fechar</button>
         </div>
         <form class="user-form">
-          <label>Tipo de relatorio
+          <label>Tipo de relatório
             <select id="property-pdf-report-type">
               <option value="environmental">Ambiental</option>
-              <option value="relation">Relacao de Imoveis</option>
+              <option value="relation">Relação de Imóveis</option>
             </select>
           </label>
-          <label>Tipo de imovel
+          <label>Tipo de imóvel
             <select id="property-pdf-property-type">
               <option value="all">Todos</option>
               <option value="urban">Urbanos</option>
@@ -1531,29 +1535,29 @@
               <option value="warning">Reserva legal abaixo de 20%</option>
             </select>
           </label>
-          <label>Selecao de imoveis
+          <label>Selecao de imóveis
             <select id="property-pdf-selection-mode">
-              <option value="all">Todos os imoveis filtrados</option>
-              <option value="selected">Selecionar imoveis especificos</option>
+              <option value="all">Todos os imóveis filtrados</option>
+              <option value="selected">Selecionar imóveis especificos</option>
             </select>
           </label>
         </form>
         <div class="pdf-filter-grid">
           <div class="pdf-filter-card">
-            <span>Proprietarios</span>
-            <strong id="property-pdf-owner-summary">Todos os proprietarios</strong>
-            <button type="button" class="ghost small" data-pdf-picker="property-owners">Selecionar proprietarios</button>
+            <span>Proprietários</span>
+            <strong id="property-pdf-owner-summary">Todos os proprietários</strong>
+            <button type="button" class="ghost small" data-pdf-picker="property-owners">Selecionar proprietários</button>
           </div>
           <div class="pdf-filter-card" id="property-pdf-property-card" hidden>
-            <span>Imoveis</span>
-            <strong id="property-pdf-property-summary">Todos os imoveis filtrados</strong>
-            <button type="button" class="ghost small" data-pdf-picker="property-properties">Selecionar imoveis</button>
+            <span>Imóveis</span>
+            <strong id="property-pdf-property-summary">Todos os imóveis filtrados</strong>
+            <button type="button" class="ghost small" data-pdf-picker="property-properties">Selecionar imóveis</button>
           </div>
         </div>
         <div class="reserve-result">
           <span>Resumo do filtro</span>
-          <strong id="property-pdf-preview">Relatorio ambiental de todos os imoveis rurais</strong>
-          <small id="property-pdf-help">No relatorio ambiental, o sistema totaliza area, reserva legal e APP, validando a exigencia de 20%.</small>
+          <strong id="property-pdf-preview">Relatório ambiental de todos os imóveis rurais</strong>
+          <small id="property-pdf-help">No relatório ambiental, o sistema totaliza área, reserva legal e APP, validando a exigência de 20%.</small>
         </div>
         <div class="modal-actions">
           <button class="ghost" data-close-modal="property-pdf-modal">Cancelar</button>
@@ -1567,14 +1571,14 @@
         <div class="modal-head">
           <div>
             <p class="eyebrow">01.2.4 Empreendimento</p>
-            <h2 id="enterprise-modules-title">Inserir modulos</h2>
+            <h2 id="enterprise-modules-title">Inserir módulos</h2>
           </div>
           <button class="ghost small" data-close-modal="enterprise-modules-modal">Fechar</button>
         </div>
         <div class="partner-checks module-checks" id="enterprise-module-checks"></div>
         <div class="modal-actions">
           <button class="ghost" data-close-modal="enterprise-modules-modal">Cancelar</button>
-          <button class="primary" id="enterprise-modules-apply" type="button">Aplicar modulos</button>
+          <button class="primary" id="enterprise-modules-apply" type="button">Aplicar módulos</button>
         </div>
       </section>
     </div>
@@ -1633,7 +1637,7 @@
       <section class="modal-panel wide-modal" role="dialog" aria-modal="true" aria-labelledby="environmental-process-title">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">03.1 Licencas Ambientais</p>
+            <p class="eyebrow">03.1 Licenças Ambientais</p>
             <h2 id="environmental-process-title">Novo processo ambiental</h2>
             <span>Dados iniciais anteriores ao protocolo ambiental</span>
           </div>
@@ -1647,7 +1651,7 @@
               <option value="trifasico">Trifasico</option>
             </select>
           </label>
-          <label>Numero interno
+          <label>Número interno
             <input id="environmental-process-number" disabled />
           </label>
           <label>Status inicial
@@ -1665,14 +1669,14 @@
           <label>Filial / unidade
             <select id="environmental-process-branch"></select>
           </label>
-          <label>Imovel vinculado
+          <label>Imóvel vinculado
             <select id="environmental-process-property"></select>
           </label>
-          <label>Socio / responsavel legal
+          <label>Sócio / responsável legal
             <select id="environmental-process-responsible"></select>
           </label>
           <div class="wide-field">
-            <span class="field-label">Tipo de licenca</span>
+            <span class="field-label">Tipo de licença</span>
             <div class="license-phase-fields" id="environmental-process-license-fields"></div>
           </div>
           <label>Prioridade
@@ -1682,20 +1686,20 @@
               <option>Critica</option>
             </select>
           </label>
-          <label>Previsao de protocolo
+          <label>Previsão de protocolo
             <input id="environmental-process-forecast" type="date" />
           </label>
           <label class="wide-field">Objetivo do processo
-            <input id="environmental-process-objective" placeholder="Ex.: regularizacao de atividade, renovacao, ampliacao, nova operacao" />
+            <input id="environmental-process-objective" placeholder="Ex.: regularização de atividade, renovação, ampliação, nova operação" />
           </label>
-          <label class="wide-field">Observacoes iniciais
-            <input id="environmental-process-notes" placeholder="Informacoes preliminares, exigencias conhecidas ou contexto do empreendimento" />
+          <label class="wide-field">Observações iniciais
+            <input id="environmental-process-notes" placeholder="Informações preliminares, exigências conhecidas ou contexto do empreendimento" />
           </label>
         </form>
         <div class="reserve-result">
           <span>Checklist inicial</span>
-          <strong id="environmental-process-checklist-preview">Sera definido conforme o tipo de licenca selecionado</strong>
-          <small>Depois de criado, o processo podera evoluir para protocolo oficial, pendencias, vencimentos e conclusao.</small>
+          <strong id="environmental-process-checklist-preview">Será definido conforme o tipo de licença selecionado</strong>
+          <small>Depois de criado, o processo poderá evoluir para protocolo oficial, pendências, vencimentos e conclusão.</small>
         </div>
         <div class="process-stage-preview">
           <div>
@@ -1732,7 +1736,7 @@
             <strong id="environmental-process-detail-current-stage">Juntada de documentos</strong>
           </article>
           <article>
-            <span>Conclusao</span>
+            <span>Conclusão</span>
             <strong id="environmental-process-detail-progress">0%</strong>
           </article>
           <label>Status do processo
@@ -1740,14 +1744,14 @@
               <option value="open">Aberto</option>
               <option value="pending">Pendente</option>
               <option value="expired">Vencido</option>
-              <option value="done">Concluido</option>
+              <option value="done">Concluído</option>
             </select>
           </label>
         </div>
         <div class="process-detail-meta">
           <span id="environmental-process-detail-company">Empresa</span>
-          <span id="environmental-process-detail-property">Imovel</span>
-          <span id="environmental-process-detail-responsible">Responsavel</span>
+          <span id="environmental-process-detail-property">Imóvel</span>
+          <span id="environmental-process-detail-responsible">Responsável</span>
         </div>
         <div class="process-stage-map">
           <div>
@@ -1757,7 +1761,7 @@
           <div class="process-stage-detail-list" id="environmental-process-detail-stage-list"></div>
         </div>
         <div class="reserve-result warning" id="environmental-process-stage-access-message" hidden>
-          <span>Etapa indisponivel</span>
+          <span>Etapa indisponível</span>
           <strong>Conclua a etapa anterior</strong>
           <small id="environmental-process-stage-access-text">Para continuar, finalize a etapa anterior.</small>
         </div>
@@ -1795,7 +1799,7 @@
           <div class="reserve-result warning" id="environmental-process-stage-gate" hidden>
             <span>Avanco bloqueado</span>
             <strong>Finalize os requisitos desta etapa</strong>
-            <small id="environmental-process-stage-gate-message">Ainda existem pendencias para avancar.</small>
+            <small id="environmental-process-stage-gate-message">Ainda existem pendências para avancar.</small>
           </div>
           <form class="stage-data-form" id="environmental-stage-deadline-fields">
             <label>Validade da etapa
@@ -1804,7 +1808,7 @@
             <label>Prazo minimo de aviso (dias)
               <input id="environmental-stage-warning-days" type="number" min="0" value="60" />
             </label>
-            <label>Prazo critico (dias)
+            <label>Prazo crítico (dias)
               <input id="environmental-stage-critical-days" type="number" min="0" value="15" />
             </label>
           </form>
@@ -1820,7 +1824,7 @@
             <strong id="environmental-process-generic-title">Acompanhamento</strong>
             <small id="environmental-process-generic-help">Use esta tela para registrar os dados desta etapa antes de concluir e avancar.</small>
             <form class="stage-data-form" id="environmental-protocol-fields" hidden>
-              <label>Numero do protocolo ambiental
+              <label>Número do protocolo ambiental
                 <input id="environmental-stage-protocol-number" placeholder="Ex.: PROT-2026-0001" />
               </label>
               <label>Data do protocolo
@@ -1828,10 +1832,10 @@
               </label>
             </form>
             <form class="stage-data-form" id="environmental-license-fields" hidden>
-              <label>Tipo de licenca
+              <label>Tipo de licença
                 <input id="environmental-stage-license-type" disabled />
               </label>
-              <label>Numero da licenca
+              <label>Número da licença
                 <input id="environmental-stage-license-number" placeholder="Ex.: LP 001/2026" />
               </label>
               <label>Data de vencimento
@@ -1851,7 +1855,7 @@
       <section class="modal-panel wide-modal" role="dialog" aria-modal="true" aria-labelledby="environmental-process-checklist-title">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">Primeira etapa da licenca</p>
+            <p class="eyebrow">Primeira etapa da licença</p>
             <h2 id="environmental-process-checklist-title">Selecionar modelo de check-list</h2>
             <span id="environmental-process-checklist-subtitle">Juntada de documentos</span>
           </div>
@@ -1878,15 +1882,15 @@
       <section class="modal-panel confirm-modal" role="dialog" aria-modal="true" aria-labelledby="environmental-document-note-title">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">Observacao do documento</p>
+            <p class="eyebrow">Observação do documento</p>
             <h2 id="environmental-document-note-title">Documento</h2>
           </div>
           <button class="ghost small" data-close-modal="environmental-document-note-modal">Fechar</button>
         </div>
         <input type="hidden" id="environmental-document-note-process-id" />
         <input type="hidden" id="environmental-document-note-index" />
-        <label>Situacao / observacoes
-          <textarea id="environmental-document-note-text" rows="5" placeholder="Informe pendencias, localizacao do arquivo, responsavel ou detalhes da elaboracao"></textarea>
+        <label>Situação / observações
+          <textarea id="environmental-document-note-text" rows="5" placeholder="Informe pendências, localização do arquivo, responsável ou detalhes da elaboração"></textarea>
         </label>
         <div class="modal-actions">
           <button class="ghost" data-close-modal="environmental-document-note-modal">Cancelar</button>
@@ -1920,7 +1924,8 @@
 
     <script src="supabase-config.js?v=20260602-db-persist"></script>
     <script src="database.js?v=20260602-db-persist"></script>
-    <script src="script.js?v=20260602-activities-adjustments"></script>
+    <script src="script.js?v=20260602-acentos"></script>
   </body>
 </html>
+
 
