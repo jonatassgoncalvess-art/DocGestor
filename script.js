@@ -2040,6 +2040,12 @@ function sendModuleLabel(moduleKey) {
   return availableAlertModules.find((module) => module.id === moduleKey)?.name || moduleKey;
 }
 
+function normalizeAlertModuleId(moduleId, moduleRows = []) {
+  const value = String(moduleId || "");
+  const row = moduleRows.find((item) => String(item.id) === value || String(item.code) === value);
+  return row?.code || value;
+}
+
 function sendRecipientModules(recipient) {
   if (Array.isArray(recipient?.modules) && recipient.modules.length) return recipient.modules;
   if (recipient?.module) return [recipient.module];
@@ -4298,7 +4304,12 @@ async function saveEnvironmentalProcess() {
     stageDocuments: {},
   };
   environmentalProcesses.push(process);
-  await persistEnvironmentalProcess(process, false);
+  const saved = await persistEnvironmentalProcess(process, false);
+  if (!saved) {
+    environmentalProcesses = environmentalProcesses.filter((item) => item !== process);
+    renderLicenseStatus(currentLicenseStatus);
+    return;
+  }
   if (acquisitionDueDate) {
     scheduleEnvironmentalAlert({
       processId: process.id,
@@ -6342,9 +6353,9 @@ async function dbList(table, query = "select=*") {
 
 function statusFromSupabase(value) {
   const normalized = String(value || "").toLowerCase();
-  if (["vencida", "vencido", "expired"].includes(normalized)) return "expired";
-  if (["pendente", "pending", "em analise", "em análise"].includes(normalized)) return "pending";
-  if (["concluida", "concluída", "concluido", "concluído", "deferido", "done"].includes(normalized)) return "done";
+  if (["vencida", "vencido", "expired", "critico", "crítico"].includes(normalized)) return "expired";
+  if (["pendente", "pending", "em analise", "em análise", "renovar", "suspenso"].includes(normalized)) return "pending";
+  if (["concluida", "concluída", "concluido", "concluído", "deferido", "done", "encerrado"].includes(normalized)) return "done";
   return "open";
 }
 
@@ -6454,11 +6465,11 @@ function licenseTypeIdByName(name) {
 
 function statusToSupabase(status) {
   return {
-    open: "Em andamento",
-    pending: "Pendente",
-    expired: "Vencida",
-    done: "Concluída",
-  }[status] || "Em andamento";
+    open: "Planejado",
+    pending: "Em analise",
+    expired: "Critico",
+    done: "Encerrado",
+  }[status] || "Planejado";
 }
 
 function documentIdByName(name) {
@@ -6803,7 +6814,7 @@ async function persistChecklistModel(model, wasExisting) {
 }
 
 async function persistEnvironmentalProcess(process, wasExisting = false) {
-  if (!window.DocGestorDB) return;
+  if (!window.DocGestorDB) return false;
   const organizationId = await defaultOrganizationId();
   const companyId = companyIdByName(process.company);
   const branchId = companyIdByName(process.branch);
@@ -6812,8 +6823,16 @@ async function persistEnvironmentalProcess(process, wasExisting = false) {
   const responsibleId = partnerIdByName(process.responsible);
   const licenseTypeId = licenseTypeIdByName(process.licenseTypes?.[0] || process.type?.split(" / ")[0]);
   if (![organizationId, companyId, propertyId, licenseTypeId].every(looksLikeUuid)) {
-    console.warn("Processo ambiental não salvo no Supabase: empresa, imóvel ou tipo de licença ainda não possuem ID válido.");
-    return;
+    const missing = [
+      !looksLikeUuid(organizationId) ? "organização" : "",
+      !looksLikeUuid(companyId) ? "empresa" : "",
+      !looksLikeUuid(propertyId) ? "imóvel" : "",
+      !looksLikeUuid(licenseTypeId) ? "tipo de licença" : "",
+    ].filter(Boolean).join(", ");
+    const message = `Processo ambiental não salvo no Supabase. Verifique o cadastro de ${missing}.`;
+    console.warn(message);
+    alert(message);
+    return false;
   }
   const activeLicense = process.activeLicense || {};
   const payload = {
@@ -6847,9 +6866,13 @@ async function persistEnvironmentalProcess(process, wasExisting = false) {
       if (process.activeLicense) process.activeLicense.processId = saved.id;
       await persistEnvironmentalProcessStages(process);
       renderLicenseStatus(currentLicenseStatus);
+      return true;
     }
+    return false;
   } catch (error) {
     console.warn("Não foi possível salvar o processo ambiental no Supabase.", error.message);
+    alert(`Não foi possível salvar o processo ambiental no banco: ${error.message}`);
+    return false;
   }
 }
 
@@ -7052,7 +7075,9 @@ async function loadSupabaseData() {
     responsible: partnerById[row.responsible_partner_id]?.name || "",
     reference: row.reference || "",
     potentialPolluter: Boolean(row.potential_polluter),
-    modules: enterpriseModuleRows.filter((link) => sameId(link.enterprise_id, row.id)).map((link) => link.module_id),
+    modules: enterpriseModuleRows
+      .filter((link) => sameId(link.enterprise_id, row.id))
+      .map((link) => normalizeAlertModuleId(link.module_id, appModuleRows)),
   }));
 
   activities = activityRows.map((row) => ({
@@ -7172,7 +7197,9 @@ async function loadSupabaseData() {
     id: row.id,
     name: row.name,
     email: row.email,
-    modules: alertRecipientModuleRows.filter((link) => sameId(link.recipient_id, row.id)).map((link) => link.module_id),
+    modules: alertRecipientModuleRows
+      .filter((link) => sameId(link.recipient_id, row.id))
+      .map((link) => normalizeAlertModuleId(link.module_id, appModuleRows)),
     relation: row.relation || "Administrativo",
     status: row.status === "active" ? "Ativo" : row.status || "Ativo",
     readConfirmation: row.require_read_confirmation ?? true,
@@ -7269,8 +7296,35 @@ async function loadSupabaseData() {
   renderDashboard();
 }
 
+async function processPendingAlertsOnServer() {
+  try {
+    await fetch("/api/processar-alertas", { method: "POST" });
+    const rows = await dbList("alert_history", "select=*&order=created_at.desc");
+    if (rows.length) {
+      alertHistoryItems = rows.map((row) => ({
+        id: row.id,
+        alert_key: row.alert_key || "",
+        subject: row.subject,
+        recipient_emails: row.recipient_emails || [],
+        sender_email: row.sender_email || systemEmailConfig.address,
+        status: row.status || "waiting",
+        status_label: row.status_label || "Aguardando",
+        related_label: row.related_label || "",
+        created_at: row.created_at,
+        sent_at: row.sent_at,
+      }));
+      renderAlertHistory(alertHistoryItems);
+    }
+  } catch (error) {
+    console.warn("Não foi possível processar alertas pendentes agora.", error.message);
+  }
+}
+
 renderDashboard();
-loadSupabaseData();
+loadSupabaseData().then(() => {
+  processPendingAlertsOnServer();
+  window.setInterval(processPendingAlertsOnServer, 60000);
+});
 
 
 

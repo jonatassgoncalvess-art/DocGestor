@@ -108,6 +108,35 @@ alter table environmental_licenses add column if not exists process_due_alert_ti
 alter table alert_queue add column if not exists alert_key text;
 alter table alert_history add column if not exists alert_key text;
 
+alter table if exists alert_recipient_modules drop constraint if exists alert_recipient_modules_module_id_fkey;
+alter table if exists alert_queue drop constraint if exists alert_queue_module_id_fkey;
+alter table if exists alert_history drop constraint if exists alert_history_module_id_fkey;
+alter table if exists alert_rules drop constraint if exists alert_rules_module_id_fkey;
+
+update alert_recipient_modules arm
+set module_id = am.code
+from app_modules am
+where am.code is not null
+  and arm.module_id = am.id::text;
+
+update alert_queue aq
+set module_id = am.code
+from app_modules am
+where am.code is not null
+  and aq.module_id = am.id::text;
+
+update alert_history ah
+set module_id = am.code
+from app_modules am
+where am.code is not null
+  and ah.module_id = am.id::text;
+
+update alert_rules ar
+set module_id = am.code
+from app_modules am
+where am.code is not null
+  and ar.module_id = am.id::text;
+
 create index if not exists idx_agenda_events_date on agenda_events(event_date, event_time);
 create index if not exists idx_agenda_events_module on agenda_events(module_id);
 create index if not exists idx_agenda_events_alert_key on agenda_events(alert_key);
