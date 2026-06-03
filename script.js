@@ -4447,12 +4447,13 @@ async function saveEnvironmentalProcess() {
     notes: field("environmental-process-notes").value,
     stageDocuments: {},
   };
-  environmentalProcesses.push(process);
   const saved = await persistEnvironmentalProcess(process, false);
   if (!saved) {
-    environmentalProcesses = environmentalProcesses.filter((item) => item !== process);
     renderLicenseStatus(currentLicenseStatus);
     return;
+  }
+  if (!environmentalProcesses.some((item) => sameId(item.id, process.id))) {
+    environmentalProcesses.push(process);
   }
   if (acquisitionDueDate) {
     scheduleEnvironmentalAlert({
