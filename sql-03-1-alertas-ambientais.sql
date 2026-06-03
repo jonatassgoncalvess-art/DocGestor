@@ -21,6 +21,7 @@ alter table agenda_events add column if not exists module_id text;
 alter table agenda_events add column if not exists status text not null default 'waiting';
 alter table agenda_events add column if not exists related_type text;
 alter table agenda_events add column if not exists related_id uuid;
+alter table agenda_events add column if not exists alert_key text;
 
 create table if not exists environmental_process_stage_deadlines (
   id uuid primary key default gen_random_uuid(),
@@ -51,6 +52,8 @@ alter table environmental_process_stage_deadlines add column if not exists criti
 alter table environmental_process_stage_deadlines add column if not exists renewal_days integer not null default 120;
 alter table environmental_process_stage_deadlines add column if not exists renewal_time time not null default '09:00';
 alter table environmental_process_stage_deadlines add column if not exists deadline_time time not null default '09:00';
+alter table environmental_process_stage_deadlines add column if not exists block_number integer not null default 1;
+alter table environmental_process_stage_deadlines add column if not exists stage_kind text not null default 'checklist';
 
 create table if not exists alert_history (
   id uuid primary key default gen_random_uuid(),
@@ -102,12 +105,19 @@ alter table alert_history add column if not exists last_event_at timestamptz;
 alter table alert_history add column if not exists status_label text not null default 'Aguardando';
 alter table alert_history add column if not exists raw_payload jsonb not null default '{}'::jsonb;
 alter table environmental_licenses add column if not exists process_due_alert_time time not null default '09:00';
+alter table alert_queue add column if not exists alert_key text;
+alter table alert_history add column if not exists alert_key text;
 
 create index if not exists idx_agenda_events_date on agenda_events(event_date, event_time);
 create index if not exists idx_agenda_events_module on agenda_events(module_id);
+create index if not exists idx_agenda_events_alert_key on agenda_events(alert_key);
 create index if not exists idx_environmental_stage_deadlines_process on environmental_process_stage_deadlines(process_id);
 create index if not exists idx_environmental_stage_deadlines_validity on environmental_process_stage_deadlines(validity_date);
 create index if not exists idx_environmental_stage_deadlines_status on environmental_process_stage_deadlines(status);
+create index if not exists idx_environmental_stage_deadlines_block on environmental_process_stage_deadlines(process_id, block_number, stage_kind);
+create index if not exists idx_alert_queue_due_status on alert_queue(status, scheduled_for);
+create index if not exists idx_alert_queue_alert_key on alert_queue(alert_key);
+create index if not exists idx_alert_history_alert_key on alert_history(alert_key);
 
 create or replace function set_updated_at()
 returns trigger
@@ -130,9 +140,17 @@ for each row execute function set_updated_at();
 
 alter table agenda_events enable row level security;
 alter table environmental_process_stage_deadlines enable row level security;
+alter table alert_queue enable row level security;
+alter table alert_history enable row level security;
 
 drop policy if exists agenda_events_prototype_all on agenda_events;
 create policy agenda_events_prototype_all on agenda_events for all using (true) with check (true);
 
 drop policy if exists environmental_stage_deadlines_prototype_all on environmental_process_stage_deadlines;
 create policy environmental_stage_deadlines_prototype_all on environmental_process_stage_deadlines for all using (true) with check (true);
+
+drop policy if exists alert_queue_prototype_all on alert_queue;
+create policy alert_queue_prototype_all on alert_queue for all using (true) with check (true);
+
+drop policy if exists alert_history_prototype_all on alert_history;
+create policy alert_history_prototype_all on alert_history for all using (true) with check (true);
