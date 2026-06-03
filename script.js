@@ -363,16 +363,188 @@ function addAgendaEvent(event) {
   if (!event?.date) return;
   const key = `${event.date}|${event.title}|${event.type}`;
   const exists = agendaEvents.some((item) => `${item.date}|${item.title}|${item.type}` === key);
-  if (exists) return;
-  agendaEvents.push({
+  if (exists) return false;
+  const agendaEvent = {
     id: nextAgendaEventId++,
     time: "09:00",
     status: "green",
     description: "Prazo registrado automaticamente pelo processo ambiental.",
     ...event,
-  });
+  };
+  agendaEvents.push(agendaEvent);
+  persistAgendaEvent(agendaEvent);
   renderAgenda();
   renderAgendaNotes();
+  return true;
+}
+
+function addDaysToDate(dateValue, days) {
+  if (!dateValue) return "";
+  const date = parseDateKey(dateValue);
+  if (Number.isNaN(date.getTime())) return "";
+  date.setDate(date.getDate() + Number(days || 0));
+  return dateKey(date);
+}
+
+function subtractDaysFromDate(dateValue, days) {
+  return addDaysToDate(dateValue, -Math.max(0, Number(days || 0)));
+}
+
+function environmentalAlertRecipients() {
+  return sendRecipients.filter((recipient) => {
+    const active = String(recipient.status || "Ativo").toLowerCase() !== "inativo";
+    return active && sendRecipientModules(recipient).includes("environmental");
+  });
+}
+
+function alertMessageHtml(alertInfo) {
+  return `
+    <p><strong>DocGestor by Carminatti</strong></p>
+    <p>${escapeHtml(alertInfo.message)}</p>
+    <ul>
+      <li><strong>Processo:</strong> ${escapeHtml(alertInfo.processNumber)}</li>
+      <li><strong>Etapa:</strong> ${escapeHtml(alertInfo.stageName)}</li>
+      <li><strong>Tipo de alerta:</strong> ${escapeHtml(alertInfo.alertLabel)}</li>
+      <li><strong>Data:</strong> ${escapeHtml(formatAgendaDate(alertInfo.date))}</li>
+    </ul>
+  `;
+}
+
+async function persistAgendaEvent(event) {
+  if (!window.DocGestorDB || !event?.date || looksLikeUuid(event.id)) return;
+  try {
+    const [saved] = await window.DocGestorDB.create("agenda_events", {
+      event_date: event.date,
+      event_time: event.time || "09:00",
+      title: event.title,
+      description: event.description || "",
+      module_id: event.module || "environmental",
+      status: event.alertStatus || "waiting",
+      related_type: event.linkedTarget?.type || event.relatedType || null,
+      related_id: looksLikeUuid(event.linkedTarget?.id || event.relatedId) ? event.linkedTarget?.id || event.relatedId : null,
+    });
+    if (saved?.id) event.id = saved.id;
+  } catch (error) {
+    console.warn("Não foi possível salvar o agendamento no Supabase.", error.message);
+  }
+}
+
+async function persistAlertQueueItem(alertInfo, recipient) {
+  if (!window.DocGestorDB || !looksLikeUuid(recipient?.id)) return;
+  const scheduledFor = `${alertInfo.date}T${alertInfo.time || "09:00"}:00`;
+  try {
+    await window.DocGestorDB.create("alert_queue", {
+      module_id: "environmental",
+      recipient_id: recipient.id,
+      related_type: alertInfo.relatedType || "environmental_process",
+      related_id: looksLikeUuid(alertInfo.relatedId) ? alertInfo.relatedId : null,
+      related_label: alertInfo.relatedLabel,
+      subject: alertInfo.subject,
+      message_html: alertMessageHtml(alertInfo),
+      status: "pending",
+      scheduled_for: scheduledFor,
+    });
+    await window.DocGestorDB.create("alert_history", {
+      recipient_id: recipient.id,
+      module_id: "environmental",
+      subject: alertInfo.subject,
+      sender_email: systemEmailConfig.address,
+      recipient_emails: [recipient.email],
+      status: "waiting",
+      status_label: "Aguardando",
+      related_type: alertInfo.relatedType || "environmental_process",
+      related_id: looksLikeUuid(alertInfo.relatedId) ? alertInfo.relatedId : null,
+      related_label: alertInfo.relatedLabel,
+      sent_at: null,
+      raw_payload: { scheduled_for: scheduledFor, alert_type: alertInfo.alertType },
+    });
+  } catch (error) {
+    console.warn("Não foi possível salvar o alerta no Supabase.", error.message);
+  }
+}
+
+function scheduleEnvironmentalAlert(alertInfo) {
+  if (!alertInfo?.date) return;
+  const linkedTarget = {
+    id: String(alertInfo.relatedId || alertInfo.processId || ""),
+    module: "environmental",
+    type: alertInfo.relatedType || "process",
+    label: alertInfo.relatedLabel || alertInfo.processNumber,
+    detail: alertInfo.stageName,
+  };
+  const added = addAgendaEvent({
+    date: alertInfo.date,
+    time: alertInfo.time || "09:00",
+    title: alertInfo.title,
+    type: "Licenças Ambientais",
+    status: alertInfo.status || "warning",
+    alertStatus: "waiting",
+    description: alertInfo.message,
+    module: "environmental",
+    relatedType: alertInfo.relatedType || "environmental_process",
+    relatedId: alertInfo.relatedId,
+    linkedTarget,
+  });
+  if (!added) return;
+  environmentalAlertRecipients().forEach((recipient) => {
+    persistAlertQueueItem(alertInfo, recipient);
+  });
+}
+
+function scheduleStageAlerts(process, stage) {
+  if (!stage?.validityDate) return;
+  const processNumber = process.internalNumber || process.number || "Processo";
+  const base = {
+    processId: process.id,
+    processNumber,
+    stageName: stage.name,
+    relatedId: process.id,
+    relatedType: "environmental_process",
+    relatedLabel: `${processNumber} - ${stage.name}`,
+  };
+  const stageAlerts = [
+    ["minimum", "Prazo mínimo", stage.warningDays, stage.warningTime || "09:00", "warning"],
+    ["critical", "Prazo crítico", stage.criticalDays, stage.criticalTime || "09:00", "warning"],
+    ["emergency", "Emergência", stage.emergencyDays, stage.emergencyTime || "09:00", "danger"],
+    ["deadline", "Vencimento final", 0, stage.deadlineTime || "09:00", "danger"],
+  ];
+  stageAlerts.forEach(([alertType, alertLabel, days, time, status]) => {
+    const date = subtractDaysFromDate(stage.validityDate, days);
+    scheduleEnvironmentalAlert({
+      ...base,
+      alertType,
+      alertLabel,
+      date,
+      time,
+      status,
+      title: `${alertLabel} - ${processNumber} - ${stage.name}`,
+      subject: `DocGestor: ${alertLabel} do processo ${processNumber}`,
+      message: `Alerta ${alertLabel} do processo ${processNumber}, etapa ${stage.name}. O vencimento da etapa é ${formatAgendaDate(stage.validityDate)}.`,
+    });
+  });
+}
+
+function scheduleLicenseAlerts(process, stage, license) {
+  if (!license?.expiryDate) return;
+  const renewalDays = stage.renewalDays ?? 120;
+  const processNumber = process.internalNumber || process.number || "Processo";
+  scheduleEnvironmentalAlert({
+    processId: process.id,
+    processNumber,
+    stageName: stage.name,
+    relatedId: process.id,
+    relatedType: "environmental_license",
+    relatedLabel: `${license.number} - ${license.type}`,
+    alertType: "renewal",
+    alertLabel: "Renovação",
+    date: subtractDaysFromDate(license.expiryDate, renewalDays),
+    time: stage.renewalTime || "09:00",
+    status: "warning",
+    title: `Renovação - ${license.number}`,
+    subject: `DocGestor: iniciar renovação da licença ${license.number}`,
+    message: `Alerta de renovação da licença ${license.number}, processo ${processNumber}, etapa ${stage.name}. A licença vence em ${formatAgendaDate(license.expiryDate)}.`,
+  });
+  scheduleStageAlerts(process, { ...stage, validityDate: license.expiryDate });
 }
 
 function agendaLinkedText(linkedTarget) {
@@ -1794,7 +1966,11 @@ field("send-recipient-list")?.addEventListener("click", (event) => {
 
 renderSendRecipients();
 
+let alertHistoryItems = [];
+
 const alertHistoryStatusLabels = {
+  waiting: "Aguardando",
+  pending: "Aguardando",
   sent: "Enviado",
   delivered: "Entregue",
   delivery_delayed: "Entrega atrasada",
@@ -1816,7 +1992,7 @@ function escapeHtml(value) {
 function alertHistoryStatusClass(status) {
   if (["delivered", "opened", "clicked"].includes(status)) return "green";
   if (["bounced", "complained"].includes(status)) return "red";
-  if (status === "delivery_delayed") return "yellow";
+  if (["waiting", "pending", "delivery_delayed"].includes(status)) return "yellow";
   return "";
 }
 
@@ -1833,7 +2009,19 @@ function formatAlertHistoryDate(value) {
   }).format(date);
 }
 
-function renderAlertHistory(items = []) {
+function normalizeAlertHistoryItem(item) {
+  const status = item.last_event || item.status || "sent";
+  return {
+    id: item.id,
+    subject: item.subject || "Sem assunto",
+    to: item.to || item.recipient_emails || [],
+    from: item.from || item.sender_email || systemEmailConfig.address,
+    created_at: item.created_at || item.sent_at || item.last_event_at,
+    last_event: status,
+  };
+}
+
+function renderAlertHistory(items = alertHistoryItems) {
   const list = field("alert-history-list");
   const count = field("alert-history-count");
   const summary = field("alert-history-summary");
@@ -1846,7 +2034,8 @@ function renderAlertHistory(items = []) {
     return;
   }
 
-  const totals = items.reduce((acc, item) => {
+  const normalizedItems = items.map(normalizeAlertHistoryItem);
+  const totals = normalizedItems.reduce((acc, item) => {
     const status = item.last_event || "sent";
     acc[status] = (acc[status] || 0) + 1;
     return acc;
@@ -1856,7 +2045,7 @@ function renderAlertHistory(items = []) {
     .map(([status, total]) => `<span><strong>${total}</strong> ${escapeHtml(alertHistoryStatusLabels[status] || status)}</span>`)
     .join("");
 
-  list.innerHTML = items
+  list.innerHTML = normalizedItems
     .map((item) => {
       const status = item.last_event || "sent";
       const recipients = Array.isArray(item.to) ? item.to.join(", ") : item.to || "Não informado";
@@ -1891,7 +2080,8 @@ async function loadAlertHistory() {
     if (!response.ok || !result.success) {
       throw new Error(result.error || "Não foi possível carregar o histórico.");
     }
-    renderAlertHistory(result.emails || []);
+    alertHistoryItems = result.emails || [];
+    renderAlertHistory(alertHistoryItems);
   } catch (error) {
     console.error(error);
     if (summary) summary.innerHTML = `<span>Erro ao buscar histórico: ${escapeHtml(error.message)}</span>`;
@@ -3301,7 +3491,11 @@ function sortedProcesses(processes) {
 function activeLicenses() {
   return environmentalProcesses
     .filter((process) => process.activeLicense)
-    .map((process) => ({ ...process.activeLicense, process }))
+    .map((process) => {
+      const license = { ...process.activeLicense, process };
+      license.status = daysUntil(license.expiryDate) !== null && daysUntil(license.expiryDate) <= 0 ? "Vencida" : license.status || "Ativa";
+      return license;
+    })
     .sort((a, b) => a.expiryDate.localeCompare(b.expiryDate));
 }
 
@@ -3383,6 +3577,11 @@ function licenseForDocumentStage(process, stageNumber) {
 function licenseForLicenseStage(process, stageNumber) {
   const index = Math.max(0, licenseStageIndex(process, stageNumber));
   return process.licenseTypes?.[index] || process.licenseTypes?.[0] || process.type.split(" / ")[0];
+}
+
+function protocolForLicenseStage(process, stageNumber) {
+  const protocolStage = [...ensureProcessStages(process)].reverse().find((stage) => isProtocolStage(stage) && stage.number < stageNumber);
+  return protocolStage ? stageRecord(process, protocolStage.number).protocolNumber || "" : "";
 }
 
 function documentsForCurrentProcessStage(process) {
@@ -3520,7 +3719,13 @@ function processStagesForFormat(format) {
     status: index === 0 ? "Em andamento" : "Não iniciada",
     validityDate: "",
     warningDays: 60,
+    warningTime: "09:00",
     criticalDays: 15,
+    criticalTime: "09:00",
+    emergencyDays: 3,
+    emergencyTime: "09:00",
+    renewalDays: 120,
+    renewalTime: "09:00",
     deadlineStatus: "open",
   }));
 }
@@ -3542,8 +3747,10 @@ function updateStageDeadlineStatus(stage) {
   }
   if (remaining === null) {
     stage.deadlineStatus = "open";
-  } else if (remaining < 0) {
+  } else if (remaining <= 0) {
     stage.deadlineStatus = "expired";
+  } else if (remaining <= Number(stage.emergencyDays || 0)) {
+    stage.deadlineStatus = "emergency";
   } else if (remaining <= Number(stage.criticalDays || 0)) {
     stage.deadlineStatus = "critical";
   } else if (remaining <= Number(stage.warningDays || 0)) {
@@ -3557,11 +3764,13 @@ function updateStageDeadlineStatus(stage) {
 function applyProcessDeadlineRules(process) {
   const stages = ensureProcessStages(process);
   stages.forEach(updateStageDeadlineStatus);
-  const expiredStage2 = stages.some((stage) => stage.number === 2 && stage.deadlineStatus === "expired" && stage.status !== "Concluída");
-  const expiredLicenseStage = stages.some((stage) => isLicenseStage(stage) && stage.deadlineStatus === "expired");
-  const criticalStage = stages.some((stage) => ["warning", "critical"].includes(stage.deadlineStatus) && stage.status !== "Concluída");
+  const currentStage = currentProcessStage(process);
+  const processDueExpired = daysUntil(process.acquisitionDueDate) !== null && daysUntil(process.acquisitionDueDate) <= 0 && process.status !== "done";
+  const expiredStage = stages.find((stage) => stage.deadlineStatus === "expired" && stage.status !== "Concluída");
+  const expiredActiveLicense = process.activeLicense && daysUntil(process.activeLicense.expiryDate) !== null && daysUntil(process.activeLicense.expiryDate) <= 0;
+  const criticalStage = stages.some((stage) => ["warning", "critical", "emergency"].includes(stage.deadlineStatus) && stage.status !== "Concluída");
 
-  if (expiredLicenseStage) {
+  if (expiredActiveLicense) {
     process.status = "expired";
     process.statusLabel = processStatusLabel("expired");
     process.risk = "Licença vencida";
@@ -3569,17 +3778,19 @@ function applyProcessDeadlineRules(process) {
     return;
   }
 
-  if (expiredStage2) {
+  if (processDueExpired || expiredStage) {
     process.status = "pending";
     process.statusLabel = processStatusLabel("pending");
-    process.risk = "Etapa 2 vencida";
-    process.due = "Prazo da etapa 2 ultrapassado";
+    process.risk = processDueExpired ? "Prazo de aquisição vencido" : `${expiredStage.name} vencida`;
+    process.due = processDueExpired
+      ? "Data limite para aquisição da licença ultrapassada"
+      : `Prazo da etapa ${expiredStage.number} ultrapassado`;
     return;
   }
 
   if (criticalStage && process.status === "open") {
     process.risk = "Prazo em atenção";
-    process.due = "Há etapa próxima do vencimento";
+    process.due = currentStage?.validityDate ? `Etapa atual vence em ${formatAgendaDate(currentStage.validityDate)}` : "Há etapa próxima do vencimento";
   }
 }
 
@@ -3673,6 +3884,7 @@ function processStageClass(stage) {
 
 function stageStatusPill(stage) {
   if (stage.deadlineStatus === "expired") return "red";
+  if (stage.deadlineStatus === "emergency") return "red";
   if (stage.deadlineStatus === "critical" || stage.deadlineStatus === "warning") return "yellow";
   if (stage.status === "Concluída") return "green";
   if (stage.status === "Em andamento") return "yellow";
@@ -3686,6 +3898,7 @@ function stageDeadlineLabel(stage) {
     open: "Prazo normal",
     warning: "Aviso minimo",
     critical: "Prazo crítico",
+    emergency: "Emergência",
     expired: "Vencida",
     completed: "Concluída",
   };
@@ -3812,7 +4025,7 @@ function openEnvironmentalProcessModal() {
   openModal("environmental-process-modal");
 }
 
-function saveEnvironmentalProcess() {
+async function saveEnvironmentalProcess() {
   const internalNumber = field("environmental-process-number").value || nextEnvironmentalProcessNumber();
   const status = field("environmental-process-status").value;
   const licensingFormat = field("environmental-process-format").value;
@@ -3825,6 +4038,7 @@ function saveEnvironmentalProcess() {
   const responsible = field("environmental-process-responsible").value;
   const objective = field("environmental-process-objective").value;
   const priority = field("environmental-process-priority").value;
+  const acquisitionDueDate = field("environmental-process-forecast").value;
   const process = {
     id: Date.now(),
     internalNumber,
@@ -3835,13 +4049,15 @@ function saveEnvironmentalProcess() {
     title: enterprise?.name || branch || company,
     enterprise: enterprise?.name || "",
     company,
+    branch,
     type,
     licenseTypes: selectedLicenses,
     agency: "Não especificado",
     status,
     statusLabel: processStatusLabel(status),
     risk: priority === "Critica" ? "Risco crítico" : priority === "Alta" ? "Prioridade alta" : "Aberto",
-    due: field("environmental-process-forecast").value ? `Protocolo previsto para ${field("environmental-process-forecast").value}` : "Sem protocolo definido",
+    due: acquisitionDueDate ? `Aquisição prevista até ${formatAgendaDate(acquisitionDueDate)}` : "Sem vencimento de aquisição definido",
+    acquisitionDueDate,
     responsible,
     progress: 0,
     documents: objective || "Preparacao inicial",
@@ -3850,14 +4066,23 @@ function saveEnvironmentalProcess() {
     stageDocuments: {},
   };
   environmentalProcesses.push(process);
-  if (field("environmental-process-forecast").value) {
-    addAgendaEvent({
-      date: field("environmental-process-forecast").value,
+  await persistEnvironmentalProcess(process, false);
+  if (acquisitionDueDate) {
+    scheduleEnvironmentalAlert({
+      processId: process.id,
+      processNumber: internalNumber,
+      stageName: "Conclusão do processo ambiental",
+      relatedId: process.id,
+      relatedType: "environmental_process",
+      relatedLabel: `${internalNumber} - ${process.title}`,
+      alertType: "process_deadline",
+      alertLabel: "Vencimento para aquisição da licença",
+      date: acquisitionDueDate,
       time: "09:00",
-      title: `Previsão de protocolo - ${internalNumber}`,
-      type: "Prazo do processo",
-      status: "warning",
-      description: `${process.title} - ${process.type}`,
+      status: "danger",
+      title: `Vencimento para aquisição - ${internalNumber}`,
+      subject: `DocGestor: vencimento para aquisição da licença do processo ${internalNumber}`,
+      message: `O processo ${internalNumber} deve ser finalizado por inteiro até ${formatAgendaDate(acquisitionDueDate)}. Se a última etapa não estiver concluída, o processo será classificado como pendente.`,
     });
   }
   closeModal("environmental-process-modal");
@@ -3986,7 +4211,13 @@ function renderCurrentStageScreen(process, stage) {
   field("environmental-process-current-stage-description").textContent = stage.description;
   field("environmental-stage-validity-date").value = stage.validityDate || "";
   field("environmental-stage-warning-days").value = stage.warningDays ?? 60;
+  field("environmental-stage-warning-time").value = stage.warningTime || "09:00";
   field("environmental-stage-critical-days").value = stage.criticalDays ?? 15;
+  field("environmental-stage-critical-time").value = stage.criticalTime || "09:00";
+  field("environmental-stage-emergency-days").value = stage.emergencyDays ?? 3;
+  field("environmental-stage-emergency-time").value = stage.emergencyTime || "09:00";
+  field("environmental-stage-renewal-days").value = stage.renewalDays ?? 120;
+  field("environmental-stage-renewal-time").value = stage.renewalTime || "09:00";
   const gateText = stageRequiredMessage(process, stage);
   if (gate) gate.hidden = !gateText;
   if (gateMessage) gateMessage.textContent = gateText || "Etapa liberada para avançar.";
@@ -3997,15 +4228,17 @@ function renderCurrentStageScreen(process, stage) {
   const previousButton = field("environmental-process-previous-stage");
   if (previousButton) previousButton.disabled = stage.number <= 1;
   const documentStage = isDocumentStage(stage);
+  const licenseStage = isLicenseStage(stage);
   if (documentsPanel) documentsPanel.hidden = !documentStage;
   if (genericStage) genericStage.hidden = documentStage;
   if (protocolFields) protocolFields.hidden = true;
   if (licenseFields) licenseFields.hidden = true;
+  if (field("environmental-stage-renewal-days-field")) field("environmental-stage-renewal-days-field").hidden = !licenseStage;
+  if (field("environmental-stage-renewal-time-field")) field("environmental-stage-renewal-time-field").hidden = !licenseStage;
   if (documentStage) {
     renderEnvironmentalProcessDocuments(process);
   } else {
     const protocolStage = isProtocolStage(stage);
-    const licenseStage = isLicenseStage(stage);
     const record = stageRecord(process, stage.number);
     field("environmental-process-generic-label").textContent = protocolStage ? "Protocolo ambiental" : "Licença ambiental";
     field("environmental-process-generic-title").textContent = stage.name;
@@ -4019,6 +4252,8 @@ function renderCurrentStageScreen(process, stage) {
     }
     if (licenseStage && licenseFields) {
       licenseFields.hidden = false;
+      field("environmental-stage-license-process-number").value = process.internalNumber || process.number || "";
+      field("environmental-stage-license-protocol").value = record.protocolNumber || protocolForLicenseStage(process, stage.number);
       field("environmental-stage-license-type").value = licenseForLicenseStage(process, stage.number);
       field("environmental-stage-license-number").value = record.licenseNumber || "";
       field("environmental-stage-license-expiry").value = record.expiryDate || "";
@@ -4048,15 +4283,24 @@ function saveCurrentStageForm(process, stage) {
   const record = stageRecord(process, stage.number);
   stage.validityDate = field("environmental-stage-validity-date")?.value || "";
   stage.warningDays = Number(field("environmental-stage-warning-days")?.value || 60);
+  stage.warningTime = field("environmental-stage-warning-time")?.value || "09:00";
   stage.criticalDays = Number(field("environmental-stage-critical-days")?.value || 15);
+  stage.criticalTime = field("environmental-stage-critical-time")?.value || "09:00";
+  stage.emergencyDays = Number(field("environmental-stage-emergency-days")?.value || 3);
+  stage.emergencyTime = field("environmental-stage-emergency-time")?.value || "09:00";
+  stage.renewalDays = Number(field("environmental-stage-renewal-days")?.value || 120);
+  stage.renewalTime = field("environmental-stage-renewal-time")?.value || "09:00";
   updateStageDeadlineStatus(stage);
   applyProcessDeadlineRules(process);
+  if (stage.validityDate && !isLicenseStage(stage)) scheduleStageAlerts(process, stage);
   if (isProtocolStage(stage)) {
     record.protocolNumber = field("environmental-stage-protocol-number")?.value || "";
     record.protocolDate = field("environmental-stage-protocol-date")?.value || "";
   }
   if (isLicenseStage(stage)) {
     record.licenseType = licenseForLicenseStage(process, stage.number);
+    record.protocolNumber = field("environmental-stage-license-protocol")?.value || protocolForLicenseStage(process, stage.number);
+    record.processNumber = process.internalNumber || process.number || "";
     record.licenseNumber = field("environmental-stage-license-number")?.value || "";
     record.expiryDate = field("environmental-stage-license-expiry")?.value || "";
   }
@@ -4095,14 +4339,7 @@ function registerStageData(process, stage) {
     else process.licenseHistory.push(license);
     process.number = license.number;
     process.due = `Vence em ${formatAgendaDate(license.expiryDate)}`;
-    addAgendaEvent({
-      date: license.expiryDate,
-      time: "09:00",
-      title: `Vencimento ${license.number}`,
-      type: "Vencimento de licença",
-      status: "danger",
-      description: `${license.type} - ${process.title}`,
-    });
+    scheduleLicenseAlerts(process, stage, license);
   }
 }
 
@@ -4168,7 +4405,7 @@ function openEnvironmentalStage(processId, stageNumber) {
   openModal("environmental-stage-modal");
 }
 
-function saveEnvironmentalProcessDetail() {
+async function saveEnvironmentalProcessDetail() {
   const process = environmentalProcesses.find((item) => String(item.id) === String(field("environmental-process-detail-id").value));
   if (!process) return;
   process.status = field("environmental-process-detail-status").value;
@@ -4198,6 +4435,7 @@ function saveEnvironmentalProcessDetail() {
     process.risk = process.risk === "Processo concluído" ? "Aberto" : process.risk;
   }
   updateProcessProgress(process);
+  await persistEnvironmentalProcess(process, true);
   closeModal("environmental-process-detail-modal");
   openLicenseStatus(currentLicenseStatus === "general" ? process.status : currentLicenseStatus);
 }
@@ -4449,8 +4687,22 @@ field("environmental-process-complete-stage")?.addEventListener("click", () => {
     renderCurrentStageScreen(process, stage);
     return;
   }
+  if (isLicenseStage(stage)) {
+    const record = stageRecord(process, stage.number);
+    const confirmed = window.confirm(`Deseja gerar uma nova licença ambiental para o processo ${process.internalNumber || process.number}?`);
+    if (!confirmed) {
+      process.status = "open";
+      process.statusLabel = processStatusLabel("open");
+      process.risk = "Licença informada, aguardando confirmação";
+      process.due = "Confirme a geração da licença para avançar a etapa";
+      renderCurrentStageScreen(process, stage);
+      return;
+    }
+    record.generateLicense = true;
+  }
   completeProcessStage(process, stage.number);
   renderProcessDetail(process);
+  persistEnvironmentalProcess(process, true);
   closeModal("environmental-stage-modal");
 });
 
@@ -4478,11 +4730,12 @@ field("environmental-stage-save")?.addEventListener("click", () => {
     const stage = ensureProcessStages(process).find((item) => item.number === Number(field("environmental-stage-number").value)) || currentProcessStage(process);
     saveCurrentStageForm(process, stage);
     renderProcessDetail(process);
+    persistEnvironmentalProcess(process, true);
   }
   closeModal("environmental-stage-modal");
 });
 
-["environmental-stage-protocol-number", "environmental-stage-protocol-date", "environmental-stage-license-number", "environmental-stage-license-expiry"].forEach((id) => {
+["environmental-stage-protocol-number", "environmental-stage-protocol-date", "environmental-stage-license-protocol", "environmental-stage-license-number", "environmental-stage-license-expiry"].forEach((id) => {
   field(id)?.addEventListener("input", refreshActiveStageGate);
   field(id)?.addEventListener("change", refreshActiveStageGate);
 });
@@ -5227,7 +5480,7 @@ function buildChecklistModelsReport() {
   };
 }
 
-function formatPdfDate(value) {
+function formatPdfDateOnly(value) {
   return value ? formatAgendaDate(value) : "Não informado";
 }
 
@@ -5271,7 +5524,7 @@ function buildEnvironmentalModuleReport() {
     license.type,
     license.processNumber,
     license.company,
-    formatPdfDate(license.expiryDate),
+    formatPdfDateOnly(license.expiryDate),
     license.status,
   ]);
   const processColumns = ["Processo", "Empreendimento", "Tipo de licença", "Etapa atual", "Progresso", "Prazo / situação"];
@@ -5311,7 +5564,7 @@ function buildEnvironmentalStatusReport(status = currentLicenseStatus) {
       license.type,
       license.processNumber,
       license.company,
-      formatPdfDate(license.expiryDate),
+      formatPdfDateOnly(license.expiryDate),
       license.status,
     ]);
     return {
@@ -5358,9 +5611,9 @@ function buildEnvironmentalProcessDossiêr(process) {
     const documentCount = process.stageDocuments?.[stage.number]?.length || 0;
     const preparedCount = (process.stageDocuments?.[stage.number] || []).filter((item) => item.prepared).length;
     const detail = isProtocolStage(stage)
-      ? `${record.protocolNumber || "Sem protocolo"} - ${formatPdfDate(record.protocolDate)}`
+      ? `${record.protocolNumber || "Sem protocolo"} - ${formatPdfDateOnly(record.protocolDate)}`
       : isLicenseStage(stage)
-        ? `${record.licenseNumber || "Sem licença"} - venc. ${formatPdfDate(record.expiryDate)}`
+        ? `${record.licenseNumber || "Sem licença"} - venc. ${formatPdfDateOnly(record.expiryDate)}`
         : documentCount
           ? `${preparedCount} de ${documentCount} documento(s) elaborado(s)`
           : "Sem check-list selecionado";
@@ -5378,7 +5631,7 @@ function buildEnvironmentalProcessDossiêr(process) {
     license.number,
     license.type,
     `Etapa ${license.stageNumber}`,
-    formatPdfDate(license.expiryDate),
+    formatPdfDateOnly(license.expiryDate),
     license.status,
   ]);
 
@@ -5425,7 +5678,7 @@ function buildEnvironmentalLicenseDossiêr(license) {
         ["Número da licença", license.number],
         ["Tipo", license.type],
         ["Status", license.status],
-        ["Vencimento", formatPdfDate(license.expiryDate)],
+        ["Vencimento", formatPdfDateOnly(license.expiryDate)],
         ["Processo interno", license.processNumber],
         ["Empreendimento", license.title],
         ["Empresa", license.company],
@@ -5442,7 +5695,7 @@ function buildEnvironmentalLicenseDossiêr(license) {
         ["Prazo / situação", process?.due || "Não informado"],
       ], { estimate: 180 }),
       pdfTableSection("Histórico de licenças do processo", ["Licença", "Tipo", "Etapa", "Vencimento", "Status"], fallbackPdfRows(
-        previousLicenses.map((item) => [item.number, item.type, `Etapa ${item.stageNumber}`, formatPdfDate(item.expiryDate), item.status]),
+        previousLicenses.map((item) => [item.number, item.type, `Etapa ${item.stageNumber}`, formatPdfDateOnly(item.expiryDate), item.status]),
         ["Licença", "Tipo", "Etapa", "Vencimento", "Status"],
       ), { rowEstimate: 34 }),
     ],
@@ -5809,7 +6062,7 @@ function statusFromSupabase(value) {
   const normalized = String(value || "").toLowerCase();
   if (["vencida", "vencido", "expired"].includes(normalized)) return "expired";
   if (["pendente", "pending", "em analise", "em análise"].includes(normalized)) return "pending";
-  if (["concluida", "concluido", "deferido", "done"].includes(normalized)) return "done";
+  if (["concluida", "concluída", "concluido", "concluído", "deferido", "done"].includes(normalized)) return "done";
   return "open";
 }
 
@@ -5909,8 +6162,21 @@ function propertyIdByLabel(label) {
   return properties.find((property) => property.registration === registration || `Matrícula ${property.registration}` === label)?.id || null;
 }
 
+function enterpriseIdByName(name) {
+  return enterprises.find((enterprise) => enterprise.name === name)?.id || null;
+}
+
 function licenseTypeIdByName(name) {
   return environmentalLicenseTypes.find((license) => license.name === name)?.id || null;
+}
+
+function statusToSupabase(status) {
+  return {
+    open: "Em andamento",
+    pending: "Pendente",
+    expired: "Vencida",
+    done: "Concluída",
+  }[status] || "Em andamento";
 }
 
 function documentIdByName(name) {
@@ -6254,6 +6520,81 @@ async function persistChecklistModel(model, wasExisting) {
   }
 }
 
+async function persistEnvironmentalProcess(process, wasExisting = false) {
+  if (!window.DocGestorDB) return;
+  const organizationId = await defaultOrganizationId();
+  const companyId = companyIdByName(process.company);
+  const branchId = companyIdByName(process.branch);
+  const propertyId = propertyIdByLabel(process.property);
+  const enterpriseId = enterpriseIdByName(process.enterprise || process.title);
+  const responsibleId = partnerIdByName(process.responsible);
+  const licenseTypeId = licenseTypeIdByName(process.licenseTypes?.[0] || process.type?.split(" / ")[0]);
+  if (![organizationId, companyId, propertyId, licenseTypeId].every(looksLikeUuid)) {
+    console.warn("Processo ambiental não salvo no Supabase: empresa, imóvel ou tipo de licença ainda não possuem ID válido.");
+    return;
+  }
+  const activeLicense = process.activeLicense || {};
+  const payload = {
+    organization_id: organizationId,
+    enterprise_id: looksLikeUuid(enterpriseId) ? enterpriseId : null,
+    company_id: companyId,
+    branch_id: looksLikeUuid(branchId) ? branchId : null,
+    property_id: propertyId,
+    responsible_partner_id: looksLikeUuid(responsibleId) ? responsibleId : null,
+    license_type_id: licenseTypeId,
+    license_number: activeLicense.number || null,
+    process_number: process.internalNumber || process.number,
+    expiration_date: activeLicense.expiryDate || process.acquisitionDueDate || null,
+    renewal_recommended_at: activeLicense.expiryDate ? subtractDaysFromDate(activeLicense.expiryDate, 120) : null,
+    status: statusToSupabase(process.status),
+    risk_level: process.risk || "",
+    progress_percent: Number(process.progress || 0),
+    notes: process.notes || process.documents || "",
+  };
+  try {
+    let saved = null;
+    if (wasExisting && looksLikeUuid(process.id)) {
+      [saved] = await window.DocGestorDB.update("environmental_licenses", process.id, payload);
+    } else {
+      [saved] = await window.DocGestorDB.create("environmental_licenses", payload);
+    }
+    if (saved?.id) {
+      updateLocalId(environmentalProcesses, process.id, saved.id);
+      process.id = saved.id;
+      if (process.activeLicense) process.activeLicense.processId = saved.id;
+      await persistEnvironmentalProcessStages(process);
+      renderLicenseStatus(currentLicenseStatus);
+    }
+  } catch (error) {
+    console.warn("Não foi possível salvar o processo ambiental no Supabase.", error.message);
+  }
+}
+
+async function persistEnvironmentalProcessStages(process) {
+  if (!window.DocGestorDB || !looksLikeUuid(process.id)) return;
+  try {
+    await window.DocGestorDB.removeWhere("environmental_process_stage_deadlines", `process_id=eq.${encodeURIComponent(process.id)}`);
+    await Promise.all(ensureProcessStages(process).map((stage) => window.DocGestorDB.create("environmental_process_stage_deadlines", {
+      process_id: process.id,
+      stage_number: stage.number,
+      stage_name: stage.name,
+      validity_date: stage.validityDate || null,
+      warning_days: Number(stage.warningDays || 0),
+      warning_time: stage.warningTime || "09:00",
+      critical_days: Number(stage.criticalDays || 0),
+      critical_time: stage.criticalTime || "09:00",
+      emergency_days: Number(stage.emergencyDays || 0),
+      emergency_time: stage.emergencyTime || "09:00",
+      renewal_days: Number(stage.renewalDays || 0),
+      renewal_time: stage.renewalTime || "09:00",
+      status: stage.deadlineStatus || "open",
+      completed_at: stage.status === "Concluída" ? new Date().toISOString() : null,
+    })));
+  } catch (error) {
+    console.warn("Não foi possível salvar as etapas do processo no Supabase.", error.message);
+  }
+}
+
 async function persistSendRecipient(recipient, wasExisting) {
   if (!window.DocGestorDB) return;
   try {
@@ -6308,10 +6649,12 @@ async function loadSupabaseData() {
     checklistRows,
     checklistDocumentRows,
     licenseRows,
+    stageDeadlineRows,
     appModuleRows,
     alertRecipientRows,
     alertRecipientModuleRows,
     agendaRows,
+    alertHistoryRows,
     userRows,
     backupRows,
   ] = await Promise.all([
@@ -6330,10 +6673,12 @@ async function loadSupabaseData() {
     dbList("environmental_checklist_models"),
     dbList("environmental_checklist_model_documents"),
     dbList("environmental_licenses"),
+    dbList("environmental_process_stage_deadlines"),
     dbList("app_modules"),
     dbList("alert_recipients"),
     dbList("alert_recipient_modules"),
     dbList("agenda_events"),
+    dbList("alert_history", "select=*&order=created_at.desc"),
     dbList("app_users"),
     dbList("system_backup_configs", "select=*&order=updated_at.desc&limit=1"),
   ]);
@@ -6467,11 +6812,11 @@ async function loadSupabaseData() {
   }, {});
 
   environmentalProcesses = licenseRows.map((row) => {
-    const status = daysUntil(row.expiration_date) !== null && daysUntil(row.expiration_date) < 0 ? "expired" : statusFromSupabase(row.status);
+    const status = daysUntil(row.expiration_date) !== null && daysUntil(row.expiration_date) <= 0 ? "expired" : statusFromSupabase(row.status);
     const licenseType = licenseTypeById[row.license_type_id]?.name || "Licença ambiental";
     const company = companyById[row.company_id]?.name || "Empresa não encontrada";
     const property = propertyById[row.property_id] ? `Matrícula ${propertyById[row.property_id].registration}` : "";
-    return {
+    const process = {
       id: row.id,
       internalNumber: row.process_number || row.license_number || "Sem número",
       licensingFormat: "monofasico",
@@ -6507,6 +6852,29 @@ async function loadSupabaseData() {
           }
         : null,
     };
+    const savedStages = stageDeadlineRows.filter((stageRow) => sameId(stageRow.process_id, row.id));
+    if (savedStages.length) {
+      process.stages = processStagesForFormat(process.licensingFormat);
+      savedStages.forEach((stageRow) => {
+        const stage = process.stages.find((item) => item.number === Number(stageRow.stage_number));
+        if (!stage) return;
+        stage.name = stageRow.stage_name || stage.name;
+        stage.validityDate = stageRow.validity_date || "";
+        stage.warningDays = Number(stageRow.warning_days || 60);
+        stage.warningTime = stageRow.warning_time || "09:00";
+        stage.criticalDays = Number(stageRow.critical_days || 15);
+        stage.criticalTime = stageRow.critical_time || "09:00";
+        stage.emergencyDays = Number(stageRow.emergency_days || 3);
+        stage.emergencyTime = stageRow.emergency_time || "09:00";
+        stage.renewalDays = Number(stageRow.renewal_days || 120);
+        stage.renewalTime = stageRow.renewal_time || "09:00";
+        stage.deadlineStatus = stageRow.status || "open";
+        if (stageRow.completed_at) stage.status = "Concluída";
+      });
+      const firstOpen = process.stages.find((stage) => stage.status !== "Concluída");
+      if (firstOpen) firstOpen.status = "Em andamento";
+    }
+    return process;
   });
 
   sendRecipients = alertRecipientRows.map((row) => ({
@@ -6530,6 +6898,19 @@ async function loadSupabaseData() {
     status: row.status || "green",
     description: row.description || "",
   })).filter((event) => event.date);
+
+  alertHistoryItems = alertHistoryRows.map((row) => ({
+    id: row.id,
+    subject: row.subject,
+    recipient_emails: row.recipient_emails || [],
+    sender_email: row.sender_email || systemEmailConfig.address,
+    status: row.status || "waiting",
+    status_label: row.status_label || "Aguardando",
+    related_label: row.related_label || "",
+    created_at: row.created_at,
+    sent_at: row.sent_at,
+  }));
+  renderAlertHistory(alertHistoryItems);
 
   users = userRows.map((row) => ({
     id: row.id,

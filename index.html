@@ -1748,7 +1748,7 @@
               <option>Critica</option>
             </select>
           </label>
-          <label>Previsão de protocolo
+          <label>Vencimento para aquisição da licença
             <input id="environmental-process-forecast" type="date" />
           </label>
           <label class="wide-field">Objetivo do processo
@@ -1864,14 +1864,32 @@
             <small id="environmental-process-stage-gate-message">Ainda existem pendências para avancar.</small>
           </div>
           <form class="stage-data-form" id="environmental-stage-deadline-fields">
-            <label>Validade da etapa
+            <label>Data de vencimento da etapa
               <input id="environmental-stage-validity-date" type="date" />
             </label>
-            <label>Prazo minimo de aviso (dias)
+            <label>Prazo mínimo (dias antes)
               <input id="environmental-stage-warning-days" type="number" min="0" value="60" />
+            </label>
+            <label>Hora do prazo mínimo
+              <input id="environmental-stage-warning-time" type="time" value="09:00" />
             </label>
             <label>Prazo crítico (dias)
               <input id="environmental-stage-critical-days" type="number" min="0" value="15" />
+            </label>
+            <label>Hora do prazo crítico
+              <input id="environmental-stage-critical-time" type="time" value="09:00" />
+            </label>
+            <label>Emergência (dias antes)
+              <input id="environmental-stage-emergency-days" type="number" min="0" value="3" />
+            </label>
+            <label>Hora da emergência
+              <input id="environmental-stage-emergency-time" type="time" value="09:00" />
+            </label>
+            <label class="license-alert-field" id="environmental-stage-renewal-days-field" hidden>Renovação (dias antes)
+              <input id="environmental-stage-renewal-days" type="number" min="0" value="120" />
+            </label>
+            <label class="license-alert-field" id="environmental-stage-renewal-time-field" hidden>Hora da renovação
+              <input id="environmental-stage-renewal-time" type="time" value="09:00" />
             </label>
           </form>
           <div class="process-documents-panel" id="environmental-process-documents-panel">
@@ -1894,6 +1912,12 @@
               </label>
             </form>
             <form class="stage-data-form" id="environmental-license-fields" hidden>
+              <label>Número do processo no sistema
+                <input id="environmental-stage-license-process-number" disabled />
+              </label>
+              <label>Protocolo ambiental
+                <input id="environmental-stage-license-protocol" placeholder="Ex.: PROT-2026-0001" />
+              </label>
               <label>Tipo de licença
                 <input id="environmental-stage-license-type" disabled />
               </label>
@@ -1986,7 +2010,7 @@
 
     <script src="supabase-config.js?v=20260602-db-persist"></script>
     <script src="database.js?v=20260602-db-persist"></script>
-    <script src="script.js?v=20260602-modulos-032-033"></script>
+    <script src="script.js?v=20260603-alertas-ambientais"></script>
   </body>
 </html>
 
