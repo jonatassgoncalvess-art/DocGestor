@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DocGestor by Carminatti | Prévia</title>
-    <link rel="stylesheet" href="styles.css?v=20260602-acentos" />
+    <link rel="stylesheet" href="styles.css?v=20260602-modulos-032-033" />
   </head>
   <body>
     <section class="login-screen" id="login-screen">
@@ -88,15 +88,17 @@
           <button class="nav-item" data-view="modulos" data-module-menu-toggle="true" data-permission-view="modules" aria-expanded="false">
             <span>03</span> Módulos
           </button>
-          <div class="admin-subnav module-subnav" id="module-subnav" data-permission-view="environmental">
-            <button class="admin-link module-parent-link" data-view-target="licencas" data-module-root="licencas">03.1 Licenças Ambientais</button>
+          <div class="admin-subnav module-subnav" id="module-subnav" data-permission-view="modules">
+            <button class="admin-link module-parent-link" data-view-target="licencas" data-module-root="licencas" data-permission-view="environmental">03.1 Licenças Ambientais</button>
             <div class="side-tree-group module-child-group">
-              <button class="admin-link" data-module-license-status="open">03.1.1 Abertas</button>
-              <button class="admin-link" data-module-license-status="pending">03.1.2 Pendentes</button>
-              <button class="admin-link" data-module-license-status="expired">03.1.3 Vencidas</button>
-              <button class="admin-link" data-module-license-status="done">03.1.4 Concluídas</button>
-              <button class="admin-link" data-module-license-status="licenses">03.1.5 Licenças</button>
+              <button class="admin-link" data-module-license-status="open" data-permission-view="environmental">03.1.1 Abertas</button>
+              <button class="admin-link" data-module-license-status="pending" data-permission-view="environmental">03.1.2 Pendentes</button>
+              <button class="admin-link" data-module-license-status="expired" data-permission-view="environmental">03.1.3 Vencidas</button>
+              <button class="admin-link" data-module-license-status="done" data-permission-view="environmental">03.1.4 Concluídas</button>
+              <button class="admin-link" data-module-license-status="licenses" data-permission-view="environmental">03.1.5 Licenças</button>
             </div>
+            <button class="admin-link" data-view-target="iptu" data-permission-view="modules">03.2 IPTU</button>
+            <button class="admin-link" data-view-target="documentos-diversos" data-permission-view="modules">03.3 Documentos Diversos</button>
           </div>
           <button class="nav-item" data-view="agenda" data-agenda-menu-toggle="true" data-permission-view="agenda" aria-expanded="false">
             <span>04</span> Agenda
@@ -701,6 +703,18 @@
               <p>Processos ambientais, etapas, checklists, documentos, protocolos, licenças e vencimentos.</p>
               <button class="primary small" data-view-target="licencas">Abrir 03.1</button>
             </article>
+            <article class="module-card">
+              <span>03.2 Módulo</span>
+              <h3>IPTU</h3>
+              <p>Controle de guias, vencimentos, imóveis vinculados e comprovantes de pagamento.</p>
+              <button class="ghost small" data-view-target="iptu" data-permission-view="modules">Abrir 03.2</button>
+            </article>
+            <article class="module-card">
+              <span>03.3 Módulo</span>
+              <h3>Documentos Diversos</h3>
+              <p>Controle de documentos internos, prazos, responsáveis e arquivos relacionados.</p>
+              <button class="ghost small" data-view-target="documentos-diversos" data-permission-view="modules">Abrir 03.3</button>
+            </article>
           </div>
         </section>
 
@@ -722,6 +736,52 @@
               </div>
             </div>
             <div class="license-status-list" id="license-status-list"></div>
+          </section>
+        </section>
+
+        <section class="view" id="iptu">
+          <div class="module-context">
+            <p class="eyebrow">03.2 Módulo operacional</p>
+            <h2>IPTU</h2>
+          </div>
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Guias de IPTU</h2>
+                <span class="muted">Controle inicial dos registros de IPTU vinculados aos imóveis.</span>
+              </div>
+              <span class="pill green" id="iptu-count">0 itens</span>
+            </div>
+            <div class="crud-list">
+              <article>
+                <strong>Nenhum IPTU cadastrado</strong>
+                <span>Os registros serão listados aqui quando o fluxo de cadastro do módulo for criado.</span>
+                <div></div>
+              </article>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="documentos-diversos">
+          <div class="module-context">
+            <p class="eyebrow">03.3 Módulo operacional</p>
+            <h2>Documentos Diversos</h2>
+          </div>
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Documentos diversos</h2>
+                <span class="muted">Controle inicial de documentos, vencimentos e responsáveis.</span>
+              </div>
+              <span class="pill green" id="diverse-documents-count">0 itens</span>
+            </div>
+            <div class="crud-list">
+              <article>
+                <strong>Nenhum documento cadastrado</strong>
+                <span>Os registros serão listados aqui quando o fluxo de cadastro do módulo for criado.</span>
+                <div></div>
+              </article>
+            </div>
           </section>
         </section>
 
@@ -904,6 +964,8 @@
                 <label>Módulo
                   <select id="agenda-note-link-module">
                     <option value="environmental">03.1 Licenças Ambientais</option>
+                    <option value="iptu">03.2 IPTU</option>
+                    <option value="diverse-documents">03.3 Documentos Diversos</option>
                   </select>
                 </label>
                 <button class="ghost" type="button" id="agenda-note-link-select">Selecionar</button>
@@ -1924,7 +1986,7 @@
 
     <script src="supabase-config.js?v=20260602-db-persist"></script>
     <script src="database.js?v=20260602-db-persist"></script>
-    <script src="script.js?v=20260602-acentos"></script>
+    <script src="script.js?v=20260602-modulos-032-033"></script>
   </body>
 </html>
 

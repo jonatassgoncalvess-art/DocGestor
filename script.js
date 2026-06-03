@@ -13,6 +13,8 @@ const titles = {
   cadastros: "Cadastros",
   modulos: "Módulos",
   licencas: "03.1 Licenças Ambientais",
+  iptu: "03.2 IPTU",
+  "documentos-diversos": "03.3 Documentos Diversos",
   usuarios: "Usuários e permissões",
   agenda: "04.1 Calendário",
   "agenda-notes": "04.2 Anotações",
@@ -30,7 +32,15 @@ function openView(viewName) {
     openView(firstAccessibleView());
     return;
   }
-  const parentView = ["cadastros", "usuarios"].includes(viewName) ? "admin" : viewName === "licencas" ? "modulos" : viewName === "agenda-notes" ? "agenda" : viewName === "profile-settings" ? "settings" : viewName;
+  const parentView = ["cadastros", "usuarios"].includes(viewName)
+    ? "admin"
+    : ["licencas", "iptu", "documentos-diversos"].includes(viewName)
+      ? "modulos"
+      : viewName === "agenda-notes"
+        ? "agenda"
+        : viewName === "profile-settings"
+          ? "settings"
+          : viewName;
   navItems.forEach((nav) => nav.classList.toggle("active", nav.dataset.view === parentView));
   views.forEach((view) => view.classList.toggle("active", view.id === viewName));
   title.textContent = titles[viewName];
@@ -66,6 +76,11 @@ function openView(viewName) {
   if (viewName !== "licencas") {
     document.querySelectorAll("[data-module-license-status]").forEach((item) => item.classList.remove("active"));
   }
+
+  document.querySelectorAll("#module-subnav [data-view-target]").forEach((item) => {
+    item.classList.toggle("active", item.dataset.viewTarget === viewName);
+    if (item.dataset.viewTarget === "licencas") item.classList.toggle("parent-active", viewName === "licencas");
+  });
 
   document.querySelectorAll("[data-agenda-target]").forEach((item) => {
     item.classList.toggle("active", item.dataset.agendaTarget === viewName);
@@ -219,6 +234,8 @@ const searchableEnvironments = [
   { code: "03.1.3", title: "Vencidas", detail: "Processos e licenças vencidos", permission: "environmental", action: () => openLicenseStatus("expired") },
   { code: "03.1.4", title: "Concluídas", detail: "Processos concluídos", permission: "environmental", action: () => openLicenseStatus("done") },
   { code: "03.1.5", title: "Licenças", detail: "Licenças ambientais geradas", permission: "environmental", action: () => openLicenseStatus("licenses") },
+  { code: "03.2", title: "IPTU", detail: "Guias, vencimentos e comprovantes", permission: "modules", action: () => openView("iptu") },
+  { code: "03.3", title: "Documentos Diversos", detail: "Documentos internos, prazos e responsáveis", permission: "modules", action: () => openView("documentos-diversos") },
   { code: "04.1", title: "Calendário", detail: "Agenda em formato calendário", permission: "agenda", action: () => openView("agenda") },
   { code: "04.2", title: "Anotações", detail: "Agendamentos e alertas pendentes", permission: "agenda", action: () => openView("agenda-notes") },
   { code: "05.1", title: "Perfil", detail: "Dados cadastrais e senha do usuário", permission: "profile", action: () => openView("profile-settings") },
@@ -742,6 +759,7 @@ function viewPermission(viewName) {
   if (viewName === "admin" || viewName === "usuarios" || viewName === "cadastros") return "admin";
   if (viewName === "dashboard") return "dashboard";
   if (viewName === "modulos") return "modules";
+  if (viewName === "iptu" || viewName === "documentos-diversos") return "modules";
   if (viewName === "licencas") return "environmental";
   if (viewName === "agenda" || viewName === "agenda-notes") return "agenda";
   if (viewName === "settings" || viewName === "profile-settings") return "profile";
@@ -1629,9 +1647,13 @@ let sendRecipients = [];
 
 let selectedSendRecipientId = 0;
 
-const availableAlertModules = [
+const defaultSystemModules = [
   { id: "environmental", name: "03.1 Licenças Ambientais" },
+  { id: "iptu", name: "03.2 IPTU" },
+  { id: "diverse-documents", name: "03.3 Documentos Diversos" },
 ];
+
+const availableAlertModules = [...defaultSystemModules];
 
 function sendModuleLabel(moduleKey) {
   return availableAlertModules.find((module) => module.id === moduleKey)?.name || moduleKey;
@@ -2481,7 +2503,7 @@ const enterpriseProperty = document.querySelector("#enterprise-property");
 const enterprisePropertyList = document.querySelector("#enterprise-property-list");
 
 function activeSystemModules() {
-  return availableAlertModules.length ? availableAlertModules : [{ id: "environmental", name: "03.1 Licenças Ambientais" }];
+  return availableAlertModules.length ? availableAlertModules : [...defaultSystemModules];
 }
 
 function enterpriseModules(enterprise) {
@@ -6323,16 +6345,21 @@ async function loadSupabaseData() {
   const documentById = Object.fromEntries(documentRows.map((row) => [row.id, row]));
 
   if (appModuleRows.length) {
+    const loadedModules = appModuleRows
+      .filter((row) => row.is_active !== false && !row.is_admin_area)
+      .sort((a, b) => Number(a.display_order || 0) - Number(b.display_order || 0))
+      .map((row) => ({
+        id: row.code || row.id,
+        name: row.name,
+      }));
+    const mergedModules = [...loadedModules];
+    defaultSystemModules.forEach((module) => {
+      if (!mergedModules.some((item) => item.id === module.id)) mergedModules.push(module);
+    });
     availableAlertModules.splice(
       0,
       availableAlertModules.length,
-      ...appModuleRows
-        .filter((row) => row.is_active !== false && !row.is_admin_area)
-        .sort((a, b) => Number(a.display_order || 0) - Number(b.display_order || 0))
-        .map((row) => ({
-          id: row.code || row.id,
-          name: row.name,
-        })),
+      ...mergedModules,
     );
   }
 
