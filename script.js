@@ -418,6 +418,55 @@ function alertMessageHtml(alertInfo) {
   `;
 }
 
+function scheduledDateTime(alertInfo) {
+  return new Date(`${alertInfo.date}T${alertInfo.time || "09:00"}:00`);
+}
+
+function shouldSendAlertNow(alertInfo) {
+  const scheduled = scheduledDateTime(alertInfo);
+  return !Number.isNaN(scheduled.getTime()) && scheduled <= new Date();
+}
+
+function addLocalAlertHistory(alertInfo, recipient = null, status = "waiting") {
+  const recipientEmails = recipient?.email ? [recipient.email] : [];
+  const localId = `${alertInfo.alertType || "alert"}|${alertInfo.relatedLabel}|${recipient?.email || "module"}|${alertInfo.date}|${alertInfo.time || "09:00"}`;
+  if (alertHistoryItems.some((item) => item.id === localId)) return;
+  alertHistoryItems.unshift({
+    id: localId,
+    subject: alertInfo.subject,
+    recipient_emails: recipientEmails,
+    sender_email: systemEmailConfig.address,
+    status,
+    status_label: status === "sent" ? "Enviado" : "Aguardando",
+    related_label: alertInfo.relatedLabel || "",
+    created_at: new Date().toISOString(),
+    sent_at: status === "sent" ? new Date().toISOString() : null,
+  });
+  renderAlertHistory(alertHistoryItems);
+}
+
+async function sendEnvironmentalAlertEmail(alertInfo, recipient) {
+  if (!recipient?.email) return false;
+  try {
+    const response = await fetch("/api/enviar-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        to: recipient.email,
+        fromName: systemEmailConfig.name,
+        fromEmail: systemEmailConfig.address,
+        subject: alertInfo.subject,
+        html: alertMessageHtml(alertInfo),
+      }),
+    });
+    const result = await response.json().catch(() => ({}));
+    return response.ok && result.success !== false;
+  } catch (error) {
+    console.warn("Não foi possível enviar o alerta ambiental agora.", error.message);
+    return false;
+  }
+}
+
 async function persistAgendaEvent(event) {
   if (!window.DocGestorDB || !event?.date || looksLikeUuid(event.id)) return;
   try {
@@ -438,8 +487,15 @@ async function persistAgendaEvent(event) {
 }
 
 async function persistAlertQueueItem(alertInfo, recipient) {
-  if (!window.DocGestorDB || !looksLikeUuid(recipient?.id)) return;
   const scheduledFor = `${alertInfo.date}T${alertInfo.time || "09:00"}:00`;
+  const dueNow = shouldSendAlertNow(alertInfo);
+  let status = dueNow ? "sent" : "waiting";
+  if (dueNow && recipient?.email) {
+    const sent = await sendEnvironmentalAlertEmail(alertInfo, recipient);
+    status = sent ? "sent" : "waiting";
+  }
+  addLocalAlertHistory(alertInfo, recipient, status);
+  if (!window.DocGestorDB || !looksLikeUuid(recipient?.id)) return;
   try {
     await window.DocGestorDB.create("alert_queue", {
       module_id: "environmental",
@@ -449,8 +505,9 @@ async function persistAlertQueueItem(alertInfo, recipient) {
       related_label: alertInfo.relatedLabel,
       subject: alertInfo.subject,
       message_html: alertMessageHtml(alertInfo),
-      status: "pending",
+      status: status === "sent" ? "sent" : "pending",
       scheduled_for: scheduledFor,
+      sent_at: status === "sent" ? new Date().toISOString() : null,
     });
     await window.DocGestorDB.create("alert_history", {
       recipient_id: recipient.id,
@@ -458,12 +515,12 @@ async function persistAlertQueueItem(alertInfo, recipient) {
       subject: alertInfo.subject,
       sender_email: systemEmailConfig.address,
       recipient_emails: [recipient.email],
-      status: "waiting",
-      status_label: "Aguardando",
+      status,
+      status_label: status === "sent" ? "Enviado" : "Aguardando",
       related_type: alertInfo.relatedType || "environmental_process",
       related_id: looksLikeUuid(alertInfo.relatedId) ? alertInfo.relatedId : null,
       related_label: alertInfo.relatedLabel,
-      sent_at: null,
+      sent_at: status === "sent" ? new Date().toISOString() : null,
       raw_payload: { scheduled_for: scheduledFor, alert_type: alertInfo.alertType },
     });
   } catch (error) {
@@ -494,9 +551,12 @@ function scheduleEnvironmentalAlert(alertInfo) {
     linkedTarget,
   });
   if (!added) return;
-  environmentalAlertRecipients().forEach((recipient) => {
-    persistAlertQueueItem(alertInfo, recipient);
-  });
+  const recipients = environmentalAlertRecipients();
+  if (!recipients.length) {
+    addLocalAlertHistory(alertInfo, null, "waiting");
+    return;
+  }
+  recipients.forEach((recipient) => persistAlertQueueItem(alertInfo, recipient));
 }
 
 function scheduleStageAlerts(process, stage) {
@@ -3793,6 +3853,14 @@ function daysUntil(dateValue) {
   return Math.ceil((target - today) / 86400000);
 }
 
+function dateIsAfter(dateValue, limitValue) {
+  if (!dateValue || !limitValue) return false;
+  const date = parseDateKey(dateValue);
+  const limit = parseDateKey(limitValue);
+  if (Number.isNaN(date.getTime()) || Number.isNaN(limit.getTime())) return false;
+  return date > limit;
+}
+
 function updateStageDeadlineStatus(stage) {
   const remaining = daysUntil(stage.validityDate);
   if (stage.status === "Concluída") {
@@ -3927,6 +3995,11 @@ function completeProcessStage(process, stageNumber) {
     });
     updateProcessProgress(process);
   }
+}
+
+function isLastProcessStage(process, stageNumber) {
+  const stages = ensureProcessStages(process);
+  return stageNumber >= Math.max(...stages.map((stage) => stage.number));
 }
 
 function processStageClass(stage) {
@@ -4073,6 +4146,7 @@ function openEnvironmentalProcessModal() {
   field("environmental-process-status").value = "open";
   field("environmental-process-priority").value = "Normal";
   field("environmental-process-forecast").value = "";
+  field("environmental-process-alert-time").value = "09:00";
   field("environmental-process-objective").value = "";
   field("environmental-process-notes").value = "";
   updateEnvironmentalProcessStagesPreview();
@@ -4093,6 +4167,7 @@ async function saveEnvironmentalProcess() {
   const objective = field("environmental-process-objective").value;
   const priority = field("environmental-process-priority").value;
   const acquisitionDueDate = field("environmental-process-forecast").value;
+  const acquisitionAlertTime = field("environmental-process-alert-time")?.value || "09:00";
   const process = {
     id: Date.now(),
     internalNumber,
@@ -4112,6 +4187,7 @@ async function saveEnvironmentalProcess() {
     risk: priority === "Critica" ? "Risco crítico" : priority === "Alta" ? "Prioridade alta" : "Aberto",
     due: acquisitionDueDate ? `Aquisição prevista até ${formatAgendaDate(acquisitionDueDate)}` : "Sem vencimento de aquisição definido",
     acquisitionDueDate,
+    acquisitionAlertTime,
     responsible,
     progress: 0,
     documents: objective || "Preparacao inicial",
@@ -4132,7 +4208,7 @@ async function saveEnvironmentalProcess() {
       alertType: "process_deadline",
       alertLabel: "Vencimento para aquisição da licença",
       date: acquisitionDueDate,
-      time: "09:00",
+      time: acquisitionAlertTime,
       status: "danger",
       title: `Vencimento para aquisição - ${internalNumber}`,
       subject: `DocGestor: vencimento para aquisição da licença do processo ${internalNumber}`,
@@ -4341,6 +4417,12 @@ function refreshActiveStageGate() {
 function saveCurrentStageForm(process, stage) {
   const record = stageRecord(process, stage.number);
   stage.validityDate = field("environmental-stage-validity-date")?.value || "";
+  if (!isLicenseStage(stage) && dateIsAfter(stage.validityDate, process.acquisitionDueDate)) {
+    alert("A data de vencimento da etapa não pode ser superior à data final do processo.");
+    stage.validityDate = process.acquisitionDueDate || "";
+    if (field("environmental-stage-validity-date")) field("environmental-stage-validity-date").value = stage.validityDate;
+    syncAllStageAlertDates();
+  }
   stage.deadlineTime = field("environmental-stage-deadline-time")?.value || "09:00";
   stage.warningDays = Number(field("environmental-stage-warning-days")?.value || 60);
   stage.warningTime = field("environmental-stage-warning-time")?.value || "09:00";
@@ -4400,6 +4482,26 @@ function registerStageData(process, stage) {
     process.number = license.number;
     process.due = `Vence em ${formatAgendaDate(license.expiryDate)}`;
     scheduleLicenseAlerts(process, stage, license);
+    if (!isLastProcessStage(process, stage.number)) {
+      process.acquisitionDueDate = license.expiryDate;
+      process.acquisitionAlertTime = stage.deadlineTime || "09:00";
+      scheduleEnvironmentalAlert({
+        processId: process.id,
+        processNumber: process.internalNumber || process.number,
+        stageName: "Aquisição da próxima licença ambiental",
+        relatedId: process.id,
+        relatedType: "environmental_process",
+        relatedLabel: `${process.internalNumber || process.number} - Próxima licença`,
+        alertType: "next_license_deadline",
+        alertLabel: "Vencimento para aquisição da licença posterior",
+        date: license.expiryDate,
+        time: process.acquisitionAlertTime,
+        status: "danger",
+        title: `Aquisição da próxima licença - ${process.internalNumber || process.number}`,
+        subject: `DocGestor: prazo para próxima licença do processo ${process.internalNumber || process.number}`,
+        message: `A licença ${license.number} vence em ${formatAgendaDate(license.expiryDate)} e essa passa a ser a data limite para aquisição da licença posterior do processo ${process.internalNumber || process.number}.`,
+      });
+    }
   }
 }
 
@@ -6617,6 +6719,7 @@ async function persistEnvironmentalProcess(process, wasExisting = false) {
     license_number: activeLicense.number || null,
     process_number: process.internalNumber || process.number,
     expiration_date: activeLicense.expiryDate || process.acquisitionDueDate || null,
+    process_due_alert_time: process.acquisitionAlertTime || "09:00",
     renewal_recommended_at: activeLicense.expiryDate ? subtractDaysFromDate(activeLicense.expiryDate, 120) : null,
     status: statusToSupabase(process.status),
     risk_level: process.risk || "",
@@ -6904,6 +7007,8 @@ async function loadSupabaseData() {
       statusLabel: processStatusLabel(status),
       risk: row.risk_level || "",
       due: row.expiration_date ? `Vence em ${formatAgendaDate(row.expiration_date)}` : "Sem vencimento cadastrado",
+      acquisitionDueDate: row.license_number ? "" : row.expiration_date || "",
+      acquisitionAlertTime: row.process_due_alert_time || "09:00",
       responsible: partnerById[row.responsible_partner_id]?.name || "",
       progress: Number(row.progress_percent || 0),
       documents: row.notes || "",

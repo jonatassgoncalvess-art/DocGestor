@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DocGestor by Carminatti | Prévia</title>
-    <link rel="stylesheet" href="styles.css?v=20260603-vencimentos-etapas" />
+    <link rel="stylesheet" href="styles.css?v=20260603-alertas-imediatos" />
   </head>
   <body>
     <section class="login-screen" id="login-screen">
@@ -1751,6 +1751,9 @@
           <label>Vencimento para aquisição da licença
             <input id="environmental-process-forecast" type="date" />
           </label>
+          <label>Horário do alerta do vencimento
+            <input id="environmental-process-alert-time" type="time" value="09:00" />
+          </label>
           <label class="wide-field">Objetivo do processo
             <input id="environmental-process-objective" placeholder="Ex.: regularização de atividade, renovação, ampliação, nova operação" />
           </label>
@@ -2028,7 +2031,7 @@
 
     <script src="supabase-config.js?v=20260602-db-persist"></script>
     <script src="database.js?v=20260602-db-persist"></script>
-    <script src="script.js?v=20260603-vencimentos-etapas"></script>
+    <script src="script.js?v=20260603-alertas-imediatos"></script>
   </body>
 </html>
 

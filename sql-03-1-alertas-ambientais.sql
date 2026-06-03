@@ -101,6 +101,7 @@ alter table alert_history add column if not exists sent_at timestamptz;
 alter table alert_history add column if not exists last_event_at timestamptz;
 alter table alert_history add column if not exists status_label text not null default 'Aguardando';
 alter table alert_history add column if not exists raw_payload jsonb not null default '{}'::jsonb;
+alter table environmental_licenses add column if not exists process_due_alert_time time not null default '09:00';
 
 create index if not exists idx_agenda_events_date on agenda_events(event_date, event_time);
 create index if not exists idx_agenda_events_module on agenda_events(module_id);
