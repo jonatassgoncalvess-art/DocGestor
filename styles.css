@@ -2333,6 +2333,33 @@ button {
   grid-column: 1 / -1;
 }
 
+.stage-deadline-shell {
+  display: grid;
+  gap: 10px;
+}
+
+.deadline-toggle {
+  justify-self: start;
+}
+
+.deadline-toggle.configured {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.deadline-toggle.configured:hover {
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+}
+
+.stage-deadline-panel {
+  border: 1px solid var(--green-line);
+  border-radius: 8px;
+  background: var(--green-soft);
+  padding: 12px;
+}
+
 .wide-field {
   grid-column: 1 / -1;
 }

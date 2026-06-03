@@ -390,6 +390,14 @@ function subtractDaysFromDate(dateValue, days) {
   return addDaysToDate(dateValue, -Math.max(0, Number(days || 0)));
 }
 
+function daysBetweenDates(startDateValue, endDateValue) {
+  if (!startDateValue || !endDateValue) return 0;
+  const start = parseDateKey(startDateValue);
+  const end = parseDateKey(endDateValue);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 0;
+  return Math.max(0, Math.round((end - start) / 86400000));
+}
+
 function environmentalAlertRecipients() {
   return sendRecipients.filter((recipient) => {
     const active = String(recipient.status || "Ativo").toLowerCase() !== "inativo";
@@ -545,6 +553,51 @@ function scheduleLicenseAlerts(process, stage, license) {
     message: `Alerta de renovação da licença ${license.number}, processo ${processNumber}, etapa ${stage.name}. A licença vence em ${formatAgendaDate(license.expiryDate)}.`,
   });
   scheduleStageAlerts(process, { ...stage, validityDate: license.expiryDate });
+}
+
+const stageAlertFieldKeys = ["warning", "critical", "emergency", "renewal"];
+
+function syncStageAlertDateFromDays(key) {
+  const validityDate = field("environmental-stage-validity-date")?.value || "";
+  const daysInput = field(`environmental-stage-${key}-days`);
+  const dateInput = field(`environmental-stage-${key}-date`);
+  if (!daysInput || !dateInput || !validityDate) {
+    if (dateInput && !validityDate) dateInput.value = "";
+    return;
+  }
+  const days = Math.max(0, Number(daysInput.value || 0));
+  if (Number(daysInput.value || 0) < 0) daysInput.value = "0";
+  dateInput.value = subtractDaysFromDate(validityDate, days);
+}
+
+function syncStageAlertDaysFromDate(key) {
+  const validityDate = field("environmental-stage-validity-date")?.value || "";
+  const daysInput = field(`environmental-stage-${key}-days`);
+  const dateInput = field(`environmental-stage-${key}-date`);
+  if (!daysInput || !dateInput || !validityDate || !dateInput.value) return;
+  daysInput.value = daysBetweenDates(dateInput.value, validityDate);
+}
+
+function syncAllStageAlertDates() {
+  stageAlertFieldKeys.forEach(syncStageAlertDateFromDays);
+}
+
+function stageDeadlineConfigured(stage) {
+  return Boolean(stage?.validityDate);
+}
+
+function updateStageDeadlineToggle(stage) {
+  const button = field("environmental-stage-deadline-toggle");
+  const panel = field("environmental-stage-deadline-fields");
+  if (!button || !panel) return;
+  const configured = stageDeadlineConfigured(stage);
+  button.classList.toggle("configured", configured);
+  button.textContent = configured ? "Vencimento adicionado" : "Adicionar vencimento";
+}
+
+function openStageDeadlinePanel(open = true) {
+  const panel = field("environmental-stage-deadline-fields");
+  if (panel) panel.hidden = !open;
 }
 
 function agendaLinkedText(linkedTarget) {
@@ -3726,6 +3779,7 @@ function processStagesForFormat(format) {
     emergencyTime: "09:00",
     renewalDays: 120,
     renewalTime: "09:00",
+    deadlineTime: "09:00",
     deadlineStatus: "open",
   }));
 }
@@ -4210,6 +4264,7 @@ function renderCurrentStageScreen(process, stage) {
   field("environmental-process-current-stage-title").textContent = stage.name;
   field("environmental-process-current-stage-description").textContent = stage.description;
   field("environmental-stage-validity-date").value = stage.validityDate || "";
+  field("environmental-stage-deadline-time").value = stage.deadlineTime || "09:00";
   field("environmental-stage-warning-days").value = stage.warningDays ?? 60;
   field("environmental-stage-warning-time").value = stage.warningTime || "09:00";
   field("environmental-stage-critical-days").value = stage.criticalDays ?? 15;
@@ -4218,6 +4273,9 @@ function renderCurrentStageScreen(process, stage) {
   field("environmental-stage-emergency-time").value = stage.emergencyTime || "09:00";
   field("environmental-stage-renewal-days").value = stage.renewalDays ?? 120;
   field("environmental-stage-renewal-time").value = stage.renewalTime || "09:00";
+  syncAllStageAlertDates();
+  updateStageDeadlineToggle(stage);
+  openStageDeadlinePanel(stageDeadlineConfigured(stage));
   const gateText = stageRequiredMessage(process, stage);
   if (gate) gate.hidden = !gateText;
   if (gateMessage) gateMessage.textContent = gateText || "Etapa liberada para avançar.";
@@ -4234,6 +4292,7 @@ function renderCurrentStageScreen(process, stage) {
   if (protocolFields) protocolFields.hidden = true;
   if (licenseFields) licenseFields.hidden = true;
   if (field("environmental-stage-renewal-days-field")) field("environmental-stage-renewal-days-field").hidden = !licenseStage;
+  if (field("environmental-stage-renewal-date-field")) field("environmental-stage-renewal-date-field").hidden = !licenseStage;
   if (field("environmental-stage-renewal-time-field")) field("environmental-stage-renewal-time-field").hidden = !licenseStage;
   if (documentStage) {
     renderEnvironmentalProcessDocuments(process);
@@ -4282,6 +4341,7 @@ function refreshActiveStageGate() {
 function saveCurrentStageForm(process, stage) {
   const record = stageRecord(process, stage.number);
   stage.validityDate = field("environmental-stage-validity-date")?.value || "";
+  stage.deadlineTime = field("environmental-stage-deadline-time")?.value || "09:00";
   stage.warningDays = Number(field("environmental-stage-warning-days")?.value || 60);
   stage.warningTime = field("environmental-stage-warning-time")?.value || "09:00";
   stage.criticalDays = Number(field("environmental-stage-critical-days")?.value || 15);
@@ -4738,6 +4798,18 @@ field("environmental-stage-save")?.addEventListener("click", () => {
 ["environmental-stage-protocol-number", "environmental-stage-protocol-date", "environmental-stage-license-protocol", "environmental-stage-license-number", "environmental-stage-license-expiry"].forEach((id) => {
   field(id)?.addEventListener("input", refreshActiveStageGate);
   field(id)?.addEventListener("change", refreshActiveStageGate);
+});
+
+field("environmental-stage-deadline-toggle")?.addEventListener("click", () => {
+  const panel = field("environmental-stage-deadline-fields");
+  openStageDeadlinePanel(panel?.hidden);
+});
+
+field("environmental-stage-validity-date")?.addEventListener("change", syncAllStageAlertDates);
+field("environmental-stage-validity-date")?.addEventListener("input", syncAllStageAlertDates);
+stageAlertFieldKeys.forEach((key) => {
+  field(`environmental-stage-${key}-days`)?.addEventListener("input", () => syncStageAlertDateFromDays(key));
+  field(`environmental-stage-${key}-date`)?.addEventListener("change", () => syncStageAlertDaysFromDate(key));
 });
 
 field("environmental-process-checklist-model")?.addEventListener("change", () => {
@@ -6587,6 +6659,7 @@ async function persistEnvironmentalProcessStages(process) {
       emergency_time: stage.emergencyTime || "09:00",
       renewal_days: Number(stage.renewalDays || 0),
       renewal_time: stage.renewalTime || "09:00",
+      deadline_time: stage.deadlineTime || "09:00",
       status: stage.deadlineStatus || "open",
       completed_at: stage.status === "Concluída" ? new Date().toISOString() : null,
     })));
@@ -6868,6 +6941,7 @@ async function loadSupabaseData() {
         stage.emergencyTime = stageRow.emergency_time || "09:00";
         stage.renewalDays = Number(stageRow.renewal_days || 120);
         stage.renewalTime = stageRow.renewal_time || "09:00";
+        stage.deadlineTime = stageRow.deadline_time || "09:00";
         stage.deadlineStatus = stageRow.status || "open";
         if (stageRow.completed_at) stage.status = "Concluída";
       });

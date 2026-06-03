@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DocGestor by Carminatti | Prévia</title>
-    <link rel="stylesheet" href="styles.css?v=20260602-modulos-032-033" />
+    <link rel="stylesheet" href="styles.css?v=20260603-vencimentos-etapas" />
   </head>
   <body>
     <section class="login-screen" id="login-screen">
@@ -1863,35 +1863,53 @@
             <strong>Finalize os requisitos desta etapa</strong>
             <small id="environmental-process-stage-gate-message">Ainda existem pendências para avancar.</small>
           </div>
-          <form class="stage-data-form" id="environmental-stage-deadline-fields">
-            <label>Data de vencimento da etapa
-              <input id="environmental-stage-validity-date" type="date" />
-            </label>
-            <label>Prazo mínimo (dias antes)
-              <input id="environmental-stage-warning-days" type="number" min="0" value="60" />
-            </label>
-            <label>Hora do prazo mínimo
-              <input id="environmental-stage-warning-time" type="time" value="09:00" />
-            </label>
-            <label>Prazo crítico (dias)
-              <input id="environmental-stage-critical-days" type="number" min="0" value="15" />
-            </label>
-            <label>Hora do prazo crítico
-              <input id="environmental-stage-critical-time" type="time" value="09:00" />
-            </label>
-            <label>Emergência (dias antes)
-              <input id="environmental-stage-emergency-days" type="number" min="0" value="3" />
-            </label>
-            <label>Hora da emergência
-              <input id="environmental-stage-emergency-time" type="time" value="09:00" />
-            </label>
-            <label class="license-alert-field" id="environmental-stage-renewal-days-field" hidden>Renovação (dias antes)
-              <input id="environmental-stage-renewal-days" type="number" min="0" value="120" />
-            </label>
-            <label class="license-alert-field" id="environmental-stage-renewal-time-field" hidden>Hora da renovação
-              <input id="environmental-stage-renewal-time" type="time" value="09:00" />
-            </label>
-          </form>
+          <div class="stage-deadline-shell">
+            <button type="button" class="ghost small deadline-toggle" id="environmental-stage-deadline-toggle">Adicionar vencimento</button>
+            <form class="stage-data-form stage-deadline-panel" id="environmental-stage-deadline-fields" hidden>
+              <label>Data de vencimento da etapa
+                <input id="environmental-stage-validity-date" type="date" />
+              </label>
+              <label>Horário do aviso de vencimento
+                <input id="environmental-stage-deadline-time" type="time" value="09:00" />
+              </label>
+              <label>Prazo mínimo (dias antes)
+                <input id="environmental-stage-warning-days" type="number" min="0" value="60" />
+              </label>
+              <label>Data do prazo mínimo
+                <input id="environmental-stage-warning-date" type="date" />
+              </label>
+              <label>Hora do prazo mínimo
+                <input id="environmental-stage-warning-time" type="time" value="09:00" />
+              </label>
+              <label>Prazo crítico (dias antes)
+                <input id="environmental-stage-critical-days" type="number" min="0" value="15" />
+              </label>
+              <label>Data do prazo crítico
+                <input id="environmental-stage-critical-date" type="date" />
+              </label>
+              <label>Hora do prazo crítico
+                <input id="environmental-stage-critical-time" type="time" value="09:00" />
+              </label>
+              <label>Emergência (dias antes)
+                <input id="environmental-stage-emergency-days" type="number" min="0" value="3" />
+              </label>
+              <label>Data da emergência
+                <input id="environmental-stage-emergency-date" type="date" />
+              </label>
+              <label>Hora da emergência
+                <input id="environmental-stage-emergency-time" type="time" value="09:00" />
+              </label>
+              <label class="license-alert-field" id="environmental-stage-renewal-days-field" hidden>Renovação (dias antes)
+                <input id="environmental-stage-renewal-days" type="number" min="0" value="120" />
+              </label>
+              <label class="license-alert-field" id="environmental-stage-renewal-date-field" hidden>Data da renovação
+                <input id="environmental-stage-renewal-date" type="date" />
+              </label>
+              <label class="license-alert-field" id="environmental-stage-renewal-time-field" hidden>Hora da renovação
+                <input id="environmental-stage-renewal-time" type="time" value="09:00" />
+              </label>
+            </form>
+          </div>
           <div class="process-documents-panel" id="environmental-process-documents-panel">
             <div>
               <span>Documentos da etapa atual</span>
@@ -2010,7 +2028,7 @@
 
     <script src="supabase-config.js?v=20260602-db-persist"></script>
     <script src="database.js?v=20260602-db-persist"></script>
-    <script src="script.js?v=20260603-alertas-ambientais"></script>
+    <script src="script.js?v=20260603-vencimentos-etapas"></script>
   </body>
 </html>
 

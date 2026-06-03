@@ -36,6 +36,7 @@ create table if not exists environmental_process_stage_deadlines (
   emergency_time time not null default '09:00',
   renewal_days integer not null default 120,
   renewal_time time not null default '09:00',
+  deadline_time time not null default '09:00',
   status text not null default 'open',
   completed_at timestamptz,
   created_at timestamptz not null default now(),
@@ -49,6 +50,7 @@ alter table environmental_process_stage_deadlines add column if not exists emerg
 alter table environmental_process_stage_deadlines add column if not exists critical_time time not null default '09:00';
 alter table environmental_process_stage_deadlines add column if not exists renewal_days integer not null default 120;
 alter table environmental_process_stage_deadlines add column if not exists renewal_time time not null default '09:00';
+alter table environmental_process_stage_deadlines add column if not exists deadline_time time not null default '09:00';
 
 create table if not exists alert_history (
   id uuid primary key default gen_random_uuid(),
@@ -88,6 +90,15 @@ create table if not exists alert_queue (
 );
 
 alter table alert_queue alter column related_id drop not null;
+alter table alert_history add column if not exists recipient_id uuid;
+alter table alert_history add column if not exists module_id text;
+alter table alert_history add column if not exists related_type text;
+alter table alert_history add column if not exists related_id uuid;
+alter table alert_history add column if not exists related_label text;
+alter table alert_history add column if not exists sender_email text;
+alter table alert_history add column if not exists recipient_emails text[] not null default '{}'::text[];
+alter table alert_history add column if not exists sent_at timestamptz;
+alter table alert_history add column if not exists last_event_at timestamptz;
 alter table alert_history add column if not exists status_label text not null default 'Aguardando';
 alter table alert_history add column if not exists raw_payload jsonb not null default '{}'::jsonb;
 
