@@ -1445,11 +1445,53 @@ function renderUsers() {
     .join("");
 }
 
-function saveCurrentUser() {
-  const id = Number(field("user-id").value);
-  const existing = users.find((user) => sameId(user.id, id));
+async function persistUser(user, wasExisting) {
+  if (!window.DocGestorDB || user?.isMaster) return;
+  const organizationId = await defaultOrganizationId();
+  if (!organizationId) return;
+  const companyId = companyIdByName(user.company);
+  const branchId = companyIdByName(user.branch);
   const payload = {
-    id: Number.isNaN(id) ? Date.now() : id,
+    organization_id: organizationId,
+    name: user.name,
+    email: user.email,
+    phone: user.phone || "",
+    cpf: user.cpf || "",
+    role_title: user.roleTitle || "",
+    company_id: looksLikeUuid(companyId) ? companyId : null,
+    branch_id: looksLikeUuid(branchId) ? branchId : null,
+    profile: user.profile || "Consulta",
+    status: user.status || "Ativo",
+    password: user.password || "123456",
+    permissions: userPermissions(user),
+  };
+  try {
+    let saved = null;
+    if (wasExisting && looksLikeUuid(user.id)) {
+      [saved] = await window.DocGestorDB.update("app_users", user.id, payload);
+    } else {
+      [saved] = await window.DocGestorDB.create("app_users", payload);
+    }
+    if (saved?.id) {
+      updateLocalId(users, user.id, saved.id);
+      user.id = saved.id;
+      selectedUserId = saved.id;
+      renderUsers();
+    }
+  } catch (error) {
+    console.warn("Não foi possível salvar o usuário no Supabase.", error.message);
+    alert(`Não foi possível salvar o usuário no banco: ${error.message}`);
+  }
+}
+
+async function saveCurrentUser() {
+  const rawId = field("user-id").value;
+  const numericId = Number(rawId);
+  const id = rawId || Date.now();
+  const existing = users.find((user) => sameId(user.id, id));
+  const wasExisting = Boolean(existing);
+  const payload = {
+    id: rawId ? id : Number.isNaN(numericId) ? Date.now() : numericId,
     name: field("user-name").value,
     email: field("user-email").value,
     phone: field("user-phone").value,
@@ -1476,6 +1518,7 @@ function saveCurrentUser() {
   renderUsers();
   fillUserForm(selectedUser());
   closeModal("user-modal");
+  await persistUser(existing || payload, wasExisting);
 }
 
 function newUser() {
@@ -1505,6 +1548,7 @@ function updateUserStatus(id, status, titleText) {
   selectedUserId = id;
   fillUserForm(user);
   renderUsers();
+  persistUser(user, looksLikeUuid(user.id));
   addUserLog(titleText, `${user.name} agora está com status: ${status}.`);
 }
 
@@ -1554,6 +1598,7 @@ document.querySelector("#profile-password-save")?.addEventListener("click", save
 document.querySelector("#permissions-save")?.addEventListener("click", () => {
   const user = selectedUser();
   user.permissions = readPermissionChecks();
+  persistUser(user, looksLikeUuid(user.id));
   closeModal("permissions-modal");
   addUserLog("Permissões salvas", `Permissões exclusivas atualizadas para ${user.name}.`);
   if (currentUser && sameId(currentUser.id, user.id)) applyAccessControl();
@@ -1579,6 +1624,7 @@ document.querySelector("#confirm-password-reset")?.addEventListener("click", () 
   if (confirmButton) confirmButton.hidden = true;
   if (cancelButton) cancelButton.hidden = true;
   if (okButton) okButton.hidden = false;
+  persistUser(user, looksLikeUuid(user.id));
   addUserLog("Senha redefinida", `A senha de ${user.name} foi substituida por uma nova senha de 6 digitos.`);
 });
 document.querySelector("#password-ok")?.addEventListener("click", () => closeModal("password-modal"));
@@ -1636,6 +1682,7 @@ userList?.addEventListener("click", (event) => {
       selectedUserId = users[0]?.id ?? 0;
       renderUsers();
       if (users.length) fillUserForm(selectedUser());
+      persistDelete("app_users", id, "usuário");
     });
   }
 });
@@ -1646,6 +1693,7 @@ if (userList) {
 }
 
 const systemEmailConfig = {
+  id: null,
   name: "DocGestor by Carminatti",
   address: "docgestor@systemdirect.org",
   domain: "systemdirect.org",
@@ -1693,6 +1741,7 @@ function loadSystemEmailConfig() {
 
 function persistSystemEmailConfig() {
   const safeConfig = {
+    id: systemEmailConfig.id,
     name: systemEmailConfig.name,
     address: systemEmailConfig.address,
     domain: systemEmailConfig.domain,
@@ -1704,6 +1753,53 @@ function persistSystemEmailConfig() {
     lastTest: systemEmailConfig.lastTest,
   };
   localStorage.setItem(SYSTEM_EMAIL_CONFIG_KEY, JSON.stringify(safeConfig));
+  persistSystemEmailConfigToDatabase();
+}
+
+async function persistSystemEmailConfigToDatabase() {
+  if (!window.DocGestorDB) return;
+  const payload = {
+    sender_name: systemEmailConfig.name,
+    sender_email: systemEmailConfig.address,
+    authorized_domain: systemEmailConfig.domain,
+    provider: systemEmailConfig.provider,
+    host: systemEmailConfig.host,
+    port: systemEmailConfig.port ? Number(systemEmailConfig.port) : null,
+    username_or_key: systemEmailConfig.user,
+    status: systemEmailConfig.status,
+    last_test_at: systemEmailConfig.lastTest || null,
+  };
+  try {
+    let saved = null;
+    if (looksLikeUuid(systemEmailConfig.id)) {
+      [saved] = await window.DocGestorDB.update("system_email_configs", systemEmailConfig.id, payload);
+    } else {
+      [saved] = await window.DocGestorDB.create("system_email_configs", payload);
+    }
+    if (saved?.id) {
+      systemEmailConfig.id = saved.id;
+      localStorage.setItem(SYSTEM_EMAIL_CONFIG_KEY, JSON.stringify({ ...systemEmailConfig }));
+    }
+  } catch (error) {
+    console.warn("Não foi possível salvar a configuração de e-mail no Supabase.", error.message);
+  }
+}
+
+function applySystemEmailConfigRow(row) {
+  if (!row) return;
+  Object.assign(systemEmailConfig, {
+    id: row.id || systemEmailConfig.id,
+    name: row.sender_name || systemEmailConfig.name,
+    address: row.sender_email || systemEmailConfig.address,
+    domain: row.authorized_domain || systemEmailConfig.domain,
+    provider: row.provider || systemEmailConfig.provider,
+    host: row.host || systemEmailConfig.host,
+    port: row.port ? String(row.port) : "",
+    user: row.username_or_key || systemEmailConfig.user,
+    status: row.status || systemEmailConfig.status,
+    lastTest: row.last_test_at || systemEmailConfig.lastTest,
+  });
+  localStorage.setItem(SYSTEM_EMAIL_CONFIG_KEY, JSON.stringify({ ...systemEmailConfig }));
 }
 
 function updateSystemEmailDns() {
@@ -7015,6 +7111,7 @@ async function loadSupabaseData() {
     alertHistoryRows,
     userRows,
     backupRows,
+    systemEmailRows,
   ] = await Promise.all([
     dbList("partners"),
     dbList("companies"),
@@ -7039,6 +7136,7 @@ async function loadSupabaseData() {
     dbList("alert_history", "select=*&order=created_at.desc"),
     dbList("app_users"),
     dbList("system_backup_configs", "select=*&order=updated_at.desc&limit=1"),
+    dbList("system_email_configs", "select=*&order=updated_at.desc&limit=1"),
   ]);
 
   const partnerById = Object.fromEntries(partnerRows.map((row) => [row.id, row]));
@@ -7293,7 +7391,7 @@ async function loadSupabaseData() {
     profile: row.profile || "Consulta",
     status: row.status || "Ativo",
     password: row.password || "123456",
-    permissions: [],
+    permissions: Array.isArray(row.permissions) ? row.permissions : [],
   }));
 
   if (backupRows[0]) {
@@ -7313,6 +7411,11 @@ async function loadSupabaseData() {
     });
     if (!backupConfig.nextBackup) backupConfig.nextBackup = computeNextBackupDate(backupConfig);
     persistBackupConfigLocal();
+  }
+
+  if (systemEmailRows[0]) {
+    applySystemEmailConfigRow(systemEmailRows[0]);
+    renderSystemEmailConfig();
   }
 
   selectedPartnerId = partners[0]?.id ?? 0;
