@@ -5,6 +5,9 @@ const adminSubnav = document.querySelector("#admin-subnav");
 const moduleSubnav = document.querySelector("#module-subnav");
 const agendaSubnav = document.querySelector("#agenda-subnav");
 const settingsSubnav = document.querySelector("#settings-subnav");
+const SESSION_USER_KEY = "docgestor.sessionUser";
+const SESSION_VIEW_KEY = "docgestor.sessionView";
+const SESSION_LICENSE_STATUS_KEY = "docgestor.licenseStatus";
 
 const titles = {
   home: "Home",
@@ -91,6 +94,7 @@ function openView(viewName) {
   });
 
   if (viewName === "profile-settings") fillProfileForm();
+  if (currentUser) sessionStorage.setItem(SESSION_VIEW_KEY, viewName);
 }
 
 navItems.forEach((item) => {
@@ -1204,16 +1208,58 @@ function authenticate(login, password) {
   return user;
 }
 
-function loginUser(user) {
+function saveSessionUser(user) {
+  if (!user) return;
+  sessionStorage.setItem(SESSION_USER_KEY, JSON.stringify({
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    isMaster: Boolean(user.isMaster),
+  }));
+}
+
+function savedSessionUser() {
+  try {
+    return JSON.parse(sessionStorage.getItem(SESSION_USER_KEY) || "null");
+  } catch {
+    return null;
+  }
+}
+
+function findUserForSession(savedUser) {
+  if (!savedUser) return null;
+  if (savedUser.isMaster || sameId(savedUser.id, MASTER_USER.id)) return MASTER_USER;
+  return users.find((user) => sameId(user.id, savedUser.id) || String(user.email || "").toLowerCase() === String(savedUser.email || "").toLowerCase()) || null;
+}
+
+function restoreSessionUser() {
+  const user = findUserForSession(savedSessionUser());
+  if (!user || ["Bloqueado", "Inativo"].includes(user.status)) {
+    sessionStorage.removeItem(SESSION_USER_KEY);
+    return false;
+  }
   currentUser = user;
   document.querySelector("#login-screen")?.setAttribute("hidden", "");
   field("app-shell")?.removeAttribute("hidden");
   applyAccessControl();
+  return true;
+}
+
+function loginUser(user) {
+  currentUser = user;
+  saveSessionUser(user);
+  document.querySelector("#login-screen")?.setAttribute("hidden", "");
+  field("app-shell")?.removeAttribute("hidden");
+  applyAccessControl();
+  sessionStorage.setItem(SESSION_VIEW_KEY, "home");
   openView("home");
 }
 
 function logoutUser() {
   currentUser = null;
+  sessionStorage.removeItem(SESSION_USER_KEY);
+  sessionStorage.removeItem(SESSION_VIEW_KEY);
+  sessionStorage.removeItem(SESSION_LICENSE_STATUS_KEY);
   field("app-shell")?.setAttribute("hidden", "");
   document.querySelector("#login-screen")?.removeAttribute("hidden");
   field("login-password").value = "";
@@ -1251,6 +1297,7 @@ function updateCurrentUserFromProfile() {
   }
 
   applyAccessControl();
+  saveSessionUser(currentUser);
   fillProfileForm();
   return currentUser;
 }
@@ -1316,6 +1363,7 @@ function saveProfilePassword() {
     if (user) Object.assign(user, currentUser);
     persistCurrentUserPassword(currentUser);
   }
+  saveSessionUser(currentUser);
   clearProfilePasswordFields();
   renderUsers();
   applyAccessControl();
@@ -4852,6 +4900,7 @@ function renderLicenseStatus(status = "open") {
 function openLicenseStatus(status = "open") {
   if (!canAccess("environmental")) return;
   openView("licencas");
+  if (currentUser) sessionStorage.setItem(SESSION_LICENSE_STATUS_KEY, status);
   if (moduleSubnav) {
     moduleSubnav.classList.add("open");
     document.querySelector("[data-module-menu-toggle]")?.setAttribute("aria-expanded", "true");
@@ -7272,6 +7321,9 @@ async function loadSupabaseData() {
   selectedEnterpriseId = enterprises[0]?.id ?? 0;
   selectedSendRecipientId = sendRecipients[0]?.id ?? 0;
   selectedUserId = users[0]?.id ?? 0;
+  const restoredSession = restoreSessionUser();
+  const restoredView = sessionStorage.getItem(SESSION_VIEW_KEY) || "home";
+  const restoredLicenseStatus = sessionStorage.getItem(SESSION_LICENSE_STATUS_KEY) || currentLicenseStatus || "general";
 
   renderUsers();
   renderPartners();
@@ -7294,6 +7346,10 @@ async function loadSupabaseData() {
   updateNextProcessNumber();
   renderLicenseStatus(currentLicenseStatus || "general");
   renderDashboard();
+  if (restoredSession) {
+    if (restoredView === "licencas") openLicenseStatus(restoredLicenseStatus);
+    else openView(restoredView);
+  }
 }
 
 async function processPendingAlertsOnServer() {
