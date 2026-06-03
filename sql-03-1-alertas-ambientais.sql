@@ -92,6 +92,28 @@ create table if not exists alert_queue (
   updated_at timestamptz not null default now()
 );
 
+alter table environmental_licenses add column if not exists organization_id uuid;
+alter table environmental_licenses add column if not exists enterprise_id uuid;
+alter table environmental_licenses add column if not exists company_id uuid;
+alter table environmental_licenses add column if not exists branch_id uuid;
+alter table environmental_licenses add column if not exists property_id uuid;
+alter table environmental_licenses add column if not exists responsible_partner_id uuid;
+alter table environmental_licenses add column if not exists license_type_id uuid;
+alter table environmental_licenses add column if not exists checklist_model_id uuid;
+alter table environmental_licenses add column if not exists environmental_agency text;
+alter table environmental_licenses add column if not exists license_number text;
+alter table environmental_licenses add column if not exists process_number text;
+alter table environmental_licenses add column if not exists issue_date date;
+alter table environmental_licenses add column if not exists expiration_date date;
+alter table environmental_licenses add column if not exists renewal_recommended_at date;
+alter table environmental_licenses add column if not exists status text not null default 'Planejado';
+alter table environmental_licenses add column if not exists risk_level text;
+alter table environmental_licenses add column if not exists progress_percent numeric(5,2) not null default 0;
+alter table environmental_licenses add column if not exists notes text;
+alter table environmental_licenses add column if not exists process_due_alert_time time not null default '09:00';
+alter table environmental_licenses add column if not exists created_at timestamptz not null default now();
+alter table environmental_licenses add column if not exists updated_at timestamptz not null default now();
+
 alter table alert_queue alter column related_id drop not null;
 alter table alert_history add column if not exists recipient_id uuid;
 alter table alert_history add column if not exists module_id text;
@@ -104,7 +126,6 @@ alter table alert_history add column if not exists sent_at timestamptz;
 alter table alert_history add column if not exists last_event_at timestamptz;
 alter table alert_history add column if not exists status_label text not null default 'Aguardando';
 alter table alert_history add column if not exists raw_payload jsonb not null default '{}'::jsonb;
-alter table environmental_licenses add column if not exists process_due_alert_time time not null default '09:00';
 alter table alert_queue add column if not exists alert_key text;
 alter table alert_history add column if not exists alert_key text;
 
