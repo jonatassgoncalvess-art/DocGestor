@@ -2523,8 +2523,15 @@ async function toggleAutomaticRecipientAlerts(userId, enable) {
   await persistSendRecipient(recipient, looksLikeUuid(recipient.id));
 }
 
+function saveSendRecipientUpdate() {
+  renderModuleEmailLists(selectedSendModuleId || "environmental");
+  renderSendRecipients();
+  closeModal("send-recipient-modal");
+}
+
 field("send-recipient-new")?.addEventListener("click", newSendRecipient);
 field("send-recipient-save")?.addEventListener("click", saveSendRecipient);
+field("send-recipient-update")?.addEventListener("click", saveSendRecipientUpdate);
 field("send-recipient-list")?.addEventListener("click", (event) => {
   const moduleButton = event.target.closest("[data-send-module-action]");
   if (moduleButton) {
