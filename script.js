@@ -2381,7 +2381,6 @@ function fillSendRecipientForm(recipient) {
   field("send-recipient-name").value = recipient.name;
   field("send-recipient-email").value = recipient.email;
   renderSendRecipientModuleChecks(sendRecipientModules(recipient));
-  field("send-recipient-relation").value = recipient.relation;
   field("send-recipient-status").value = recipient.status;
   field("send-recipient-read-confirmation").checked = Boolean(recipient.readConfirmation);
 }
@@ -2418,7 +2417,6 @@ function openSendModuleModal(moduleId) {
   field("send-recipient-module-id").value = selectedSendModuleId;
   field("send-recipient-name").value = "";
   field("send-recipient-email").value = "";
-  field("send-recipient-relation").value = selectedSendModuleId === "environmental" ? "Ambiental" : "Administrativo";
   field("send-recipient-status").value = "Ativo";
   field("send-recipient-read-confirmation").checked = true;
   renderSendRecipientModuleChecks([selectedSendModuleId]);
@@ -2472,7 +2470,7 @@ function saveSendRecipient() {
     name: field("send-recipient-name").value || email,
     email,
     modules: [...new Set([...(existing?.modules || []), moduleId])],
-    relation: field("send-recipient-relation").value,
+    relation: sendModuleLabel(moduleId),
     status: field("send-recipient-status").value,
     readConfirmation: field("send-recipient-read-confirmation").checked,
     sent: existing?.sent || 0,
