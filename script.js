@@ -6996,6 +6996,7 @@ async function persistEnvironmentalProcess(process, wasExisting = false) {
     return false;
   }
   const activeLicense = process.activeLicense || {};
+  const resolvedExpirationDate = activeLicense.expiryDate || process.acquisitionDueDate || null;
   const currentStage = ensureProcessStages(process).find((stage) => stage.number === process.currentStage) || ensureProcessStages(process)[0] || {};
   const payload = {
     id: looksLikeUuid(process.id) ? process.id : undefined,
@@ -7019,7 +7020,8 @@ async function persistEnvironmentalProcess(process, wasExisting = false) {
     stage_name: currentStage.name || "Juntada de documentos",
     block_number: Number(currentStage.blockNumber || 1),
     stage_kind: currentStage.stageKind || "checklist",
-    expiration_date: activeLicense.expiryDate || process.acquisitionDueDate || null,
+    expiration_date: resolvedExpirationDate,
+    expiry_date: resolvedExpirationDate,
     acquisition_due_date: process.acquisitionDueDate || null,
     acquisition_alert_time: process.acquisitionAlertTime || "09:00",
     process_due_alert_time: process.acquisitionAlertTime || "09:00",

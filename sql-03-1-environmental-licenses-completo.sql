@@ -32,6 +32,7 @@ alter table environmental_licenses add column if not exists license_number text;
 alter table environmental_licenses add column if not exists environmental_agency text;
 alter table environmental_licenses add column if not exists issue_date date;
 alter table environmental_licenses add column if not exists expiration_date date;
+alter table environmental_licenses add column if not exists expiry_date date;
 alter table environmental_licenses add column if not exists renewal_recommended_at date;
 alter table environmental_licenses add column if not exists process_due_alert_time time not null default '09:00';
 alter table environmental_licenses add column if not exists status text not null default 'Planejado';
@@ -121,6 +122,16 @@ where acquisition_due_date is null
   and license_number is null
   and expiration_date is not null;
 
+update environmental_licenses
+set expiry_date = expiration_date
+where expiry_date is null
+  and expiration_date is not null;
+
+update environmental_licenses
+set expiration_date = expiry_date
+where expiration_date is null
+  and expiry_date is not null;
+
 -- Remove obrigatoriedades antigas que impedem salvar processo novo.
 -- O sistema atual grava etapas detalhadas em environmental_process_stage_deadlines.
 alter table environmental_licenses alter column process_id drop not null;
@@ -136,6 +147,7 @@ alter table environmental_licenses alter column environmental_agency drop not nu
 alter table environmental_licenses alter column license_number drop not null;
 alter table environmental_licenses alter column issue_date drop not null;
 alter table environmental_licenses alter column expiration_date drop not null;
+alter table environmental_licenses alter column expiry_date drop not null;
 alter table environmental_licenses alter column renewal_recommended_at drop not null;
 alter table environmental_licenses alter column risk_level drop not null;
 alter table environmental_licenses alter column notes drop not null;
