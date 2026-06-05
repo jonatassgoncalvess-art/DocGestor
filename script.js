@@ -420,10 +420,7 @@ function daysBetweenDates(startDateValue, endDateValue) {
 }
 
 function environmentalAlertRecipients() {
-  return allModuleRecipients("environmental").filter((recipient) => {
-    const active = String(recipient.status || "Ativo").toLowerCase() !== "inativo";
-    return active && sendRecipientModules(recipient).includes("environmental");
-  });
+  return activeModuleRecipients("environmental").filter((recipient) => sendRecipientModules(recipient).includes("environmental"));
 }
 
 function companyCnpjByName(companyName) {
@@ -2303,11 +2300,30 @@ function recipientIsAutomatic(recipient) {
   return recipient?.source === "user" || Boolean(recipient?.userId);
 }
 
+function normalizeRecipientStatus(status) {
+  const value = String(status || "Ativo").toLowerCase();
+  if (value === "inactive" || value === "inativo") return "Inativo";
+  return "Ativo";
+}
+
+function recipientReceivesAlerts(recipient) {
+  return normalizeRecipientStatus(recipient?.status) === "Ativo";
+}
+
+function findAutomaticRecipientForUser(user) {
+  if (!user?.email) return null;
+  return sendRecipients.find((recipient) => {
+    if (!recipientIsAutomatic(recipient)) return false;
+    if (recipient.userId && sameId(recipient.userId, user.id)) return true;
+    return recipient.email?.toLowerCase() === user.email.toLowerCase();
+  });
+}
+
 function automaticModuleRecipients(moduleId) {
   return users
     .filter((user) => user?.email && String(user.status || "Ativo") === "Ativo" && userHasModuleAccess(user, moduleId))
     .map((user) => {
-      const existing = sendRecipients.find((recipient) => recipient.email?.toLowerCase() === user.email.toLowerCase());
+      const existing = findAutomaticRecipientForUser(user);
       return {
         id: existing?.id || user.id,
         userId: user.id,
@@ -2315,7 +2331,7 @@ function automaticModuleRecipients(moduleId) {
         email: user.email,
         modules: [moduleId],
         relation: "Usuário do sistema",
-        status: "Ativo",
+        status: normalizeRecipientStatus(existing?.status || "Ativo"),
         readConfirmation: existing?.readConfirmation ?? true,
         source: "user",
       };
@@ -2333,6 +2349,10 @@ function allModuleRecipients(moduleId) {
     if (key && !byEmail.has(key)) byEmail.set(key, recipient);
   });
   return [...byEmail.values()];
+}
+
+function activeModuleRecipients(moduleId) {
+  return allModuleRecipients(moduleId).filter(recipientReceivesAlerts);
 }
 
 function renderSendRecipientModuleChecks(selectedModules = ["environmental"]) {
@@ -2373,12 +2393,17 @@ function renderModuleEmailLists(moduleId = selectedSendModuleId) {
     userList.innerHTML = recipients.length
       ? recipients.map((recipient) => {
           const automatic = recipientIsAutomatic(recipient);
+          const enabled = recipientReceivesAlerts(recipient);
           return `
-          <article>
+          <article class="${enabled ? "" : "recipient-disabled"}">
             <strong>${escapeHtml(recipient.name || recipient.email)}</strong>
             <span>${escapeHtml(recipient.email)}</span>
-            <small>${automatic ? "Usuário com acesso ao módulo" : "E-mail externo"}</small>
-            ${automatic ? "" : `<button type="button" data-send-external-delete="${recipient.id}">Remover</button>`}
+            <small>${automatic ? (enabled ? "Usuário com acesso ao módulo" : "Usuário desabilitado para avisos") : "E-mail externo"}</small>
+            ${
+              automatic
+                ? `<button type="button" data-send-user-toggle="${recipient.userId || recipient.id}" data-send-user-status="${enabled ? "disable" : "enable"}">${enabled ? "Desabilitar" : "Reabilitar"}</button>`
+                : `<button type="button" data-send-external-delete="${recipient.id}">Remover</button>`
+            }
           </article>
         `;
         }).join("")
@@ -2410,7 +2435,7 @@ function renderSendRecipients() {
   list.innerHTML = availableAlertModules
     .map(
       (module) => {
-        const recipients = allModuleRecipients(module.id);
+        const recipients = activeModuleRecipients(module.id);
         return `
         <article class="module-recipient-row">
           <div class="module-recipient-main">
@@ -2463,6 +2488,41 @@ function saveSendRecipient() {
   persistSendRecipient(payload, Boolean(existing));
 }
 
+async function toggleAutomaticRecipientAlerts(userId, enable) {
+  const user = users.find((item) => sameId(item.id, userId));
+  if (!user?.email) return;
+  const moduleId = selectedSendModuleId || "environmental";
+  let recipient = findAutomaticRecipientForUser(user);
+  const modules = [...new Set([...(recipient ? sendRecipientModules(recipient) : []), moduleId])];
+  if (!recipient) {
+    recipient = {
+      id: Date.now(),
+      userId: user.id,
+      name: user.name,
+      email: user.email,
+      modules,
+      relation: "Usuário do sistema",
+      readConfirmation: true,
+      source: "user",
+      sent: 0,
+      read: 0,
+    };
+    sendRecipients.push(recipient);
+  }
+  Object.assign(recipient, {
+    userId: user.id,
+    name: user.name,
+    email: user.email,
+    modules,
+    relation: "Usuário do sistema",
+    status: enable ? "Ativo" : "Inativo",
+    source: "user",
+  });
+  renderModuleEmailLists(moduleId);
+  renderSendRecipients();
+  await persistSendRecipient(recipient, looksLikeUuid(recipient.id));
+}
+
 field("send-recipient-new")?.addEventListener("click", newSendRecipient);
 field("send-recipient-save")?.addEventListener("click", saveSendRecipient);
 field("send-recipient-list")?.addEventListener("click", (event) => {
@@ -2497,6 +2557,11 @@ field("send-recipient-list")?.addEventListener("click", (event) => {
 });
 
 field("send-recipient-modal")?.addEventListener("click", (event) => {
+  const userToggle = event.target.closest("[data-send-user-toggle]");
+  if (userToggle) {
+    toggleAutomaticRecipientAlerts(userToggle.dataset.sendUserToggle, userToggle.dataset.sendUserStatus === "enable");
+    return;
+  }
   const button = event.target.closest("[data-send-external-delete]");
   if (!button) return;
   const id = button.dataset.sendExternalDelete;
@@ -7466,7 +7531,7 @@ async function persistSendRecipient(recipient, wasExisting) {
 async function syncUserAlertRecipient(user) {
   if (!window.DocGestorDB || !user?.email || !looksLikeUuid(user.id)) return;
   const moduleIds = availableAlertModules.filter((module) => userHasModuleAccess(user, module.id)).map((module) => module.id);
-  const existing = sendRecipients.find((recipient) => recipient.email?.toLowerCase() === user.email.toLowerCase());
+  const existing = findAutomaticRecipientForUser(user);
   if (!moduleIds.length) {
     if (existing && recipientIsAutomatic(existing)) {
       existing.status = "Inativo";
@@ -7486,7 +7551,7 @@ async function syncUserAlertRecipient(user) {
     email: user.email,
     modules: moduleIds,
     relation: "Usuário do sistema",
-    status: String(user.status || "Ativo") === "Ativo" ? "Ativo" : "Inativo",
+    status: String(user.status || "Ativo") === "Ativo" ? normalizeRecipientStatus(existing?.status || "Ativo") : "Inativo",
     readConfirmation: recipient.readConfirmation ?? true,
     source: "user",
   });
@@ -7764,7 +7829,7 @@ async function loadSupabaseData() {
       .filter((link) => sameId(link.recipient_id, row.id))
       .map((link) => normalizeAlertModuleId(link.module_id, appModuleRows)),
     relation: row.relation || "Administrativo",
-    status: row.status === "active" ? "Ativo" : row.status || "Ativo",
+    status: normalizeRecipientStatus(row.status),
     readConfirmation: row.require_read_confirmation ?? true,
     source: row.source || "external",
     userId: row.user_id || "",
