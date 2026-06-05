@@ -4629,6 +4629,26 @@ function setProcessCurrentStage(process, stageNumber) {
   updateProcessProgress(process);
 }
 
+function restartProcessForExpansion(process) {
+  const stages = ensureProcessStages(process);
+  stages.forEach((stage, index) => {
+    stage.status = index === 0 ? "Em andamento" : "Não iniciada";
+  });
+  Object.values(process.stageDocuments || {}).forEach((documents) => {
+    documents.forEach((documentItem) => {
+      documentItem.prepared = false;
+      documentItem.notes = "";
+    });
+  });
+  process.stageRecords = {};
+  process.status = "open";
+  process.statusLabel = processStatusLabel("open");
+  process.risk = "Ampliação";
+  process.due = "Processo reaberto para ampliação";
+  process.progress = 0;
+  applyProcessDeadlineRules(process);
+}
+
 async function completeProcessStage(process, stageNumber) {
   const stages = ensureProcessStages(process);
   const stage = stages.find((item) => item.number === stageNumber);
@@ -5302,7 +5322,7 @@ function renderEnvironmentalLicenseCard(license) {
         <span class="pill green">${license.status}</span>
         <button type="button" class="ghost small" data-license-pdf="${license.processId}" data-stage-number="${license.stageNumber}">Baixar dossie PDF</button>
         <button type="button" class="ghost small" data-license-action="renew" data-process-id="${license.processId}" data-stage-number="${license.stageNumber}">Renovação</button>
-        ${isOperationLicense(license) ? `<button type="button" class="ghost small" data-license-action="expand" data-process-id="${license.processId}">Ampliação</button>` : ""}
+        <button type="button" class="ghost small" data-license-action="expand" data-process-id="${license.processId}">Ampliação</button>
         <button type="button" class="ghost small danger-action" data-delete-license="${license.processId}" data-stage-number="${license.stageNumber}">Excluir</button>
       </div>
     </article>
@@ -5529,11 +5549,9 @@ document.querySelector("#license-status-list")?.addEventListener("click", async 
     if (licenseAction.dataset.licenseAction === "expand") {
       const confirmed = window.confirm(`Deseja realmente iniciar a ampliação do processo ${process.internalNumber || process.number}? Essa ação irá reabrir o processo desde o começo, mantendo o mesmo número interno, e os dados das etapas deverão ser refeitos.`);
       if (!confirmed) return;
-      setProcessCurrentStage(process, 1);
-      process.status = "open";
-      process.statusLabel = processStatusLabel("open");
-      process.risk = "Ampliação";
-      process.due = "Processo reaberto para ampliação";
+      restartProcessForExpansion(process);
+      await persistEnvironmentalProcess(process, true);
+      renderLicenseStatus(currentLicenseStatus);
       openEnvironmentalProcessDetail(process.id);
       return;
     }
