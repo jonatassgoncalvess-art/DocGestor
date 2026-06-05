@@ -65,9 +65,11 @@ async function updateHistory(queueItem, recipient, status, resendResult = null) 
     sent_at: status === "sent" ? new Date().toISOString() : null,
     last_event_at: new Date().toISOString(),
     resend_email_id: resendResult?.id || null,
+    message_html: queueItem.message_html || null,
     raw_payload: {
       queue_id: queueItem.id,
       resend_result: resendResult || null,
+      message_html: queueItem.message_html || null,
     },
   };
   if (historyRows[0]?.id) {

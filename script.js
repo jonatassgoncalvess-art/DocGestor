@@ -481,6 +481,24 @@ function scheduledDateTime(alertInfo) {
   return new Date(`${alertInfo.date}T${alertInfo.time || "09:00"}:00`);
 }
 
+function scheduledDateTimeFromValues(dateValue, timeValue = "09:00") {
+  if (!dateValue) return null;
+  const scheduled = new Date(`${dateValue}T${timeValue || "09:00"}:00`);
+  return Number.isNaN(scheduled.getTime()) ? null : scheduled;
+}
+
+function scheduleIsInFuture(dateValue, timeValue = "09:00") {
+  const scheduled = scheduledDateTimeFromValues(dateValue, timeValue);
+  return scheduled && scheduled > new Date();
+}
+
+function validateFutureSchedule(dateValue, timeValue, label) {
+  if (!dateValue) return true;
+  if (scheduleIsInFuture(dateValue, timeValue)) return true;
+  alert(`${label} deve ser posterior à data e hora atual.`);
+  return false;
+}
+
 function shouldSendAlertNow(alertInfo) {
   const scheduled = scheduledDateTime(alertInfo);
   return !Number.isNaN(scheduled.getTime()) && scheduled <= new Date();
@@ -501,8 +519,42 @@ function addLocalAlertHistory(alertInfo, recipient = null, status = "waiting") {
     related_label: alertInfo.relatedLabel || "",
     created_at: new Date().toISOString(),
     sent_at: status === "sent" ? new Date().toISOString() : null,
+    message_html: alertMessageHtml(alertInfo),
+    raw_payload: { message: alertInfo.message },
   });
   renderAlertHistory(alertHistoryItems);
+}
+
+async function persistAlertHistoryOnly(alertInfo, status = "waiting") {
+  addLocalAlertHistory(alertInfo, null, status);
+  if (!window.DocGestorDB) return;
+  try {
+    if (alertInfo.alertKey) {
+      await window.DocGestorDB.removeWhere("alert_history", `alert_key=eq.${encodeURIComponent(alertInfo.alertKey)}&status=eq.waiting`);
+    }
+    await window.DocGestorDB.create("alert_history", {
+      alert_key: alertInfo.alertKey || null,
+      recipient_id: null,
+      module_id: "environmental",
+      subject: alertInfo.subject,
+      sender_email: systemEmailConfig.address,
+      recipient_emails: [],
+      status,
+      status_label: status === "sent" ? "Enviado" : "Aguardando",
+      related_type: alertInfo.relatedType || "environmental_process",
+      related_id: looksLikeUuid(alertInfo.relatedId) ? alertInfo.relatedId : null,
+      related_label: alertInfo.relatedLabel,
+      sent_at: status === "sent" ? new Date().toISOString() : null,
+      message_html: alertMessageHtml(alertInfo),
+      raw_payload: {
+        scheduled_for: `${alertInfo.date}T${alertInfo.time || "09:00"}:00`,
+        alert_type: alertInfo.alertType,
+        message: alertInfo.message,
+      },
+    });
+  } catch (error) {
+    console.warn("Não foi possível salvar o histórico do alerta no Supabase.", error.message);
+  }
 }
 
 async function sendEnvironmentalAlertEmail(alertInfo, recipient) {
@@ -624,6 +676,7 @@ async function persistAlertQueueItem(alertInfo, recipient) {
       related_id: looksLikeUuid(alertInfo.relatedId) ? alertInfo.relatedId : null,
       related_label: alertInfo.relatedLabel,
       sent_at: status === "sent" ? new Date().toISOString() : null,
+      message_html: alertMessageHtml(alertInfo),
       raw_payload: {
         scheduled_for: scheduledFor,
         alert_type: alertInfo.alertType,
@@ -662,7 +715,7 @@ function scheduleEnvironmentalAlert(alertInfo) {
   if (!added) return;
   const recipients = environmentalAlertRecipients();
   if (!recipients.length) {
-    addLocalAlertHistory(alertInfo, null, "waiting");
+    persistAlertHistoryOnly(alertInfo, "waiting");
     return;
   }
   recipients.forEach((recipient) => persistAlertQueueItem(alertInfo, recipient));
@@ -727,6 +780,29 @@ function scheduleLicenseAlerts(process, stage, license) {
     subject: "Renovação",
     message: `Alerta de Renovação referente a licença ${license.number}, Bloco ${stage.blockNumber || 1} do processo nº ${processNumber} do empreendimento ${process.title || process.enterprise || "não informado"} da empresa ${process.company || "não informada"}. Favor verificar para dar continuidade no processo`,
   });
+}
+
+function validateStageAlertSchedules(process, stage) {
+  if (!stage?.validityDate) return true;
+  if (!isLicenseStage(stage) && dateIsAfter(stage.validityDate, process.acquisitionDueDate)) {
+    alert("A data de vencimento da etapa não pode ser superior à data final do processo.");
+    return false;
+  }
+  const checks = [
+    ["Prazo mínimo", subtractDaysFromDate(stage.validityDate, stage.warningDays), stage.warningTime || "09:00"],
+    ["Prazo crítico", subtractDaysFromDate(stage.validityDate, stage.criticalDays), stage.criticalTime || "09:00"],
+    ["Emergência", subtractDaysFromDate(stage.validityDate, stage.emergencyDays), stage.emergencyTime || "09:00"],
+    ["Vencimento da etapa", stage.validityDate, stage.deadlineTime || "09:00"],
+  ];
+  if (isLicenseStage(stage) && field("environmental-stage-license-expiry")?.value) {
+    checks.unshift(["Renovação", subtractDaysFromDate(field("environmental-stage-license-expiry").value, stage.renewalDays), stage.renewalTime || "09:00"]);
+  }
+  const invalid = checks.find(([, dateValue, timeValue]) => dateValue && !scheduleIsInFuture(dateValue, timeValue));
+  if (invalid) {
+    alert(`${invalid[0]} ficou com data ou horário retroativo. Ajuste o vencimento, a quantidade de dias ou o horário do aviso.`);
+    return false;
+  }
+  return true;
 }
 
 const stageAlertFieldKeys = ["warning", "critical", "emergency", "renewal"];
@@ -2391,7 +2467,40 @@ function normalizeAlertHistoryItem(item) {
     from: item.from || item.sender_email || systemEmailConfig.address,
     created_at: item.created_at || item.sent_at || item.last_event_at,
     last_event: status,
+    message_html: item.message_html || item.html || item.raw_payload?.message_html || "",
+    raw_payload: item.raw_payload || {},
+    related_label: item.related_label || item.relatedLabel || "",
+    resend_email_id: item.resend_email_id || item.id || "",
   };
+}
+
+function alertHistoryItemById(id) {
+  return alertHistoryItems.map(normalizeAlertHistoryItem).find((item) => String(item.id) === String(id));
+}
+
+function plainTextFromHtml(html) {
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = html || "";
+  return wrapper.textContent?.trim() || "";
+}
+
+function openAlertEmailModal(id) {
+  const item = alertHistoryItemById(id);
+  if (!item) return;
+  const status = item.last_event || "waiting";
+  const recipients = Array.isArray(item.to) ? item.to.join(", ") : item.to || "Não informado";
+  const messageHtml = item.message_html || item.raw_payload?.message || "";
+  const messageText = messageHtml.includes("<") ? plainTextFromHtml(messageHtml) : messageHtml;
+  field("alert-email-subject").textContent = item.subject || "Sem assunto";
+  field("alert-email-status").textContent = alertHistoryStatusLabels[status] || status;
+  field("alert-email-status").className = `pill ${alertHistoryStatusClass(status)}`;
+  field("alert-email-from").textContent = item.from || "Remetente não informado";
+  field("alert-email-to").textContent = recipients;
+  field("alert-email-date").textContent = formatAlertHistoryDate(item.created_at || item.sent_at);
+  field("alert-email-resend-id").textContent = item.resend_email_id || "Não informado";
+  field("alert-email-related").textContent = item.related_label || "Não vinculado";
+  field("alert-email-body").textContent = messageText || "Texto do e-mail não disponível neste registro.";
+  openModal("alert-email-modal");
 }
 
 function renderAlertHistory(items = alertHistoryItems) {
@@ -2426,15 +2535,15 @@ function renderAlertHistory(items = alertHistoryItems) {
         <article>
           <div>
             <strong>${escapeHtml(item.subject || "Sem assunto")}</strong>
+            <span>${escapeHtml(item.related_label || recipients || "Sem vínculo informado")}</span>
+          </div>
+          <div>
+            <strong>${escapeHtml(formatAlertHistoryDate(item.created_at))}</strong>
             <span>${escapeHtml(recipients)}</span>
           </div>
           <div>
-            <strong>${escapeHtml(item.from || "Remetente não informado")}</strong>
-            <span>Enviado em ${escapeHtml(formatAlertHistoryDate(item.created_at))}</span>
-            <span>ID Resend: ${escapeHtml(item.id || "Não informado")}</span>
-          </div>
-          <div>
             <span class="pill ${alertHistoryStatusClass(status)}">${escapeHtml(alertHistoryStatusLabels[status] || status)}</span>
+            <button type="button" data-alert-email-id="${escapeHtml(item.id)}">Ver e-mail</button>
           </div>
         </article>
       `;
@@ -2446,14 +2555,35 @@ async function loadAlertHistory() {
   const button = field("alert-history-refresh");
   const summary = field("alert-history-summary");
   if (button) button.disabled = true;
-  if (summary) summary.innerHTML = "<span>Buscando histórico no Resend...</span>";
+  if (summary) summary.innerHTML = "<span>Atualizando fila e histórico de alertas...</span>";
   try {
-    const response = await fetch("/api/historico-alertas");
-    const result = await response.json();
-    if (!response.ok || !result.success) {
-      throw new Error(result.error || "Não foi possível carregar o histórico.");
+    await fetch("/api/processar-alertas").catch(() => null);
+    if (window.DocGestorDB) {
+      const rows = await window.DocGestorDB.list("alert_history", "select=*&order=created_at.desc");
+      alertHistoryItems = rows.map((row) => ({
+        id: row.id,
+        alert_key: row.alert_key || "",
+        subject: row.subject,
+        recipient_emails: row.recipient_emails || [],
+        sender_email: row.sender_email || systemEmailConfig.address,
+        status: row.status || "waiting",
+        status_label: row.status_label || "Aguardando",
+        related_label: row.related_label || "",
+        related_id: row.related_id || "",
+        created_at: row.created_at,
+        sent_at: row.sent_at,
+        resend_email_id: row.resend_email_id || "",
+        message_html: row.message_html || "",
+        raw_payload: row.raw_payload || {},
+      }));
+    } else {
+      const response = await fetch("/api/historico-alertas");
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Não foi possível carregar o histórico.");
+      }
+      alertHistoryItems = result.emails || [];
     }
-    alertHistoryItems = result.emails || [];
     renderAlertHistory(alertHistoryItems);
   } catch (error) {
     console.error(error);
@@ -2464,6 +2594,10 @@ async function loadAlertHistory() {
 }
 
 field("alert-history-refresh")?.addEventListener("click", loadAlertHistory);
+field("alert-history-list")?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-alert-email-id]");
+  if (button) openAlertEmailModal(button.dataset.alertEmailId);
+});
 renderAlertHistory();
 
 let partners = [];
@@ -4434,6 +4568,7 @@ async function saveEnvironmentalProcess() {
   const priority = field("environmental-process-priority").value;
   const acquisitionDueDate = field("environmental-process-forecast").value;
   const acquisitionAlertTime = field("environmental-process-alert-time")?.value || "09:00";
+  if (acquisitionDueDate && !validateFutureSchedule(acquisitionDueDate, acquisitionAlertTime, "O vencimento do processo")) return;
   const processId = createUuid();
   const process = {
     id: processId,
@@ -4675,7 +4810,7 @@ function refreshActiveStageGate() {
   if (!process) return;
   const stage = ensureProcessStages(process).find((item) => item.number === Number(field("environmental-stage-number")?.value));
   if (!stage) return;
-  saveCurrentStageForm(process, stage);
+  saveCurrentStageForm(process, stage, { validate: false });
   const gateText = stageRequiredMessage(process, stage);
   const gate = field("environmental-process-stage-gate");
   const gateMessage = field("environmental-process-stage-gate-message");
@@ -4688,7 +4823,8 @@ function refreshActiveStageGate() {
   }
 }
 
-function saveCurrentStageForm(process, stage) {
+function saveCurrentStageForm(process, stage, options = {}) {
+  const shouldValidate = options.validate !== false;
   const record = stageRecord(process, stage.number);
   stage.validityDate = field("environmental-stage-validity-date")?.value || "";
   if (!isLicenseStage(stage) && dateIsAfter(stage.validityDate, process.acquisitionDueDate)) {
@@ -4708,7 +4844,6 @@ function saveCurrentStageForm(process, stage) {
   stage.renewalTime = field("environmental-stage-renewal-time")?.value || "09:00";
   updateStageDeadlineStatus(stage);
   applyProcessDeadlineRules(process);
-  if (stage.validityDate) scheduleStageAlerts(process, stage);
   if (isProtocolStage(stage)) {
     record.protocolNumber = field("environmental-stage-protocol-number")?.value || "";
     record.protocolDate = field("environmental-stage-protocol-date")?.value || "";
@@ -4720,6 +4855,9 @@ function saveCurrentStageForm(process, stage) {
     record.licenseNumber = field("environmental-stage-license-number")?.value || "";
     record.expiryDate = field("environmental-stage-license-expiry")?.value || "";
   }
+  if (shouldValidate && !validateStageAlertSchedules(process, stage)) return false;
+  if (shouldValidate && stage.validityDate) scheduleStageAlerts(process, stage);
+  return true;
 }
 
 function registerStageData(process, stage) {
@@ -5009,6 +5147,24 @@ function renderLicenseStatus(status = "open") {
     : `<article class="status-process-card"><strong>Nenhum registro</strong><span>Não há ${status === "licenses" ? "licenças" : "processos"} nesta categoria.</span></article>`;
 }
 
+async function deleteEnvironmentalProcessFromDatabase(process) {
+  if (!window.DocGestorDB || !looksLikeUuid(process?.id)) return true;
+  const id = encodeURIComponent(process.id);
+  try {
+    await Promise.all([
+      window.DocGestorDB.removeWhere("alert_queue", `related_id=eq.${id}`),
+      window.DocGestorDB.removeWhere("alert_history", `related_id=eq.${id}`),
+      window.DocGestorDB.removeWhere("agenda_events", `related_id=eq.${id}`),
+      window.DocGestorDB.removeWhere("environmental_process_stage_deadlines", `process_id=eq.${id}`),
+    ]);
+    await window.DocGestorDB.remove("environmental_licenses", process.id);
+    return true;
+  } catch (error) {
+    alert(`Não foi possível excluir o processo no banco de dados: ${error.message}`);
+    return false;
+  }
+}
+
 function openLicenseStatus(status = "open") {
   if (!canAccess("environmental")) return;
   openView("licencas");
@@ -5027,16 +5183,22 @@ function openLicenseStatus(status = "open") {
   renderLicenseStatus(status);
 }
 
-document.querySelector("#license-status-list")?.addEventListener("click", (event) => {
+document.querySelector("#license-status-list")?.addEventListener("click", async (event) => {
   const deleteProcess = event.target.closest("[data-delete-process]");
   if (deleteProcess) {
     const process = environmentalProcesses.find((item) => String(item.id) === String(deleteProcess.dataset.deleteProcess));
     if (!process) return;
     const confirmed = window.confirm(`Deseja realmente excluir o processo ${process.internalNumber || process.number}?`);
     if (!confirmed) return;
+    const deleted = await deleteEnvironmentalProcessFromDatabase(process);
+    if (!deleted) return;
     const index = environmentalProcesses.findIndex((item) => String(item.id) === String(process.id));
     if (index >= 0) environmentalProcesses.splice(index, 1);
+    agendaEvents = agendaEvents.filter((item) => String(item.relatedId || item.linkedTarget?.id || "") !== String(process.id));
+    alertHistoryItems = alertHistoryItems.filter((item) => String(item.related_id || item.relatedId || "") !== String(process.id));
     renderLicenseStatus(currentLicenseStatus);
+    renderAgenda();
+    renderAlertHistory(alertHistoryItems);
     updateNextProcessNumber();
     return;
   }
@@ -5055,6 +5217,7 @@ document.querySelector("#license-status-list")?.addEventListener("click", (event
       process.licenseHistory = (process.licenseHistory || []).filter((item) => String(item.stageNumber) !== String(license.stageNumber));
       process.number = process.internalNumber || process.number;
       process.due = process.status === "done" ? "Sem pendências" : "Licença removida do cadastro";
+      await persistEnvironmentalProcess(process, true);
     }
     renderLicenseStatus(currentLicenseStatus);
     return;
@@ -5123,7 +5286,7 @@ field("environmental-process-complete-stage")?.addEventListener("click", async (
   if (!process) return;
   const stageNumber = Number(field("environmental-stage-number").value) || currentProcessStage(process).number;
   const stage = ensureProcessStages(process).find((item) => item.number === stageNumber) || currentProcessStage(process);
-  saveCurrentStageForm(process, stage);
+  if (!saveCurrentStageForm(process, stage)) return;
   const gateText = stageRequiredMessage(process, stage);
   if (gateText) {
     renderCurrentStageScreen(process, stage);
@@ -5170,7 +5333,7 @@ field("environmental-stage-save")?.addEventListener("click", () => {
   const process = environmentalProcesses.find((item) => String(item.id) === String(field("environmental-stage-process-id").value));
   if (process) {
     const stage = ensureProcessStages(process).find((item) => item.number === Number(field("environmental-stage-number").value)) || currentProcessStage(process);
-    saveCurrentStageForm(process, stage);
+    if (!saveCurrentStageForm(process, stage)) return;
     renderProcessDetail(process);
     persistEnvironmentalProcess(process, true);
   }
@@ -7396,6 +7559,7 @@ async function loadSupabaseData() {
     status: row.status || "green",
     description: row.description || "",
     alertKey: row.alert_key || "",
+    relatedId: row.related_id || "",
   })).filter((event) => event.date);
 
   alertHistoryItems = alertHistoryRows.map((row) => ({
@@ -7407,8 +7571,12 @@ async function loadSupabaseData() {
     status: row.status || "waiting",
     status_label: row.status_label || "Aguardando",
     related_label: row.related_label || "",
+    related_id: row.related_id || "",
     created_at: row.created_at,
     sent_at: row.sent_at,
+    resend_email_id: row.resend_email_id || "",
+    message_html: row.message_html || "",
+    raw_payload: row.raw_payload || {},
   }));
   renderAlertHistory(alertHistoryItems);
 
@@ -7502,8 +7670,12 @@ async function processPendingAlertsOnServer() {
         status: row.status || "waiting",
         status_label: row.status_label || "Aguardando",
         related_label: row.related_label || "",
+        related_id: row.related_id || "",
         created_at: row.created_at,
         sent_at: row.sent_at,
+        resend_email_id: row.resend_email_id || "",
+        message_html: row.message_html || "",
+        raw_payload: row.raw_payload || {},
       }));
       renderAlertHistory(alertHistoryItems);
     }

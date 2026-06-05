@@ -43,6 +43,7 @@ alter table alert_history add column if not exists status_label text not null de
 alter table alert_history add column if not exists related_type text;
 alter table alert_history add column if not exists related_id uuid;
 alter table alert_history add column if not exists related_label text;
+alter table alert_history add column if not exists message_html text;
 alter table alert_history add column if not exists sent_at timestamptz;
 alter table alert_history add column if not exists last_event_at timestamptz;
 alter table alert_history add column if not exists resend_email_id text;

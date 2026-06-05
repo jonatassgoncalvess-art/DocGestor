@@ -394,6 +394,7 @@ create table if not exists alert_history (
   related_type text,
   related_id uuid,
   related_label text,
+  message_html text,
   sent_at timestamptz,
   last_event_at timestamptz,
   raw_payload jsonb not null default '{}'::jsonb,
@@ -402,6 +403,10 @@ create table if not exists alert_history (
 );
 
 alter table alert_history add column if not exists alert_key text;
+alter table alert_history add column if not exists related_id uuid;
+alter table alert_history add column if not exists related_label text;
+alter table alert_history add column if not exists message_html text;
+alter table alert_history add column if not exists raw_payload jsonb not null default '{}'::jsonb;
 
 create table if not exists system_email_configs (
   id uuid primary key default gen_random_uuid(),

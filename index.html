@@ -414,7 +414,7 @@
                     <span id="alert-history-count">0 itens</span>
                   </div>
                   <div class="alert-history-summary" id="alert-history-summary">
-                    <span>Use atualizar histórico para buscar os envios diretamente no Resend.</span>
+                    <span>Use atualizar histórico para processar a fila e recarregar os registros salvos.</span>
                   </div>
                   <div class="crud-list alert-history-list" id="alert-history-list"></div>
                 </section>
@@ -1197,6 +1197,52 @@
         <div class="modal-actions">
           <button class="ghost" data-close-modal="system-email-test-modal" type="button">Cancelar</button>
           <button class="primary" id="system-email-test-send" type="button">Enviar teste</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="alert-email-modal" aria-hidden="true">
+      <section class="modal-panel wide-modal" role="dialog" aria-modal="true" aria-labelledby="alert-email-title">
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">01.4.3 Histórico de Alertas</p>
+            <h2 id="alert-email-title">Ver e-mail</h2>
+          </div>
+          <button class="ghost small" data-close-modal="alert-email-modal">Fechar</button>
+        </div>
+        <div class="email-detail-grid">
+          <article>
+            <span>Assunto</span>
+            <strong id="alert-email-subject">Sem assunto</strong>
+          </article>
+          <article>
+            <span>Status</span>
+            <strong id="alert-email-status" class="pill yellow">Aguardando</strong>
+          </article>
+          <article>
+            <span>Remetente</span>
+            <strong id="alert-email-from">Não informado</strong>
+          </article>
+          <article>
+            <span>Destinatário</span>
+            <strong id="alert-email-to">Não informado</strong>
+          </article>
+          <article>
+            <span>Data</span>
+            <strong id="alert-email-date">Não informado</strong>
+          </article>
+          <article>
+            <span>ID Resend</span>
+            <strong id="alert-email-resend-id">Não informado</strong>
+          </article>
+          <article class="wide-field">
+            <span>Vínculo</span>
+            <strong id="alert-email-related">Não vinculado</strong>
+          </article>
+        </div>
+        <div class="email-body-box">
+          <span>Texto do e-mail</span>
+          <pre id="alert-email-body">Texto do e-mail não disponível neste registro.</pre>
         </div>
       </section>
     </div>

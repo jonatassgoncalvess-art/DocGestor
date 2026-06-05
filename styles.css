@@ -1509,6 +1509,49 @@ button {
   justify-content: flex-end;
 }
 
+.alert-history-list article {
+  grid-template-columns: minmax(220px, 1.2fr) minmax(180px, 1fr) auto;
+}
+
+.email-detail-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.email-detail-grid article,
+.email-body-box {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+}
+
+.email-detail-grid span,
+.email-body-box span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.email-detail-grid strong {
+  overflow-wrap: anywhere;
+}
+
+.email-body-box {
+  margin-top: 12px;
+}
+
+.email-body-box pre {
+  color: var(--ink);
+  font-family: inherit;
+  line-height: 1.5;
+  margin: 0;
+  max-height: 320px;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
 .reserve-result.warning strong {
   color: var(--yellow);
 }
@@ -2735,6 +2778,10 @@ textarea {
   .user-row-actions,
   .company-actions {
     justify-content: flex-start;
+  }
+
+  .email-detail-grid {
+    grid-template-columns: 1fr;
   }
 
   .branch-row {
