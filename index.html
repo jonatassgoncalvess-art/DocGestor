@@ -392,7 +392,6 @@
                     <p class="eyebrow">01.4.2 E-mails por Módulo</p>
                     <h2>E-mails que recebem avisos por módulo</h2>
                   </div>
-                  <button class="primary" id="send-recipient-new">Editar módulo ambiental</button>
                 </div>
                 <section class="panel">
                   <div class="list-head"><h3>E-mails por módulo</h3><span id="send-recipient-count">0 módulos</span></div>
@@ -1147,12 +1146,8 @@
           <input type="hidden" id="send-recipient-id" value="0" />
           <input type="hidden" id="send-recipient-module-id" value="environmental" />
           <div class="wide-field module-email-panel">
-            <span class="field-label">Usuários automáticos do módulo</span>
+            <span class="field-label">E-mails destinatários</span>
             <div class="module-email-list" id="send-recipient-user-list"></div>
-          </div>
-          <div class="wide-field module-email-panel">
-            <span class="field-label">E-mails externos do módulo</span>
-            <div class="module-email-list" id="send-recipient-external-list"></div>
           </div>
           <label>Nome do e-mail externo<input id="send-recipient-name" /></label>
           <label>E-mail externo<input id="send-recipient-email" type="email" /></label>
@@ -1198,7 +1193,7 @@
           <button class="ghost small" data-close-modal="system-email-test-modal">Fechar</button>
         </div>
         <form class="user-form" id="system-email-test-form">
-          <label>E-mail destinatario
+          <label>E-mail destinatário
             <input id="system-email-test-to" type="email" value="jonatass.goncalvess@gmail.com" placeholder="email@dominio.com" />
           </label>
           <small class="helper-text">Informe um e-mail de qualquer dominio valido, como Gmail, Outlook, Hotmail ou e-mail empresarial.</small>

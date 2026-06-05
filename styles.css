@@ -1571,13 +1571,48 @@ button {
   border-radius: 8px;
   display: grid;
   gap: 4px;
-  grid-template-columns: minmax(160px, 1fr) minmax(180px, 1.4fr) auto;
+  grid-template-columns: minmax(160px, 1fr) minmax(220px, 1.4fr) minmax(150px, auto) auto;
   padding: 10px;
 }
 
 .module-email-list small,
 .module-email-list span {
   color: var(--muted);
+}
+
+.module-email-list button {
+  justify-self: end;
+}
+
+.module-recipient-row {
+  grid-template-columns: minmax(260px, 1fr) minmax(170px, auto) auto;
+}
+
+.crud-list .module-recipient-row > div {
+  align-items: center;
+}
+
+.module-recipient-main {
+  justify-content: flex-start !important;
+}
+
+.module-recipient-total {
+  color: var(--muted);
+  justify-content: center !important;
+  white-space: nowrap;
+}
+
+.module-recipient-total strong,
+.module-recipient-total span {
+  display: inline;
+}
+
+.module-recipient-total strong {
+  color: var(--ink);
+}
+
+.module-recipient-actions {
+  justify-content: flex-end !important;
 }
 
 .reserve-result.warning strong {

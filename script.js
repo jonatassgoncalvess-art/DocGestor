@@ -1960,7 +1960,7 @@ function openSystemEmailTestModal() {
 
 async function sendSystemEmail({ to, subject, html }) {
   const recipient = String(to || "").trim();
-  if (!recipient) throw new Error("Informe o e-mail destinatario.");
+  if (!recipient) throw new Error("Informe o e-mail destinatário.");
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)) throw new Error(`E-mail invalido: ${recipient}`);
   const response = await fetch("/api/enviar-email", {
     method: "POST",
@@ -2368,24 +2368,21 @@ function fillSendRecipientForm(recipient) {
 
 function renderModuleEmailLists(moduleId = selectedSendModuleId) {
   const userList = field("send-recipient-user-list");
-  const externalList = field("send-recipient-external-list");
   if (userList) {
-    const autoRecipients = automaticModuleRecipients(moduleId);
-    userList.innerHTML = autoRecipients.length
-      ? autoRecipients.map((recipient) => `<article><strong>${escapeHtml(recipient.name)}</strong><span>${escapeHtml(recipient.email)}</span><small>Usuário com acesso ao módulo</small></article>`).join("")
-      : `<article><strong>Nenhum usuário automático</strong><span>Autorize usuários neste módulo em 01.1 Usuários.</span></article>`;
-  }
-  if (externalList) {
-    const externalRecipients = externalModuleRecipients(moduleId);
-    externalList.innerHTML = externalRecipients.length
-      ? externalRecipients.map((recipient) => `
+    const recipients = allModuleRecipients(moduleId);
+    userList.innerHTML = recipients.length
+      ? recipients.map((recipient) => {
+          const automatic = recipientIsAutomatic(recipient);
+          return `
           <article>
             <strong>${escapeHtml(recipient.name || recipient.email)}</strong>
             <span>${escapeHtml(recipient.email)}</span>
-            <button type="button" data-send-external-delete="${recipient.id}">Remover</button>
+            <small>${automatic ? "Usuário com acesso ao módulo" : "E-mail externo"}</small>
+            ${automatic ? "" : `<button type="button" data-send-external-delete="${recipient.id}">Remover</button>`}
           </article>
-        `).join("")
-      : `<article><strong>Nenhum e-mail externo</strong><span>Adicione e-mails que não são usuários do sistema.</span></article>`;
+        `;
+        }).join("")
+      : `<article><strong>Nenhum destinatário</strong><span>Autorize usuários no módulo ou adicione e-mails externos.</span></article>`;
   }
 }
 
@@ -2413,21 +2410,17 @@ function renderSendRecipients() {
   list.innerHTML = availableAlertModules
     .map(
       (module) => {
-        const automatic = automaticModuleRecipients(module.id);
-        const external = externalModuleRecipients(module.id);
         const recipients = allModuleRecipients(module.id);
         return `
-        <article>
-          <div>
+        <article class="module-recipient-row">
+          <div class="module-recipient-main">
             <strong>${module.name}</strong>
-            <span>${recipients.length} e-mail${recipients.length === 1 ? "" : "s"} configurado${recipients.length === 1 ? "" : "s"}</span>
           </div>
-          <div>
-            <strong>${automatic.length} usuário${automatic.length === 1 ? "" : "s"} automático${automatic.length === 1 ? "" : "s"}</strong>
-            <span>${external.length} e-mail${external.length === 1 ? "" : "s"} externo${external.length === 1 ? "" : "s"}</span>
-            <span>${recipients.map((recipient) => recipient.email).slice(0, 3).join(", ")}${recipients.length > 3 ? "..." : ""}</span>
+          <div class="module-recipient-total">
+            <strong>${recipients.length}</strong>
+            <span>e-mail${recipients.length === 1 ? "" : "s"} destinatário${recipients.length === 1 ? "" : "s"}</span>
           </div>
-          <div>
+          <div class="module-recipient-actions">
             <button type="button" data-send-module-action="edit" data-send-module-id="${module.id}">Editar</button>
           </div>
         </article>
