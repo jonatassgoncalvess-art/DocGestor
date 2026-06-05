@@ -7000,7 +7000,7 @@ async function persistEnvironmentalProcess(process, wasExisting = false) {
   const currentStage = ensureProcessStages(process).find((stage) => stage.number === process.currentStage) || ensureProcessStages(process)[0] || {};
   const payload = {
     id: looksLikeUuid(process.id) ? process.id : undefined,
-    process_id: looksLikeUuid(process.id) ? process.id : undefined,
+    process_id: null,
     organization_id: organizationId,
     enterprise_id: looksLikeUuid(enterpriseId) ? enterpriseId : null,
     company_id: companyId,

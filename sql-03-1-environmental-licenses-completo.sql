@@ -147,6 +147,7 @@ end;
 
 -- Remove obrigatoriedades antigas que impedem salvar processo novo.
 -- O sistema atual grava etapas detalhadas em environmental_process_stage_deadlines.
+alter table environmental_licenses drop constraint if exists environmental_licenses_process_id_fkey;
 alter table environmental_licenses alter column process_id drop not null;
 alter table environmental_licenses alter column process_internal_number drop not null;
 alter table environmental_licenses alter column stage_number drop not null;
@@ -178,6 +179,13 @@ alter table environmental_licenses alter column status set default 'Planejado';
 alter table environmental_licenses alter column progress_percent set default 0;
 alter table environmental_licenses alter column created_at set default now();
 alter table environmental_licenses alter column updated_at set default now();
+
+-- A coluna process_id é legada. O identificador real do processo é id.
+alter table environmental_licenses alter column process_id drop default;
+update environmental_licenses
+set process_id = null
+where process_id is not null
+  and process_id = id;
 
 -- Corrige CHECK antigo de status.
 alter table environmental_licenses drop constraint if exists environmental_licenses_status_check;
