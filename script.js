@@ -435,11 +435,7 @@ function stageKindLabel(stage) {
 }
 
 function alertSubjectByType(alertType, alertLabel) {
-  if (alertType === "minimum") return "Prazo Mínimo";
-  if (alertType === "critical") return "Crítico";
-  if (alertType === "emergency") return "Emergência";
-  if (alertType === "renewal") return "Renovação";
-  return alertLabel === "Renovação" ? "Renovação" : "Vencimento";
+  return "Alerta de Prazo";
 }
 
 function environmentalAlertMessage(process, stage, alertLabel) {
@@ -447,6 +443,58 @@ function environmentalAlertMessage(process, stage, alertLabel) {
   const cnpj = companyCnpjByName(process.company);
   const companyText = `${process.company || "empresa não informada"}${cnpj ? ` - CNPJ ${cnpj}` : ""}`;
   return `Alerta de ${alertLabel} referente a etapa ${stageKindLabel(stage)}, Bloco ${stage.blockNumber || 1} do processo nº ${processNumber} do empreendimento ${process.title || process.enterprise || "não informado"} da empresa ${companyText}. Favor verificar para dar continuidade no processo`;
+}
+
+function firstFilledValue(...values) {
+  return values.find((value) => String(value || "").trim()) || "";
+}
+
+function alertProtocolValue(process, stage = {}) {
+  const currentRecord = stage?.number ? stageRecord(process, stage.number) : {};
+  const previousProtocol = stage?.number ? protocolForLicenseStage(process, stage.number) : "";
+  const anyProtocol = ensureProcessStages(process)
+    .map((item) => stageRecord(process, item.number).protocolNumber)
+    .find((value) => String(value || "").trim());
+  return firstFilledValue(currentRecord.protocolNumber, previousProtocol, anyProtocol);
+}
+
+function alertLicenseValue(process, stage = {}) {
+  const currentRecord = stage?.number ? stageRecord(process, stage.number) : {};
+  const anyLicense = ensureProcessStages(process)
+    .map((item) => stageRecord(process, item.number).licenseNumber)
+    .find((value) => String(value || "").trim());
+  return firstFilledValue(currentRecord.licenseNumber, process.activeLicense?.number, anyLicense);
+}
+
+function alertInfoValue(value, fallback = "em andamento") {
+  return String(value || "").trim() || fallback;
+}
+
+function environmentalAlertHtmlBody(alertInfo) {
+  const rows = [
+    ["Alerta", alertInfo.alertLabel],
+    ["Processo", alertInfo.processNumber],
+    ["Licença", alertInfo.licenseNumber],
+    ["Protocolo", alertInfo.protocolNumber],
+    ["Empresa", alertInfo.companyName],
+    ["Empreendimento", alertInfo.enterpriseName],
+    ["Etapa", alertInfo.stageKindLabel || alertInfo.stageName],
+    ["Tipo de alerta", alertInfo.alertTypeLabel],
+    ["Data", formatAgendaDate(alertInfo.date)],
+  ];
+  return `
+    <p>Este é um email automático do <strong>DocGestor by Carminatti</strong>, verifique o processo abaixo com extrema urgência para não perder nenhum prazo.</p>
+    <table style="border-collapse:collapse;margin-top:16px;width:100%;max-width:620px">
+      <tbody>
+        ${rows.map(([label, value]) => `
+          <tr>
+            <td style="border:1px solid #dde2e6;padding:8px 10px;width:170px"><strong>${escapeHtml(label)}:</strong></td>
+            <td style="border:1px solid #dde2e6;padding:8px 10px">${escapeHtml(alertInfoValue(value))}</td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
 }
 
 function environmentalStageAlertKey(process, stage, alertType) {
@@ -462,16 +510,7 @@ function environmentalLicenseAlertKey(license, alertType) {
 }
 
 function alertMessageHtml(alertInfo) {
-  return `
-    <p><strong>DocGestor by Carminatti</strong></p>
-    <p>${escapeHtml(alertInfo.message)}</p>
-    <ul>
-      <li><strong>Processo:</strong> ${escapeHtml(alertInfo.processNumber)}</li>
-      <li><strong>Etapa:</strong> ${escapeHtml(alertInfo.stageName)}</li>
-      <li><strong>Tipo de alerta:</strong> ${escapeHtml(alertInfo.alertLabel)}</li>
-      <li><strong>Data:</strong> ${escapeHtml(formatAgendaDate(alertInfo.date))}</li>
-    </ul>
-  `;
+  return environmentalAlertHtmlBody(alertInfo);
 }
 
 function scheduledDateTime(alertInfo) {
@@ -727,8 +766,14 @@ function scheduleStageAlerts(process, stage) {
     processId: process.id,
     processNumber,
     stageName: stage.name,
+    stageKindLabel: stageKindLabel(stage),
     blockNumber,
     stageKind,
+    companyName: process.company || "não informada",
+    enterpriseName: process.title || process.enterprise || "não informado",
+    licenseNumber: alertLicenseValue(process, stage),
+    protocolNumber: alertProtocolValue(process, stage),
+    alertTypeLabel: "Prazo",
     relatedId: process.id,
     relatedType: "environmental_process",
     relatedLabel: `${processNumber} - ${stage.name}`,
@@ -764,6 +809,14 @@ function scheduleLicenseAlerts(process, stage, license) {
     processId: process.id,
     processNumber,
     stageName: stage.name,
+    stageKindLabel: stageKindLabel(stage),
+    blockNumber: stage.blockNumber || 1,
+    stageKind: stage.stageKind || "license",
+    companyName: process.company || "não informada",
+    enterpriseName: process.title || process.enterprise || "não informado",
+    licenseNumber: license.number,
+    protocolNumber: license.protocol || alertProtocolValue(process, stage),
+    alertTypeLabel: "Renovação",
     relatedId: process.id,
     relatedType: "environmental_license",
     relatedLabel: `${license.number} - ${license.type}`,
@@ -774,7 +827,7 @@ function scheduleLicenseAlerts(process, stage, license) {
     time: stage.renewalTime || "09:00",
     status: "warning",
     title: `Renovação - ${license.number}`,
-    subject: "Renovação",
+    subject: alertSubjectByType("renewal", "Renovação"),
     message: `Alerta de Renovação referente a licença ${license.number}, Bloco ${stage.blockNumber || 1} do processo nº ${processNumber} do empreendimento ${process.title || process.enterprise || "não informado"} da empresa ${process.company || "não informada"}. Favor verificar para dar continuidade no processo`,
   });
 }
@@ -4809,6 +4862,12 @@ async function saveEnvironmentalProcess() {
       processId: process.id,
       processNumber: internalNumber,
       stageName: "Conclusão do processo ambiental",
+      stageKindLabel: "Processo Ambiental",
+      companyName: process.company || "não informada",
+      enterpriseName: process.title || process.enterprise || "não informado",
+      licenseNumber: alertLicenseValue(process),
+      protocolNumber: alertProtocolValue(process),
+      alertTypeLabel: "Prazo",
       relatedId: process.id,
       relatedType: "environmental_process",
       relatedLabel: `${internalNumber} - ${process.title}`,
@@ -4819,7 +4878,7 @@ async function saveEnvironmentalProcess() {
       time: acquisitionAlertTime,
       status: "danger",
       title: `Vencimento para aquisição - ${internalNumber}`,
-      subject: "Vencimento",
+      subject: alertSubjectByType("deadline", "Vencimento"),
       message: `O processo ${internalNumber} deve ser finalizado por inteiro até ${formatAgendaDate(acquisitionDueDate)}. Se a última etapa não estiver concluída, o processo será classificado como pendente.`,
     });
   }
@@ -5079,6 +5138,7 @@ function registerStageData(process, stage) {
       stageNumber: stage.number,
       type: record.licenseType || licenseForLicenseStage(process, stage.number),
       number: record.licenseNumber,
+      protocol: record.protocolNumber || protocolForLicenseStage(process, stage.number),
       expiryDate: record.expiryDate,
       company: process.company,
       title: process.title,
@@ -5100,6 +5160,12 @@ function registerStageData(process, stage) {
         processId: process.id,
         processNumber: process.internalNumber || process.number,
         stageName: "Aquisição da próxima licença ambiental",
+        stageKindLabel: "Licença",
+        companyName: process.company || "não informada",
+        enterpriseName: process.title || process.enterprise || "não informado",
+        licenseNumber: license.number,
+        protocolNumber: license.protocol || alertProtocolValue(process, stage),
+        alertTypeLabel: "Prazo",
         relatedId: process.id,
         relatedType: "environmental_process",
         relatedLabel: `${process.internalNumber || process.number} - Próxima licença`,
@@ -5109,7 +5175,7 @@ function registerStageData(process, stage) {
         time: process.acquisitionAlertTime,
         status: "danger",
         title: `Aquisição da próxima licença - ${process.internalNumber || process.number}`,
-        subject: `DocGestor: prazo para próxima licença do processo ${process.internalNumber || process.number}`,
+        subject: alertSubjectByType("deadline", "Vencimento"),
         message: `A licença ${license.number} vence em ${formatAgendaDate(license.expiryDate)} e essa passa a ser a data limite para aquisição da licença posterior do processo ${process.internalNumber || process.number}.`,
       });
     }
