@@ -7008,6 +7008,7 @@ async function persistEnvironmentalProcess(process, wasExisting = false) {
     license_type_id: licenseTypeId,
     license_number: activeLicense.number || null,
     process_number: process.internalNumber || process.number,
+    process_internal_number: process.internalNumber || process.number,
     expiration_date: activeLicense.expiryDate || process.acquisitionDueDate || null,
     process_due_alert_time: process.acquisitionAlertTime || "09:00",
     renewal_recommended_at: activeLicense.expiryDate ? subtractDaysFromDate(activeLicense.expiryDate, 120) : null,
