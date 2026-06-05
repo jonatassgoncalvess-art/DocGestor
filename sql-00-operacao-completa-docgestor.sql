@@ -67,7 +67,7 @@ insert into app_modules (code, name, parent_code, display_order, is_admin_area, 
 values
   ('environmental', '03.1 Licenças Ambientais', '03', 3.1, false, true, 'active'),
   ('iptu', '03.2 IPTU', '03', 3.2, false, true, 'development'),
-  ('diverse-documents', '03.3 Documentos Diversos', '03', 3.3, false, true, 'development')
+  ('diverse-documents', '03.3 Lembretes Diversos', '03', 3.3, false, true, 'active')
 on conflict (code) do update set
   name = excluded.name,
   parent_code = excluded.parent_code,
@@ -79,6 +79,40 @@ on conflict (code) do update set
 delete from app_modules
 where code is null
   and name in ('03.1 Licenças Ambientais', '03.1 LicenÃ§as Ambientais', '03.2 IPTU', '03.3 Documentos Diversos');
+
+create table if not exists diverse_reminders (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid,
+  name text not null,
+  company_id uuid,
+  company_label text,
+  alert_format integer not null default 1,
+  alerts jsonb not null default '[]'::jsonb,
+  repeat_enabled boolean not null default false,
+  repeat_count integer not null default 1,
+  repeat_interval_days integer not null default 30,
+  description text,
+  status text not null default 'pending',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table diverse_reminders add column if not exists organization_id uuid;
+alter table diverse_reminders add column if not exists company_id uuid;
+alter table diverse_reminders add column if not exists company_label text;
+alter table diverse_reminders add column if not exists alert_format integer not null default 1;
+alter table diverse_reminders add column if not exists alerts jsonb not null default '[]'::jsonb;
+alter table diverse_reminders add column if not exists repeat_enabled boolean not null default false;
+alter table diverse_reminders add column if not exists repeat_count integer not null default 1;
+alter table diverse_reminders add column if not exists repeat_interval_days integer not null default 30;
+alter table diverse_reminders add column if not exists description text;
+alter table diverse_reminders add column if not exists status text not null default 'pending';
+alter table diverse_reminders add column if not exists created_at timestamptz not null default now();
+alter table diverse_reminders add column if not exists updated_at timestamptz not null default now();
+
+create index if not exists idx_diverse_reminders_status on diverse_reminders(status);
+create index if not exists idx_diverse_reminders_company on diverse_reminders(company_id);
+create index if not exists idx_diverse_reminders_updated_at on diverse_reminders(updated_at desc);
 
 create table if not exists partners (
   id uuid primary key default gen_random_uuid(),

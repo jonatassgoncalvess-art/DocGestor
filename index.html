@@ -98,7 +98,7 @@
               <button class="admin-link" data-module-license-status="licenses" data-permission-view="environmental">03.1.5 Licenças</button>
             </div>
             <button class="admin-link" data-view-target="iptu" data-permission-view="modules">03.2 IPTU</button>
-            <button class="admin-link" data-view-target="documentos-diversos" data-permission-view="modules">03.3 Documentos Diversos</button>
+            <button class="admin-link" data-view-target="documentos-diversos" data-permission-view="modules">03.3 Lembretes Diversos</button>
           </div>
           <button class="nav-item" data-view="agenda" data-agenda-menu-toggle="true" data-permission-view="agenda" aria-expanded="false">
             <span>04</span> Agenda
@@ -710,8 +710,8 @@
             </article>
             <article class="module-card">
               <span>03.3 Módulo</span>
-              <h3>Documentos Diversos</h3>
-              <p>Controle de documentos internos, prazos, responsáveis e arquivos relacionados.</p>
+              <h3>Lembretes Diversos</h3>
+              <p>Lembretes avulsos, alertas por data, repetição e estabelecimento vinculado.</p>
               <button class="ghost small" data-view-target="documentos-diversos" data-permission-view="modules">Abrir 03.3</button>
             </article>
           </div>
@@ -764,23 +764,20 @@
         <section class="view" id="documentos-diversos">
           <div class="module-context">
             <p class="eyebrow">03.3 Módulo operacional</p>
-            <h2>Documentos Diversos</h2>
+            <h2>Lembretes Diversos</h2>
+            <div class="title-actions">
+              <button class="primary" id="diverse-reminder-new">Novo lembrete</button>
+            </div>
           </div>
           <section class="panel">
             <div class="panel-head">
               <div>
-                <h2>Documentos diversos</h2>
-                <span class="muted">Controle inicial de documentos, vencimentos e responsáveis.</span>
+                <h2>Lembretes cadastrados</h2>
+                <span class="muted">Alertas avulsos com prazos, repetição e estabelecimento opcional.</span>
               </div>
-              <span class="pill green" id="diverse-documents-count">0 itens</span>
+              <span class="pill green" id="diverse-reminders-count">0 itens</span>
             </div>
-            <div class="crud-list">
-              <article>
-                <strong>Nenhum documento cadastrado</strong>
-                <span>Os registros serão listados aqui quando o fluxo de cadastro do módulo for criado.</span>
-                <div></div>
-              </article>
-            </div>
+            <div class="crud-list" id="diverse-reminders-list"></div>
           </section>
         </section>
 
@@ -964,7 +961,7 @@
                   <select id="agenda-note-link-module">
                     <option value="environmental">03.1 Licenças Ambientais</option>
                     <option value="iptu">03.2 IPTU</option>
-                    <option value="diverse-documents">03.3 Documentos Diversos</option>
+                    <option value="diverse-documents">03.3 Lembretes Diversos</option>
                   </select>
                 </label>
                 <button class="ghost" type="button" id="agenda-note-link-select">Selecionar</button>
@@ -999,6 +996,63 @@
               </label>
             </div>
             <div class="crud-list picker-list" id="agenda-link-picker-list"></div>
+          </section>
+        </div>
+
+        <div class="modal-backdrop" id="diverse-reminder-modal" aria-hidden="true">
+          <section class="modal-panel wide-modal" role="dialog" aria-modal="true" aria-labelledby="diverse-reminder-modal-title">
+            <div class="modal-head">
+              <div>
+                <p class="eyebrow">03.3 Lembretes Diversos</p>
+                <h2 id="diverse-reminder-modal-title">Novo lembrete</h2>
+              </div>
+              <button class="ghost small" data-close-modal="diverse-reminder-modal">Fechar</button>
+            </div>
+            <form class="user-form" id="diverse-reminder-form">
+              <input type="hidden" id="diverse-reminder-id" value="" />
+              <input type="hidden" id="diverse-reminder-company-id" value="" />
+              <label class="wide-field">Nome do Lembrete<input id="diverse-reminder-name" /></label>
+              <div class="wide-field linked-process-box">
+                <button class="ghost" type="button" id="diverse-reminder-company-select">Selecionar Estabelecimento</button>
+                <span id="diverse-reminder-company-summary">Nenhum estabelecimento selecionado.</span>
+              </div>
+              <div class="wide-field module-email-panel">
+                <span class="field-label">Formato de avisos</span>
+                <div class="partner-checks compact-checks" id="diverse-reminder-format-options">
+                  <label><input type="radio" name="diverse-reminder-format" value="1" checked /> 1 Aviso</label>
+                  <label><input type="radio" name="diverse-reminder-format" value="2" /> 2 Avisos</label>
+                  <label><input type="radio" name="diverse-reminder-format" value="3" /> 3 Avisos</label>
+                  <label><input type="radio" name="diverse-reminder-format" value="4" /> 4 Avisos</label>
+                </div>
+              </div>
+              <div class="wide-field alert-grid" id="diverse-reminder-alert-fields"></div>
+              <label class="wide-field checkbox-line">
+                <input id="diverse-reminder-repeat-enabled" type="checkbox" />
+                Repetir
+              </label>
+              <div class="wide-field linked-process-box" id="diverse-reminder-repeat-box" hidden>
+                <label>Quantidade de repetições<input id="diverse-reminder-repeat-count" type="number" min="1" value="2" /></label>
+                <label>Período entre repetições (dias)<input id="diverse-reminder-repeat-interval" type="number" min="1" value="30" /></label>
+              </div>
+              <label class="wide-field">Descrição<textarea id="diverse-reminder-description"></textarea></label>
+            </form>
+            <div class="modal-actions">
+              <button class="ghost" data-close-modal="diverse-reminder-modal">Cancelar</button>
+              <button class="primary" id="diverse-reminder-save">Salvar lembrete</button>
+            </div>
+          </section>
+        </div>
+
+        <div class="modal-backdrop" id="diverse-reminder-company-modal" aria-hidden="true">
+          <section class="modal-panel wide-modal" role="dialog" aria-modal="true" aria-labelledby="diverse-reminder-company-title">
+            <div class="modal-head">
+              <div>
+                <p class="eyebrow">03.3 Lembretes Diversos</p>
+                <h2 id="diverse-reminder-company-title">Selecionar Estabelecimento</h2>
+              </div>
+              <button class="ghost small" data-close-modal="diverse-reminder-company-modal">Fechar</button>
+            </div>
+            <div class="picker-list" id="diverse-reminder-company-list"></div>
           </section>
         </div>
 

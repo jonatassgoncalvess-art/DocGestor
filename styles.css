@@ -1957,6 +1957,16 @@ button {
   min-height: 32px;
 }
 
+.alert-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.compact-checks {
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+}
+
 .picker-toolbar {
   border-bottom: 1px solid var(--line);
   margin-bottom: 14px;
@@ -2857,6 +2867,11 @@ textarea {
   }
 
   .email-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .alert-grid,
+  .compact-checks {
     grid-template-columns: 1fr;
   }
 

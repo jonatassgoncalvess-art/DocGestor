@@ -17,7 +17,7 @@ const titles = {
   modulos: "Módulos",
   licencas: "03.1 Licenças Ambientais",
   iptu: "03.2 IPTU",
-  "documentos-diversos": "03.3 Documentos Diversos",
+  "documentos-diversos": "03.3 Lembretes Diversos",
   usuarios: "Usuários e permissões",
   agenda: "04.1 Calendário",
   "agenda-notes": "04.2 Anotações",
@@ -108,6 +108,7 @@ function openView(viewName) {
   });
 
   if (viewName === "profile-settings") fillProfileForm();
+  if (viewName === "documentos-diversos") renderDiverseReminders();
   if (currentUser) sessionStorage.setItem(SESSION_VIEW_KEY, viewName);
 }
 
@@ -253,7 +254,7 @@ const searchableEnvironments = [
   { code: "03.1.4", title: "Concluídas", detail: "Processos concluídos", permission: "environmental", action: () => openLicenseStatus("done") },
   { code: "03.1.5", title: "Licenças", detail: "Licenças ambientais geradas", permission: "environmental", action: () => openLicenseStatus("licenses") },
   { code: "03.2", title: "IPTU", detail: "Guias, vencimentos e comprovantes", permission: "modules", action: () => openView("iptu") },
-  { code: "03.3", title: "Documentos Diversos", detail: "Documentos internos, prazos e responsáveis", permission: "modules", action: () => openView("documentos-diversos") },
+  { code: "03.3", title: "Lembretes Diversos", detail: "Lembretes avulsos, prazos e alertas", permission: "modules", action: () => openView("documentos-diversos") },
   { code: "04.1", title: "Calendário", detail: "Agenda em formato calendário", permission: "agenda", action: () => openView("agenda") },
   { code: "04.2", title: "Anotações", detail: "Agendamentos e alertas pendentes", permission: "agenda", action: () => openView("agenda-notes") },
   { code: "05.1", title: "Perfil", detail: "Dados cadastrais e senha do usuário", permission: "profile", action: () => openView("profile-settings") },
@@ -347,6 +348,8 @@ document.addEventListener("click", (event) => {
 
 let agendaEvents = [];
 let nextAgendaEventId = 100;
+let diverseReminders = [];
+let selectedDiverseReminderCompany = null;
 
 let agendaCursor = new Date(2026, 4, 30);
 let selectedAgendaDate = "2026-05-30";
@@ -409,6 +412,84 @@ function addDaysToDate(dateValue, days) {
 
 function subtractDaysFromDate(dateValue, days) {
   return addDaysToDate(dateValue, -Math.max(0, Number(days || 0)));
+}
+
+const diverseReminderAlertDefinitions = [
+  { key: "deadline", label: "Vencimento", status: "danger" },
+  { key: "minimum", label: "Prazo mínimo", status: "warning" },
+  { key: "critical", label: "Prazo crítico", status: "warning" },
+  { key: "urgent", label: "Prazo urgente", status: "danger" },
+];
+
+function selectedDiverseReminderFormat() {
+  return Number(document.querySelector('input[name="diverse-reminder-format"]:checked')?.value || 1);
+}
+
+function diverseReminderCompanyLabel(companyId) {
+  if (!companyId) return "";
+  const company = companies.find((item) => sameId(item.id, companyId));
+  if (!company) return "";
+  return `${company.name}${company.cnpj ? ` - ${company.cnpj}` : ""}`;
+}
+
+function updateDiverseReminderCompanySummary() {
+  const summary = field("diverse-reminder-company-summary");
+  const companyId = field("diverse-reminder-company-id")?.value || selectedDiverseReminderCompany?.id || "";
+  if (summary) summary.textContent = diverseReminderCompanyLabel(companyId) || "Nenhum estabelecimento selecionado.";
+}
+
+function renderDiverseReminderAlertFields(format = selectedDiverseReminderFormat()) {
+  const wrapper = field("diverse-reminder-alert-fields");
+  if (!wrapper) return;
+  wrapper.innerHTML = diverseReminderAlertDefinitions
+    .slice(0, format)
+    .map((definition) => `
+      <label>${definition.label}
+        <input id="diverse-reminder-${definition.key}-date" type="date" />
+      </label>
+      <label>Horário - ${definition.label}
+        <input id="diverse-reminder-${definition.key}-time" type="time" value="09:00" />
+      </label>
+    `)
+    .join("");
+}
+
+function diverseReminderAlertRowsFromForm() {
+  return diverseReminderAlertDefinitions
+    .slice(0, selectedDiverseReminderFormat())
+    .map((definition) => ({
+      ...definition,
+      date: field(`diverse-reminder-${definition.key}-date`)?.value || "",
+      time: field(`diverse-reminder-${definition.key}-time`)?.value || "09:00",
+    }))
+    .filter((alert) => alert.date);
+}
+
+function fillDiverseReminderAlertFields(alerts = []) {
+  alerts.forEach((alert) => {
+    if (field(`diverse-reminder-${alert.key}-date`)) field(`diverse-reminder-${alert.key}-date`).value = alert.date || "";
+    if (field(`diverse-reminder-${alert.key}-time`)) field(`diverse-reminder-${alert.key}-time`).value = alert.time || "09:00";
+  });
+}
+
+function diverseReminderAlertKey(reminder, alert, repeatIndex = 0) {
+  return `${reminder.id}|diverse-reminder|${alert.key}|${repeatIndex}`;
+}
+
+function diverseReminderMessageHtml(reminder, alert, dateValue) {
+  return `
+    <p>Este é um email automático do <strong>DocGestor by Carminatti</strong>.</p>
+    <p>Verifique o lembrete abaixo para não perder nenhum prazo.</p>
+    <table style="border-collapse:collapse;margin-top:16px;width:100%;max-width:620px">
+      <tbody>
+        <tr><td style="border:1px solid #dde2e6;padding:8px 10px;width:170px"><strong>Lembrete:</strong></td><td style="border:1px solid #dde2e6;padding:8px 10px">${escapeHtml(reminder.name)}</td></tr>
+        <tr><td style="border:1px solid #dde2e6;padding:8px 10px"><strong>Estabelecimento:</strong></td><td style="border:1px solid #dde2e6;padding:8px 10px">${escapeHtml(reminder.companyLabel || "Não vinculado")}</td></tr>
+        <tr><td style="border:1px solid #dde2e6;padding:8px 10px"><strong>Tipo de aviso:</strong></td><td style="border:1px solid #dde2e6;padding:8px 10px">${escapeHtml(alert.label)}</td></tr>
+        <tr><td style="border:1px solid #dde2e6;padding:8px 10px"><strong>Data:</strong></td><td style="border:1px solid #dde2e6;padding:8px 10px">${escapeHtml(formatAgendaDate(dateValue))}</td></tr>
+        <tr><td style="border:1px solid #dde2e6;padding:8px 10px"><strong>Descrição:</strong></td><td style="border:1px solid #dde2e6;padding:8px 10px">${escapeHtml(reminder.description || "Sem descrição.")}</td></tr>
+      </tbody>
+    </table>
+  `;
 }
 
 function daysBetweenDates(startDateValue, endDateValue) {
@@ -757,6 +838,96 @@ function scheduleEnvironmentalAlert(alertInfo) {
   recipients.forEach((recipient) => persistAlertQueueItem(alertInfo, recipient));
 }
 
+async function persistDiverseReminderAlert(reminder, alert, dateValue, repeatIndex = 0) {
+  const recipients = activeModuleRecipients("diverse-documents");
+  const alertKey = diverseReminderAlertKey(reminder, alert, repeatIndex);
+  addAgendaEvent({
+    alertKey,
+    date: dateValue,
+    time: alert.time || "09:00",
+    title: `${alert.label} - ${reminder.name}`,
+    type: "Lembretes Diversos",
+    status: alert.status,
+    description: reminder.description || "Lembrete diverso.",
+    module: "diverse-documents",
+    alertStatus: "waiting",
+    relatedType: "diverse_reminder",
+    relatedId: reminder.id,
+    linkedTarget: {
+      id: reminder.id,
+      type: "diverse_reminder",
+      module: "diverse-documents",
+      label: reminder.name,
+    },
+  });
+  if (!window.DocGestorDB || !recipients.length) return;
+  await Promise.all(recipients.map(async (recipient) => {
+    if (!looksLikeUuid(recipient.id)) return;
+    const scheduledFor = `${dateValue}T${alert.time || "09:00"}:00`;
+    try {
+      await window.DocGestorDB.removeWhere("alert_queue", `alert_key=eq.${encodeURIComponent(alertKey)}&recipient_id=eq.${encodeURIComponent(recipient.id)}&status=eq.pending`);
+      await window.DocGestorDB.create("alert_queue", {
+        alert_key: alertKey,
+        module_id: "diverse-documents",
+        recipient_id: recipient.id,
+        related_type: "diverse_reminder",
+        related_id: looksLikeUuid(reminder.id) ? reminder.id : null,
+        related_label: reminder.name,
+        subject: "Alerta de Prazo",
+        message_html: diverseReminderMessageHtml(reminder, alert, dateValue),
+        status: "pending",
+        scheduled_for: scheduledFor,
+      });
+      await window.DocGestorDB.removeWhere("alert_history", `alert_key=eq.${encodeURIComponent(alertKey)}&recipient_id=eq.${encodeURIComponent(recipient.id)}&status=eq.waiting`);
+      await window.DocGestorDB.create("alert_history", {
+        alert_key: alertKey,
+        recipient_id: recipient.id,
+        module_id: "diverse-documents",
+        subject: "Alerta de Prazo",
+        sender_email: systemEmailConfig.address,
+        recipient_emails: [recipient.email],
+        status: "waiting",
+        status_label: "Aguardando",
+        related_type: "diverse_reminder",
+        related_id: looksLikeUuid(reminder.id) ? reminder.id : null,
+        related_label: reminder.name,
+        message_html: diverseReminderMessageHtml(reminder, alert, dateValue),
+        raw_payload: {
+          scheduled_for: scheduledFor,
+          alert_type: alert.key,
+          reminder_name: reminder.name,
+        },
+      });
+    } catch (error) {
+      console.warn("Não foi possível salvar alerta de lembrete diverso no Supabase.", error.message);
+    }
+  }));
+}
+
+async function scheduleDiverseReminderAlerts(reminder) {
+  const repeatEnabled = Boolean(reminder.repeat?.enabled);
+  const repeatCount = repeatEnabled ? Math.max(1, Number(reminder.repeat.count || 1)) : 1;
+  const intervalDays = repeatEnabled ? Math.max(1, Number(reminder.repeat.intervalDays || 30)) : 0;
+  for (let repeatIndex = 0; repeatIndex < repeatCount; repeatIndex += 1) {
+    await Promise.all((reminder.alerts || []).map((alert) => {
+      const dateValue = repeatIndex ? addDaysToDate(alert.date, intervalDays * repeatIndex) : alert.date;
+      return persistDiverseReminderAlert(reminder, alert, dateValue, repeatIndex);
+    }));
+  }
+}
+
+async function cancelDiverseReminderPendingAlerts(reminder) {
+  const repeatEnabled = Boolean(reminder.repeat?.enabled);
+  const repeatCount = repeatEnabled ? Math.max(1, Number(reminder.repeat.count || 1)) : 1;
+  const keys = [];
+  for (let repeatIndex = 0; repeatIndex < repeatCount; repeatIndex += 1) {
+    (reminder.alerts || []).forEach((alert) => keys.push(diverseReminderAlertKey(reminder, alert, repeatIndex)));
+  }
+  await Promise.all(keys.map(deletePendingAlertKey));
+  agendaEvents = agendaEvents.filter((eventItem) => String(eventItem.relatedId || eventItem.linkedTarget?.id || "") !== String(reminder.id));
+  alertHistoryItems = alertHistoryItems.filter((item) => String(item.related_id || item.relatedId || "") !== String(reminder.id) || String(item.status || "") === "sent");
+}
+
 function scheduleStageAlerts(process, stage) {
   if (!stage?.validityDate) return;
   const processNumber = process.internalNumber || process.number || "Processo";
@@ -1001,6 +1172,192 @@ function renderAgendaNotes() {
     : `<article><strong>Nenhum agendamento pendente</strong><span>Use Novo agendamento para incluir uma anotacao.</span><div></div></article>`;
 }
 
+function renderDiverseReminders() {
+  const list = field("diverse-reminders-list");
+  const count = field("diverse-reminders-count");
+  if (!list || !count) return;
+  const activeItems = diverseReminders.filter((item) => item.status !== "deleted");
+  count.textContent = `${activeItems.length} ${activeItems.length === 1 ? "item" : "itens"}`;
+  list.innerHTML = activeItems.length
+    ? activeItems.map((reminder) => {
+        const nextAlert = [...(reminder.alerts || [])].sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`))[0];
+        return `
+          <article>
+            <div>
+              <strong>${escapeHtml(reminder.name)}</strong>
+              <span>${escapeHtml(reminder.companyLabel || "Sem estabelecimento vinculado")}</span>
+            </div>
+            <div>
+              <strong>${nextAlert ? `${nextAlert.label}: ${formatAgendaDate(nextAlert.date)} às ${nextAlert.time}` : "Sem prazo informado"}</strong>
+              <span>${escapeHtml(reminder.description || "Sem descrição.")}</span>
+              <span class="pill ${reminder.status === "resolved" ? "green" : "yellow"}">${reminder.status === "resolved" ? "Resolvido" : "Pendente"}</span>
+            </div>
+            <div>
+              <button type="button" data-diverse-reminder-action="edit" data-diverse-reminder-id="${reminder.id}">Editar</button>
+              <button type="button" data-diverse-reminder-action="renew" data-diverse-reminder-id="${reminder.id}">Renovar</button>
+              <button type="button" data-diverse-reminder-action="resolve" data-diverse-reminder-id="${reminder.id}">Resolvido</button>
+              <button type="button" data-diverse-reminder-action="delete" data-diverse-reminder-id="${reminder.id}">Excluir</button>
+            </div>
+          </article>
+        `;
+      }).join("")
+    : `<article><strong>Nenhum lembrete cadastrado</strong><span>Use Novo lembrete para criar alertas avulsos.</span><div></div></article>`;
+}
+
+function openDiverseReminderModal(reminder = null) {
+  const item = reminder || {
+    id: "",
+    name: "",
+    companyId: "",
+    companyLabel: "",
+    format: 1,
+    alerts: [],
+    repeat: { enabled: false, count: 2, intervalDays: 30 },
+    description: "",
+    status: "pending",
+  };
+  field("diverse-reminder-id").value = item.id || "";
+  field("diverse-reminder-name").value = item.name || "";
+  field("diverse-reminder-company-id").value = item.companyId || "";
+  selectedDiverseReminderCompany = item.companyId ? companies.find((company) => sameId(company.id, item.companyId)) || null : null;
+  updateDiverseReminderCompanySummary();
+  const format = Number(item.format || Math.max(1, item.alerts?.length || 1));
+  const formatInput = document.querySelector(`input[name="diverse-reminder-format"][value="${format}"]`);
+  if (formatInput) formatInput.checked = true;
+  renderDiverseReminderAlertFields(format);
+  fillDiverseReminderAlertFields(item.alerts || []);
+  field("diverse-reminder-repeat-enabled").checked = Boolean(item.repeat?.enabled);
+  field("diverse-reminder-repeat-box").hidden = !field("diverse-reminder-repeat-enabled").checked;
+  field("diverse-reminder-repeat-count").value = item.repeat?.count || 2;
+  field("diverse-reminder-repeat-interval").value = item.repeat?.intervalDays || 30;
+  field("diverse-reminder-description").value = item.description || "";
+  field("diverse-reminder-modal-title").textContent = reminder ? "Editar lembrete" : "Novo lembrete";
+  openModal("diverse-reminder-modal");
+}
+
+function renderDiverseReminderCompanyPicker() {
+  const list = field("diverse-reminder-company-list");
+  if (!list) return;
+  list.innerHTML = companies.length
+    ? companies.map((company) => `
+      <article>
+        <div>
+          <strong>${escapeHtml(company.name)}</strong>
+          <span>${escapeHtml(company.type || "Empresa/Filial")}</span>
+        </div>
+        <div>
+          <span>${escapeHtml(company.cnpj || "Sem CNPJ informado")}</span>
+          <span>${escapeHtml(company.parent || "")}</span>
+        </div>
+        <div>
+          <button type="button" data-diverse-company-id="${company.id}">Selecionar</button>
+        </div>
+      </article>
+    `).join("")
+    : `<article><strong>Nenhuma empresa cadastrada</strong><span>Cadastre empresas e filiais em 01.2.2.</span><div></div></article>`;
+}
+
+function validateDiverseReminderPayload(payload) {
+  if (!payload.name) {
+    alert("Informe o nome do lembrete.");
+    return false;
+  }
+  if (!payload.alerts.length) {
+    alert("Informe pelo menos uma data de aviso.");
+    return false;
+  }
+  const invalid = payload.alerts.find((alert) => !scheduleIsInFuture(alert.date, alert.time));
+  if (invalid) {
+    alert(`${invalid.label} deve ter data e horário posteriores ao momento atual.`);
+    return false;
+  }
+  return true;
+}
+
+async function persistDiverseReminder(reminder, wasExisting) {
+  if (!window.DocGestorDB) return;
+  try {
+    const payload = {
+      name: reminder.name,
+      company_id: looksLikeUuid(reminder.companyId) ? reminder.companyId : null,
+      company_label: reminder.companyLabel || null,
+      alert_format: reminder.format,
+      alerts: reminder.alerts,
+      repeat_enabled: Boolean(reminder.repeat?.enabled),
+      repeat_count: Number(reminder.repeat?.count || 1),
+      repeat_interval_days: Number(reminder.repeat?.intervalDays || 30),
+      description: reminder.description || "",
+      status: reminder.status || "pending",
+      updated_at: new Date().toISOString(),
+    };
+    let saved = null;
+    if (wasExisting && looksLikeUuid(reminder.id)) {
+      [saved] = await window.DocGestorDB.update("diverse_reminders", reminder.id, payload);
+    } else {
+      [saved] = await window.DocGestorDB.create("diverse_reminders", payload);
+    }
+    if (saved?.id) reminder.id = saved.id;
+  } catch (error) {
+    console.warn("Não foi possível salvar o lembrete diverso no Supabase.", error.message);
+  }
+}
+
+async function deleteDiverseReminderFromDatabase(reminder) {
+  if (!window.DocGestorDB || !looksLikeUuid(reminder?.id)) return;
+  try {
+    await Promise.all([
+      window.DocGestorDB.removeWhere("alert_queue", `related_id=eq.${encodeURIComponent(reminder.id)}&status=eq.pending`),
+      window.DocGestorDB.removeWhere("alert_history", `related_id=eq.${encodeURIComponent(reminder.id)}&status=eq.waiting`),
+      window.DocGestorDB.removeWhere("agenda_events", `related_id=eq.${encodeURIComponent(reminder.id)}&status=eq.waiting`),
+      window.DocGestorDB.remove("diverse_reminders", reminder.id),
+    ]);
+  } catch (error) {
+    console.warn("Não foi possível excluir lembrete diverso no Supabase.", error.message);
+  }
+}
+
+async function saveDiverseReminder() {
+  const id = field("diverse-reminder-id").value || Date.now();
+  const existing = diverseReminders.find((item) => sameId(item.id, id));
+  const companyId = field("diverse-reminder-company-id").value || "";
+  const payload = {
+    id,
+    name: field("diverse-reminder-name").value.trim(),
+    companyId,
+    companyLabel: diverseReminderCompanyLabel(companyId),
+    format: selectedDiverseReminderFormat(),
+    alerts: diverseReminderAlertRowsFromForm(),
+    repeat: {
+      enabled: field("diverse-reminder-repeat-enabled").checked,
+      count: Number(field("diverse-reminder-repeat-count").value || 1),
+      intervalDays: Number(field("diverse-reminder-repeat-interval").value || 30),
+    },
+    description: field("diverse-reminder-description").value.trim(),
+    status: existing?.status || "pending",
+  };
+  if (!validateDiverseReminderPayload(payload)) return;
+  if (existing) await cancelDiverseReminderPendingAlerts(existing);
+  if (existing) Object.assign(existing, payload);
+  else diverseReminders.push(payload);
+  await persistDiverseReminder(payload, Boolean(existing));
+  await scheduleDiverseReminderAlerts(payload);
+  closeModal("diverse-reminder-modal");
+  renderDiverseReminders();
+  renderAgenda();
+  renderAgendaNotes();
+}
+
+function renewDiverseReminder(reminder) {
+  const renewed = {
+    ...reminder,
+    id: Date.now(),
+    name: `${reminder.name} - renovação`,
+    status: "pending",
+    alerts: (reminder.alerts || []).map((alert) => ({ ...alert, date: addDaysToDate(alert.date, 365) })),
+  };
+  openDiverseReminderModal(renewed);
+}
+
 function agendaLinkOptions(filter) {
   if (filter === "licenses") {
     return activeLicenses().map((license) => ({
@@ -1222,6 +1579,59 @@ field("agenda-note-list")?.addEventListener("click", (event) => {
   }
 });
 renderAgendaNotes();
+
+field("diverse-reminder-new")?.addEventListener("click", () => openDiverseReminderModal());
+field("diverse-reminder-save")?.addEventListener("click", saveDiverseReminder);
+field("diverse-reminder-repeat-enabled")?.addEventListener("change", () => {
+  const box = field("diverse-reminder-repeat-box");
+  if (box) box.hidden = !field("diverse-reminder-repeat-enabled").checked;
+});
+field("diverse-reminder-format-options")?.addEventListener("change", () => renderDiverseReminderAlertFields());
+field("diverse-reminder-company-select")?.addEventListener("click", () => {
+  renderDiverseReminderCompanyPicker();
+  openModal("diverse-reminder-company-modal");
+});
+field("diverse-reminder-company-list")?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-diverse-company-id]");
+  if (!button) return;
+  selectedDiverseReminderCompany = companies.find((company) => sameId(company.id, button.dataset.diverseCompanyId)) || null;
+  field("diverse-reminder-company-id").value = selectedDiverseReminderCompany?.id || "";
+  updateDiverseReminderCompanySummary();
+  closeModal("diverse-reminder-company-modal");
+});
+field("diverse-reminders-list")?.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-diverse-reminder-action]");
+  if (!button) return;
+  const reminder = diverseReminders.find((item) => sameId(item.id, button.dataset.diverseReminderId));
+  if (!reminder) return;
+  if (button.dataset.diverseReminderAction === "edit") {
+    openDiverseReminderModal(reminder);
+  }
+  if (button.dataset.diverseReminderAction === "renew") {
+    renewDiverseReminder(reminder);
+  }
+  if (button.dataset.diverseReminderAction === "resolve") {
+    reminder.status = "resolved";
+    await cancelDiverseReminderPendingAlerts(reminder);
+    await persistDiverseReminder(reminder, looksLikeUuid(reminder.id));
+    renderDiverseReminders();
+    renderAgenda();
+    renderAgendaNotes();
+  }
+  if (button.dataset.diverseReminderAction === "delete") {
+    confirmDelete(`Deseja realmente excluir o lembrete ${reminder.name}?`, async () => {
+      const index = diverseReminders.findIndex((item) => sameId(item.id, reminder.id));
+      if (index >= 0) diverseReminders.splice(index, 1);
+      await cancelDiverseReminderPendingAlerts(reminder);
+      await deleteDiverseReminderFromDatabase(reminder);
+      renderDiverseReminders();
+      renderAgenda();
+      renderAgendaNotes();
+    });
+  }
+});
+renderDiverseReminderAlertFields();
+renderDiverseReminders();
 
 let users = [];
 
@@ -2317,7 +2727,7 @@ let selectedSendModuleId = "environmental";
 const defaultSystemModules = [
   { id: "environmental", name: "03.1 Licenças Ambientais" },
   { id: "iptu", name: "03.2 IPTU" },
-  { id: "diverse-documents", name: "03.3 Documentos Diversos" },
+  { id: "diverse-documents", name: "03.3 Lembretes Diversos" },
 ];
 
 const availableAlertModules = [...defaultSystemModules];
@@ -7675,6 +8085,7 @@ async function loadSupabaseData() {
     licenseRows,
     stageDeadlineRows,
     appModuleRows,
+    diverseReminderRows,
     alertRecipientRows,
     alertRecipientModuleRows,
     agendaRows,
@@ -7700,6 +8111,7 @@ async function loadSupabaseData() {
     dbList("environmental_licenses"),
     dbList("environmental_process_stage_deadlines"),
     dbList("app_modules"),
+    dbList("diverse_reminders"),
     dbList("alert_recipients"),
     dbList("alert_recipient_modules"),
     dbList("agenda_events"),
@@ -7926,6 +8338,22 @@ async function loadSupabaseData() {
     read: 0,
   }));
 
+  diverseReminders = diverseReminderRows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    companyId: row.company_id || "",
+    companyLabel: row.company_label || diverseReminderCompanyLabel(row.company_id),
+    format: Number(row.alert_format || 1),
+    alerts: Array.isArray(row.alerts) ? row.alerts : [],
+    repeat: {
+      enabled: Boolean(row.repeat_enabled),
+      count: Number(row.repeat_count || 1),
+      intervalDays: Number(row.repeat_interval_days || 30),
+    },
+    description: row.description || "",
+    status: row.status || "pending",
+  }));
+
   agendaEvents = agendaRows.map((row) => ({
     id: row.id,
     date: row.event_date || row.date,
@@ -8024,6 +8452,7 @@ async function loadSupabaseData() {
   renderAgenda();
   renderAgendaNotes();
   renderBackupConfig();
+  renderDiverseReminders();
   updateNextProcessNumber();
   renderLicenseStatus(currentLicenseStatus || "general");
   renderDashboard();

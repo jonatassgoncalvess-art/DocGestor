@@ -30,7 +30,7 @@ insert into app_modules (id, code, name, parent_code, display_order, is_admin_ar
 values
   (gen_random_uuid(), 'environmental', '03.1 Licenças Ambientais', '03', 3.1, false, true),
   (gen_random_uuid(), 'iptu', '03.2 IPTU', '03', 3.2, false, true),
-  (gen_random_uuid(), 'diverse-documents', '03.3 Documentos Diversos', '03', 3.3, false, true)
+  (gen_random_uuid(), 'diverse-documents', '03.3 Lembretes Diversos', '03', 3.3, false, true)
 on conflict (code) do update
 set
   name = excluded.name,
