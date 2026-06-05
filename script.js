@@ -29,6 +29,20 @@ function sameId(left, right) {
   return String(left) === String(right);
 }
 
+function createUuid() {
+  if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+  if (!window.crypto?.getRandomValues) {
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (character) => {
+      const random = Math.random() * 16 | 0;
+      const value = character === "x" ? random : (random & 0x3) | 0x8;
+      return value.toString(16);
+    });
+  }
+  return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (character) =>
+    (Number(character) ^ (window.crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (Number(character) / 4)))).toString(16),
+  );
+}
+
 function openView(viewName) {
   const requiredPermission = viewPermission(viewName);
   if (currentUser && !canAccess(requiredPermission)) {
@@ -4420,8 +4434,9 @@ async function saveEnvironmentalProcess() {
   const priority = field("environmental-process-priority").value;
   const acquisitionDueDate = field("environmental-process-forecast").value;
   const acquisitionAlertTime = field("environmental-process-alert-time")?.value || "09:00";
+  const processId = createUuid();
   const process = {
-    id: Date.now(),
+    id: processId,
     internalNumber,
     licensingFormat,
     licensingFormatLabel: formatConfig.label,
@@ -6982,6 +6997,8 @@ async function persistEnvironmentalProcess(process, wasExisting = false) {
   }
   const activeLicense = process.activeLicense || {};
   const payload = {
+    id: looksLikeUuid(process.id) ? process.id : undefined,
+    process_id: looksLikeUuid(process.id) ? process.id : undefined,
     organization_id: organizationId,
     enterprise_id: looksLikeUuid(enterpriseId) ? enterpriseId : null,
     company_id: companyId,
