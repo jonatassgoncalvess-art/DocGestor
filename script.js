@@ -6996,6 +6996,7 @@ async function persistEnvironmentalProcess(process, wasExisting = false) {
     return false;
   }
   const activeLicense = process.activeLicense || {};
+  const currentStage = ensureProcessStages(process).find((stage) => stage.number === process.currentStage) || ensureProcessStages(process)[0] || {};
   const payload = {
     id: looksLikeUuid(process.id) ? process.id : undefined,
     process_id: looksLikeUuid(process.id) ? process.id : undefined,
@@ -7006,10 +7007,21 @@ async function persistEnvironmentalProcess(process, wasExisting = false) {
     property_id: propertyId,
     responsible_partner_id: looksLikeUuid(responsibleId) ? responsibleId : null,
     license_type_id: licenseTypeId,
+    license_type: process.licenseTypes?.[0] || process.type || "Licença ambiental",
     license_number: activeLicense.number || null,
     process_number: process.internalNumber || process.number,
     process_internal_number: process.internalNumber || process.number,
+    licensing_format: process.licensingFormat || "monofasico",
+    licensing_format_label: process.licensingFormatLabel || "Monofásico",
+    current_stage_number: Number(process.currentStage || 1),
+    current_block_number: Number(currentStage.blockNumber || 1),
+    stage_number: Number(process.currentStage || currentStage.number || 1),
+    stage_name: currentStage.name || "Juntada de documentos",
+    block_number: Number(currentStage.blockNumber || 1),
+    stage_kind: currentStage.stageKind || "checklist",
     expiration_date: activeLicense.expiryDate || process.acquisitionDueDate || null,
+    acquisition_due_date: process.acquisitionDueDate || null,
+    acquisition_alert_time: process.acquisitionAlertTime || "09:00",
     process_due_alert_time: process.acquisitionAlertTime || "09:00",
     renewal_recommended_at: activeLicense.expiryDate ? subtractDaysFromDate(activeLicense.expiryDate, 120) : null,
     status: statusToSupabase(process.status),
