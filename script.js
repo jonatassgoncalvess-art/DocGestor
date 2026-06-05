@@ -6626,11 +6626,11 @@ function licenseTypeIdByName(name) {
 
 function statusToSupabase(status) {
   return {
-    open: "Planejado",
-    pending: "Em analise",
-    expired: "Critico",
-    done: "Encerrado",
-  }[status] || "Planejado";
+    open: "open",
+    pending: "pending",
+    expired: "expired",
+    done: "done",
+  }[status] || "open";
 }
 
 function documentIdByName(name) {

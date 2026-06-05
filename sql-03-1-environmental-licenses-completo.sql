@@ -132,6 +132,19 @@ set expiration_date = expiry_date
 where expiration_date is null
   and expiry_date is not null;
 
+update environmental_licenses
+set status = case lower(coalesce(status, ''))
+  when 'planejado' then 'open'
+  when 'em analise' then 'pending'
+  when 'em análise' then 'pending'
+  when 'critico' then 'expired'
+  when 'crítico' then 'expired'
+  when 'encerrado' then 'done'
+  when 'concluído' then 'done'
+  when 'concluido' then 'done'
+  else coalesce(nullif(status, ''), 'open')
+end;
+
 -- Remove obrigatoriedades antigas que impedem salvar processo novo.
 -- O sistema atual grava etapas detalhadas em environmental_process_stage_deadlines.
 alter table environmental_licenses alter column process_id drop not null;
@@ -165,6 +178,28 @@ alter table environmental_licenses alter column status set default 'Planejado';
 alter table environmental_licenses alter column progress_percent set default 0;
 alter table environmental_licenses alter column created_at set default now();
 alter table environmental_licenses alter column updated_at set default now();
+
+-- Corrige CHECK antigo de status.
+alter table environmental_licenses drop constraint if exists environmental_licenses_status_check;
+
+alter table environmental_licenses
+  add constraint environmental_licenses_status_check
+  check (
+    status in (
+      'open',
+      'pending',
+      'expired',
+      'done',
+      'Planejado',
+      'Em analise',
+      'Em análise',
+      'Critico',
+      'Crítico',
+      'Encerrado'
+    )
+  );
+
+alter table environmental_licenses alter column status set default 'open';
 
 -- Índices principais
 create index if not exists idx_environmental_licenses_organization on environmental_licenses(organization_id);
