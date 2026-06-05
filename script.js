@@ -420,7 +420,7 @@ function daysBetweenDates(startDateValue, endDateValue) {
 }
 
 function environmentalAlertRecipients() {
-  return sendRecipients.filter((recipient) => {
+  return allModuleRecipients("environmental").filter((recipient) => {
     const active = String(recipient.status || "Ativo").toLowerCase() !== "inativo";
     return active && sendRecipientModules(recipient).includes("environmental");
   });
@@ -1568,6 +1568,7 @@ async function persistUser(user, wasExisting) {
       selectedUserId = saved.id;
       renderUsers();
     }
+    await syncUserAlertRecipient(user);
   } catch (error) {
     console.warn("Não foi possível salvar o usuário no Supabase.", error.message);
     alert(`Não foi possível salvar o usuário no banco: ${error.message}`);
@@ -1685,10 +1686,10 @@ document.querySelector("#profile-save")?.addEventListener("click", () => {
 });
 document.querySelector("#profile-password-clear")?.addEventListener("click", clearProfilePasswordFields);
 document.querySelector("#profile-password-save")?.addEventListener("click", saveProfilePassword);
-document.querySelector("#permissions-save")?.addEventListener("click", () => {
+document.querySelector("#permissions-save")?.addEventListener("click", async () => {
   const user = selectedUser();
   user.permissions = readPermissionChecks();
-  persistUser(user, looksLikeUuid(user.id));
+  await persistUser(user, looksLikeUuid(user.id));
   closeModal("permissions-modal");
   addUserLog("Permissões salvas", `Permissões exclusivas atualizadas para ${user.name}.`);
   if (currentUser && sameId(currentUser.id, user.id)) applyAccessControl();
@@ -2261,6 +2262,7 @@ if (field("backup-enabled")) {
 let sendRecipients = [];
 
 let selectedSendRecipientId = 0;
+let selectedSendModuleId = "environmental";
 
 const defaultSystemModules = [
   { id: "environmental", name: "03.1 Licenças Ambientais" },
@@ -2274,6 +2276,17 @@ function sendModuleLabel(moduleKey) {
   return availableAlertModules.find((module) => module.id === moduleKey)?.name || moduleKey;
 }
 
+const alertModulePermissionMap = {
+  environmental: "environmental",
+  iptu: "iptu",
+  "diverse-documents": "documentos-diversos",
+};
+
+function userHasModuleAccess(user, moduleId) {
+  const permission = alertModulePermissionMap[moduleId] || moduleId;
+  return userPermissions(user).includes(permission);
+}
+
 function normalizeAlertModuleId(moduleId, moduleRows = []) {
   const value = String(moduleId || "");
   const row = moduleRows.find((item) => String(item.id) === value || String(item.code) === value);
@@ -2284,6 +2297,42 @@ function sendRecipientModules(recipient) {
   if (Array.isArray(recipient?.modules) && recipient.modules.length) return recipient.modules;
   if (recipient?.module) return [recipient.module];
   return ["environmental"];
+}
+
+function recipientIsAutomatic(recipient) {
+  return recipient?.source === "user" || Boolean(recipient?.userId);
+}
+
+function automaticModuleRecipients(moduleId) {
+  return users
+    .filter((user) => user?.email && String(user.status || "Ativo") === "Ativo" && userHasModuleAccess(user, moduleId))
+    .map((user) => {
+      const existing = sendRecipients.find((recipient) => recipient.email?.toLowerCase() === user.email.toLowerCase());
+      return {
+        id: existing?.id || user.id,
+        userId: user.id,
+        name: user.name,
+        email: user.email,
+        modules: [moduleId],
+        relation: "Usuário do sistema",
+        status: "Ativo",
+        readConfirmation: existing?.readConfirmation ?? true,
+        source: "user",
+      };
+    });
+}
+
+function externalModuleRecipients(moduleId) {
+  return sendRecipients.filter((recipient) => !recipientIsAutomatic(recipient) && sendRecipientModules(recipient).includes(moduleId));
+}
+
+function allModuleRecipients(moduleId) {
+  const byEmail = new Map();
+  [...automaticModuleRecipients(moduleId), ...externalModuleRecipients(moduleId)].forEach((recipient) => {
+    const key = String(recipient.email || "").toLowerCase();
+    if (key && !byEmail.has(key)) byEmail.set(key, recipient);
+  });
+  return [...byEmail.values()];
 }
 
 function renderSendRecipientModuleChecks(selectedModules = ["environmental"]) {
@@ -2317,60 +2366,94 @@ function fillSendRecipientForm(recipient) {
   field("send-recipient-read-confirmation").checked = Boolean(recipient.readConfirmation);
 }
 
+function renderModuleEmailLists(moduleId = selectedSendModuleId) {
+  const userList = field("send-recipient-user-list");
+  const externalList = field("send-recipient-external-list");
+  if (userList) {
+    const autoRecipients = automaticModuleRecipients(moduleId);
+    userList.innerHTML = autoRecipients.length
+      ? autoRecipients.map((recipient) => `<article><strong>${escapeHtml(recipient.name)}</strong><span>${escapeHtml(recipient.email)}</span><small>Usuário com acesso ao módulo</small></article>`).join("")
+      : `<article><strong>Nenhum usuário automático</strong><span>Autorize usuários neste módulo em 01.1 Usuários.</span></article>`;
+  }
+  if (externalList) {
+    const externalRecipients = externalModuleRecipients(moduleId);
+    externalList.innerHTML = externalRecipients.length
+      ? externalRecipients.map((recipient) => `
+          <article>
+            <strong>${escapeHtml(recipient.name || recipient.email)}</strong>
+            <span>${escapeHtml(recipient.email)}</span>
+            <button type="button" data-send-external-delete="${recipient.id}">Remover</button>
+          </article>
+        `).join("")
+      : `<article><strong>Nenhum e-mail externo</strong><span>Adicione e-mails que não são usuários do sistema.</span></article>`;
+  }
+}
+
+function openSendModuleModal(moduleId) {
+  selectedSendModuleId = moduleId || "environmental";
+  selectedSendRecipientId = 0;
+  field("send-recipient-id").value = "";
+  field("send-recipient-module-id").value = selectedSendModuleId;
+  field("send-recipient-name").value = "";
+  field("send-recipient-email").value = "";
+  field("send-recipient-relation").value = selectedSendModuleId === "environmental" ? "Ambiental" : "Administrativo";
+  field("send-recipient-status").value = "Ativo";
+  field("send-recipient-read-confirmation").checked = true;
+  renderSendRecipientModuleChecks([selectedSendModuleId]);
+  renderModuleEmailLists(selectedSendModuleId);
+  field("send-recipient-modal-title").textContent = `Editar envios - ${sendModuleLabel(selectedSendModuleId)}`;
+  openModal("send-recipient-modal");
+}
+
 function renderSendRecipients() {
   const list = field("send-recipient-list");
   const count = field("send-recipient-count");
   if (!list || !count) return;
-  count.textContent = `${sendRecipients.length} itens`;
-  list.innerHTML = sendRecipients
+  count.textContent = `${availableAlertModules.length} módulos`;
+  list.innerHTML = availableAlertModules
     .map(
-      (recipient) => `
+      (module) => {
+        const automatic = automaticModuleRecipients(module.id);
+        const external = externalModuleRecipients(module.id);
+        const recipients = allModuleRecipients(module.id);
+        return `
         <article>
           <div>
-            <strong>${recipient.name}</strong>
-            <span>${recipient.email}</span>
+            <strong>${module.name}</strong>
+            <span>${recipients.length} e-mail${recipients.length === 1 ? "" : "s"} configurado${recipients.length === 1 ? "" : "s"}</span>
           </div>
           <div>
-            <strong>${sendRecipientModules(recipient).map(sendModuleLabel).join(", ")}</strong>
-            <span>${recipient.relation} - ${recipient.status}</span>
-            <span>Confirmação de leitura: ${recipient.readConfirmation ? "Exigida" : "Não exigida"}</span>
+            <strong>${automatic.length} usuário${automatic.length === 1 ? "" : "s"} automático${automatic.length === 1 ? "" : "s"}</strong>
+            <span>${external.length} e-mail${external.length === 1 ? "" : "s"} externo${external.length === 1 ? "" : "s"}</span>
+            <span>${recipients.map((recipient) => recipient.email).slice(0, 3).join(", ")}${recipients.length > 3 ? "..." : ""}</span>
           </div>
           <div>
-            <button type="button" data-send-recipient-action="edit" data-send-recipient-id="${recipient.id}">Editar</button>
-            <button type="button" data-send-recipient-action="test" data-send-recipient-id="${recipient.id}">Enviar teste</button>
-            <button type="button" data-send-recipient-action="delete" data-send-recipient-id="${recipient.id}">Excluir</button>
+            <button type="button" data-send-module-action="edit" data-send-module-id="${module.id}">Editar</button>
           </div>
         </article>
-      `,
+      `;
+      },
     )
     .join("");
 }
 
 function newSendRecipient() {
-  const recipient = {
-    id: Date.now(),
-    name: "",
-    email: "",
-    modules: ["environmental"],
-    relation: "Administrativo",
-    status: "Ativo",
-    readConfirmation: true,
-    sent: 0,
-    read: 0,
-  };
-  fillSendRecipientForm(recipient);
-  field("send-recipient-modal-title").textContent = "Novo e-mail";
-  openModal("send-recipient-modal");
+  openSendModuleModal("environmental");
 }
 
 function saveSendRecipient() {
-  const id = field("send-recipient-id").value;
-  const existing = sendRecipients.find((recipient) => sameId(recipient.id, id));
+  const moduleId = field("send-recipient-module-id")?.value || selectedSendModuleId || "environmental";
+  const email = field("send-recipient-email").value.trim();
+  if (!email) {
+    alert("Informe o e-mail externo que receberá os avisos deste módulo.");
+    return;
+  }
+  const existing = sendRecipients.find((recipient) => !recipientIsAutomatic(recipient) && recipient.email?.toLowerCase() === email.toLowerCase());
   const payload = {
-    id: id || Date.now(),
-    name: field("send-recipient-name").value,
-    email: field("send-recipient-email").value,
-    modules: checkedValues('input[name="send-recipient-module"]').length ? checkedValues('input[name="send-recipient-module"]') : ["environmental"],
+    id: existing?.id || Date.now(),
+    name: field("send-recipient-name").value || email,
+    email,
+    modules: [...new Set([...(existing?.modules || []), moduleId])],
     relation: field("send-recipient-relation").value,
     status: field("send-recipient-status").value,
     readConfirmation: field("send-recipient-read-confirmation").checked,
@@ -2381,13 +2464,20 @@ function saveSendRecipient() {
   else sendRecipients.push(payload);
   selectedSendRecipientId = payload.id;
   renderSendRecipients();
-  closeModal("send-recipient-modal");
+  renderModuleEmailLists(moduleId);
+  field("send-recipient-name").value = "";
+  field("send-recipient-email").value = "";
   persistSendRecipient(payload, Boolean(existing));
 }
 
 field("send-recipient-new")?.addEventListener("click", newSendRecipient);
 field("send-recipient-save")?.addEventListener("click", saveSendRecipient);
 field("send-recipient-list")?.addEventListener("click", (event) => {
+  const moduleButton = event.target.closest("[data-send-module-action]");
+  if (moduleButton) {
+    openSendModuleModal(moduleButton.dataset.sendModuleId);
+    return;
+  }
   const button = event.target.closest("[data-send-recipient-action]");
   if (!button) return;
   const id = button.dataset.sendRecipientId;
@@ -2411,6 +2501,30 @@ field("send-recipient-list")?.addEventListener("click", (event) => {
       renderSendRecipients();
     });
   }
+});
+
+field("send-recipient-modal")?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-send-external-delete]");
+  if (!button) return;
+  const id = button.dataset.sendExternalDelete;
+  const recipient = sendRecipients.find((item) => sameId(item.id, id));
+  if (!recipient) return;
+  const moduleId = selectedSendModuleId;
+  confirmDelete(`Deseja remover ${recipient.email} dos avisos de ${sendModuleLabel(moduleId)}?`, () => {
+    recipient.modules = sendRecipientModules(recipient).filter((item) => item !== moduleId);
+    if (!recipient.modules.length) {
+      const index = sendRecipients.findIndex((item) => sameId(item.id, id));
+      if (index >= 0) sendRecipients.splice(index, 1);
+      if (looksLikeUuid(id) && window.DocGestorDB) {
+        window.DocGestorDB.removeWhere("alert_recipient_modules", `recipient_id=eq.${encodeURIComponent(id)}`).catch(() => null);
+      }
+      persistDelete("alert_recipients", id, "e-mail de alerta");
+    } else {
+      persistSendRecipient(recipient, looksLikeUuid(recipient.id));
+    }
+    renderModuleEmailLists(moduleId);
+    renderSendRecipients();
+  });
 });
 
 renderSendRecipients();
@@ -5150,6 +5264,7 @@ function renderLicenseStatus(status = "open") {
 async function deleteEnvironmentalProcessFromDatabase(process) {
   if (!window.DocGestorDB || !looksLikeUuid(process?.id)) return true;
   const id = encodeURIComponent(process.id);
+  const alertKeyTokens = [process.id, process.internalNumber, process.number].filter(Boolean);
   try {
     await Promise.all([
       window.DocGestorDB.removeWhere("alert_queue", `related_id=eq.${id}`),
@@ -5157,6 +5272,14 @@ async function deleteEnvironmentalProcessFromDatabase(process) {
       window.DocGestorDB.removeWhere("agenda_events", `related_id=eq.${id}`),
       window.DocGestorDB.removeWhere("environmental_process_stage_deadlines", `process_id=eq.${id}`),
     ]);
+    for (const token of alertKeyTokens) {
+      const likeToken = encodeURIComponent(`*${token}*`);
+      await Promise.all([
+        window.DocGestorDB.removeWhere("alert_queue", `alert_key=like.${likeToken}`),
+        window.DocGestorDB.removeWhere("alert_history", `alert_key=like.${likeToken}`),
+        window.DocGestorDB.removeWhere("agenda_events", `alert_key=like.${likeToken}`),
+      ]);
+    }
     await window.DocGestorDB.remove("environmental_licenses", process.id);
     return true;
   } catch (error) {
@@ -5194,8 +5317,17 @@ document.querySelector("#license-status-list")?.addEventListener("click", async 
     if (!deleted) return;
     const index = environmentalProcesses.findIndex((item) => String(item.id) === String(process.id));
     if (index >= 0) environmentalProcesses.splice(index, 1);
-    agendaEvents = agendaEvents.filter((item) => String(item.relatedId || item.linkedTarget?.id || "") !== String(process.id));
-    alertHistoryItems = alertHistoryItems.filter((item) => String(item.related_id || item.relatedId || "") !== String(process.id));
+    const tokens = [process.id, process.internalNumber, process.number].filter(Boolean).map(String);
+    agendaEvents = agendaEvents.filter((item) => {
+      const related = String(item.relatedId || item.linkedTarget?.id || "");
+      const key = String(item.alertKey || "");
+      return related !== String(process.id) && !tokens.some((token) => key.includes(token));
+    });
+    alertHistoryItems = alertHistoryItems.filter((item) => {
+      const related = String(item.related_id || item.relatedId || "");
+      const key = String(item.alert_key || "");
+      return related !== String(process.id) && !tokens.some((token) => key.includes(token));
+    });
     renderLicenseStatus(currentLicenseStatus);
     renderAgenda();
     renderAlertHistory(alertHistoryItems);
@@ -7247,15 +7379,19 @@ async function persistEnvironmentalProcessStages(process) {
 
 async function persistSendRecipient(recipient, wasExisting) {
   if (!window.DocGestorDB) return;
+  const basePayload = {
+    name: recipient.name,
+    email: recipient.email,
+    relation: recipient.relation,
+    status: recipient.status === "Ativo" ? "active" : "inactive",
+    require_read_confirmation: Boolean(recipient.readConfirmation),
+  };
+  const payload = {
+    ...basePayload,
+    source: recipient.source || "external",
+    user_id: looksLikeUuid(recipient.userId) ? recipient.userId : null,
+  };
   try {
-    const payload = {
-      name: recipient.name,
-      email: recipient.email,
-      relation: recipient.relation,
-      status: recipient.status === "Ativo" ? "active" : "inactive",
-      require_read_confirmation: Boolean(recipient.readConfirmation),
-    };
-
     let saved = null;
     if (wasExisting && looksLikeUuid(recipient.id)) {
       [saved] = await window.DocGestorDB.update("alert_recipients", recipient.id, payload);
@@ -7278,8 +7414,75 @@ async function persistSendRecipient(recipient, wasExisting) {
     })));
     renderSendRecipients();
   } catch (error) {
+    if (/source|user_id/i.test(error.message || "")) {
+      try {
+        let saved = null;
+        if (wasExisting && looksLikeUuid(recipient.id)) {
+          [saved] = await window.DocGestorDB.update("alert_recipients", recipient.id, basePayload);
+        } else {
+          [saved] = await window.DocGestorDB.create("alert_recipients", basePayload);
+        }
+        if (saved?.id) {
+          const local = sendRecipients.find((item) => sameId(item.id, recipient.id));
+          if (local) local.id = saved.id;
+          recipient.id = saved.id;
+        }
+        const recipientId = saved?.id || recipient.id;
+        if (looksLikeUuid(recipientId)) {
+          await window.DocGestorDB.removeWhere("alert_recipient_modules", `recipient_id=eq.${encodeURIComponent(recipientId)}`);
+          await Promise.all(sendRecipientModules(recipient).map((moduleId) => window.DocGestorDB.create("alert_recipient_modules", {
+            recipient_id: recipientId,
+            module_id: moduleId,
+          })));
+        }
+        renderSendRecipients();
+        return;
+      } catch (fallbackError) {
+        console.warn("Não foi possível salvar o e-mail de alerta no Supabase.", fallbackError.message);
+        return;
+      }
+    }
     console.warn("Não foi possível salvar o e-mail de alerta no Supabase.", error.message);
   }
+}
+
+async function syncUserAlertRecipient(user) {
+  if (!window.DocGestorDB || !user?.email || !looksLikeUuid(user.id)) return;
+  const moduleIds = availableAlertModules.filter((module) => userHasModuleAccess(user, module.id)).map((module) => module.id);
+  const existing = sendRecipients.find((recipient) => recipient.email?.toLowerCase() === user.email.toLowerCase());
+  if (!moduleIds.length) {
+    if (existing && recipientIsAutomatic(existing)) {
+      existing.status = "Inativo";
+      existing.modules = [];
+      await persistSendRecipient(existing, looksLikeUuid(existing.id));
+    }
+    return;
+  }
+  const recipient = existing || {
+    id: Date.now(),
+    sent: 0,
+    read: 0,
+  };
+  Object.assign(recipient, {
+    userId: user.id,
+    name: user.name,
+    email: user.email,
+    modules: moduleIds,
+    relation: "Usuário do sistema",
+    status: String(user.status || "Ativo") === "Ativo" ? "Ativo" : "Inativo",
+    readConfirmation: recipient.readConfirmation ?? true,
+    source: "user",
+  });
+  if (!existing) sendRecipients.push(recipient);
+  await persistSendRecipient(recipient, looksLikeUuid(recipient.id));
+}
+
+async function syncUserAlertRecipients() {
+  if (!window.DocGestorDB) return;
+  for (const user of users) {
+    await syncUserAlertRecipient(user);
+  }
+  renderSendRecipients();
 }
 
 async function loadSupabaseData() {
@@ -7546,6 +7749,8 @@ async function loadSupabaseData() {
     relation: row.relation || "Administrativo",
     status: row.status === "active" ? "Ativo" : row.status || "Ativo",
     readConfirmation: row.require_read_confirmation ?? true,
+    source: row.source || "external",
+    userId: row.user_id || "",
     sent: 0,
     read: 0,
   }));
@@ -7594,6 +7799,7 @@ async function loadSupabaseData() {
     password: row.password || "123456",
     permissions: Array.isArray(row.permissions) ? row.permissions : [],
   }));
+  await syncUserAlertRecipients();
 
   if (backupRows[0]) {
     Object.assign(backupConfig, {

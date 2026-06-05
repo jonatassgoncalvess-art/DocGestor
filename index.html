@@ -392,10 +392,10 @@
                     <p class="eyebrow">01.4.2 E-mails por Módulo</p>
                     <h2>E-mails que recebem avisos por módulo</h2>
                   </div>
-                  <button class="primary" id="send-recipient-new">Novo e-mail</button>
+                  <button class="primary" id="send-recipient-new">Editar módulo ambiental</button>
                 </div>
                 <section class="panel">
-                  <div class="list-head"><h3>Destinatários por módulo</h3><span id="send-recipient-count">0 itens</span></div>
+                  <div class="list-head"><h3>E-mails por módulo</h3><span id="send-recipient-count">0 módulos</span></div>
                   <div class="crud-list" id="send-recipient-list"></div>
                 </section>
               </section>
@@ -1139,16 +1139,25 @@
         <div class="modal-head">
           <div>
             <p class="eyebrow">01.4 Envios</p>
-            <h2 id="send-recipient-modal-title">Novo e-mail</h2>
+            <h2 id="send-recipient-modal-title">Editar módulo</h2>
           </div>
           <button class="ghost small" data-close-modal="send-recipient-modal">Fechar</button>
         </div>
         <form class="user-form" id="send-recipient-form">
           <input type="hidden" id="send-recipient-id" value="0" />
-          <label>Nome<input id="send-recipient-name" /></label>
-          <label>E-mail<input id="send-recipient-email" type="email" /></label>
-          <div class="wide-field">
-            <span class="field-label">Módulos que este e-mail recebera</span>
+          <input type="hidden" id="send-recipient-module-id" value="environmental" />
+          <div class="wide-field module-email-panel">
+            <span class="field-label">Usuários automáticos do módulo</span>
+            <div class="module-email-list" id="send-recipient-user-list"></div>
+          </div>
+          <div class="wide-field module-email-panel">
+            <span class="field-label">E-mails externos do módulo</span>
+            <div class="module-email-list" id="send-recipient-external-list"></div>
+          </div>
+          <label>Nome do e-mail externo<input id="send-recipient-name" /></label>
+          <label>E-mail externo<input id="send-recipient-email" type="email" /></label>
+          <div class="wide-field" hidden>
+            <span class="field-label">Módulos vinculados</span>
             <div class="partner-checks" id="send-recipient-module-checks"></div>
           </div>
           <label>Vínculo
@@ -1174,7 +1183,7 @@
         </form>
         <div class="modal-actions">
           <button class="ghost" data-close-modal="send-recipient-modal">Cancelar</button>
-          <button class="primary" id="send-recipient-save">Salvar e-mail</button>
+          <button class="primary" id="send-recipient-save">Adicionar e-mail externo</button>
         </div>
       </section>
     </div>

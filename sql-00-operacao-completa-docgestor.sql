@@ -348,9 +348,14 @@ create table if not exists alert_recipients (
   relation text,
   status text not null default 'active',
   require_read_confirmation boolean not null default true,
+  source text not null default 'external',
+  user_id uuid,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table alert_recipients add column if not exists source text not null default 'external';
+alter table alert_recipients add column if not exists user_id uuid;
 
 create table if not exists alert_recipient_modules (
   id uuid primary key default gen_random_uuid(),
