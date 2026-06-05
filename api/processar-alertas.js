@@ -1,6 +1,9 @@
 import { Resend } from "resend";
 
-const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "https://wyuwlvnvfgxohclmnogd.supabase.co";
+const supabaseUrl =
+  process.env.SUPABASE_URL ||
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  "https://wyuwlvnvfgxohclmnogd.supabase.co";
 const supabaseKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
@@ -35,7 +38,10 @@ async function supabaseRequest(table, query, options = {}) {
 
 async function recipientById(recipientId) {
   if (!recipientId) return null;
-  const rows = await supabaseRequest("alert_recipients", `select=id,email,name,status&id=eq.${encodeURIComponent(recipientId)}&limit=1`);
+  const rows = await supabaseRequest(
+    "alert_recipients",
+    `select=id,email,name,status&id=eq.${encodeURIComponent(recipientId)}&limit=1`,
+  );
   return rows[0] || null;
 }
 

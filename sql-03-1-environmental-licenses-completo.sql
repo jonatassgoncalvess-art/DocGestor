@@ -61,34 +61,11 @@ alter table environmental_licenses add column if not exists stage_kind text;
 alter table environmental_licenses add column if not exists created_at timestamptz not null default now();
 alter table environmental_licenses add column if not exists updated_at timestamptz not null default now();
 
--- Normalização de dados existentes
-do $$
-declare
-  process_id_type text;
-begin
-  select data_type
-    into process_id_type
-  from information_schema.columns
-  where table_schema = 'public'
-    and table_name = 'environmental_licenses'
-    and column_name = 'process_id';
-
-  if process_id_type = 'uuid' then
-    update environmental_licenses
-    set process_id = id
-    where process_id is null
-      and id is not null;
-
-    alter table environmental_licenses alter column process_id set default gen_random_uuid();
-  else
-    update environmental_licenses
-    set process_id = id::text
-    where process_id is null
-      and id is not null;
-
-    alter table environmental_licenses alter column process_id set default gen_random_uuid()::text;
-  end if;
-end $$;
+-- Remove trava legada antes de qualquer normalização.
+-- O identificador real do processo ambiental é environmental_licenses.id.
+alter table environmental_licenses drop constraint if exists environmental_licenses_process_id_fkey;
+alter table environmental_licenses alter column process_id drop not null;
+alter table environmental_licenses alter column process_id drop default;
 
 update environmental_licenses
 set process_internal_number = process_number
@@ -147,7 +124,6 @@ end;
 
 -- Remove obrigatoriedades antigas que impedem salvar processo novo.
 -- O sistema atual grava etapas detalhadas em environmental_process_stage_deadlines.
-alter table environmental_licenses drop constraint if exists environmental_licenses_process_id_fkey;
 alter table environmental_licenses alter column process_id drop not null;
 alter table environmental_licenses alter column process_internal_number drop not null;
 alter table environmental_licenses alter column stage_number drop not null;
@@ -184,8 +160,7 @@ alter table environmental_licenses alter column updated_at set default now();
 alter table environmental_licenses alter column process_id drop default;
 update environmental_licenses
 set process_id = null
-where process_id is not null
-  and process_id = id;
+where process_id is not null;
 
 -- Corrige CHECK antigo de status.
 alter table environmental_licenses drop constraint if exists environmental_licenses_status_check;
@@ -230,3 +205,4 @@ on environmental_licenses
 for all
 using (true)
 with check (true);
+
