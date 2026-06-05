@@ -76,6 +76,10 @@ on conflict (code) do update set
   is_active = excluded.is_active,
   status = excluded.status;
 
+delete from app_modules
+where code is null
+  and name in ('03.1 Licenças Ambientais', '03.1 LicenÃ§as Ambientais', '03.2 IPTU', '03.3 Documentos Diversos');
+
 create table if not exists partners (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid,
