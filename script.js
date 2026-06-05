@@ -2530,6 +2530,7 @@ field("send-recipient-modal")?.addEventListener("click", (event) => {
 renderSendRecipients();
 
 let alertHistoryItems = [];
+const ALERT_HISTORY_RETENTION_DAYS = 90;
 
 const alertHistoryStatusLabels = {
   waiting: "Aguardando",
@@ -2586,6 +2587,27 @@ function normalizeAlertHistoryItem(item) {
     related_label: item.related_label || item.relatedLabel || "",
     resend_email_id: item.resend_email_id || item.id || "",
   };
+}
+
+function alertHistoryRetentionCutoff() {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - ALERT_HISTORY_RETENTION_DAYS);
+  return cutoff;
+}
+
+function alertHistoryDateForRetention(item) {
+  return new Date(item.sent_at || item.sentAt || item.last_event_at || item.created_at || item.createdAt || 0);
+}
+
+function alertHistoryWithinRetention(item) {
+  const status = String(item.status || item.last_event || "").toLowerCase();
+  if (status !== "sent" && status !== "enviado") return true;
+  const eventDate = alertHistoryDateForRetention(item);
+  return !Number.isNaN(eventDate.getTime()) && eventDate >= alertHistoryRetentionCutoff();
+}
+
+function retainedAlertHistoryRows(rows) {
+  return (rows || []).filter(alertHistoryWithinRetention);
 }
 
 function alertHistoryItemById(id) {
@@ -2674,7 +2696,7 @@ async function loadAlertHistory() {
     await fetch("/api/processar-alertas").catch(() => null);
     if (window.DocGestorDB) {
       const rows = await window.DocGestorDB.list("alert_history", "select=*&order=created_at.desc");
-      alertHistoryItems = rows.map((row) => ({
+      alertHistoryItems = retainedAlertHistoryRows(rows).map((row) => ({
         id: row.id,
         alert_key: row.alert_key || "",
         subject: row.subject,
@@ -2696,7 +2718,7 @@ async function loadAlertHistory() {
       if (!response.ok || !result.success) {
         throw new Error(result.error || "Não foi possível carregar o histórico.");
       }
-      alertHistoryItems = result.emails || [];
+      alertHistoryItems = retainedAlertHistoryRows(result.emails || []);
     }
     renderAlertHistory(alertHistoryItems);
   } catch (error) {
@@ -5268,7 +5290,7 @@ async function deleteEnvironmentalProcessFromDatabase(process) {
   try {
     await Promise.all([
       window.DocGestorDB.removeWhere("alert_queue", `related_id=eq.${id}`),
-      window.DocGestorDB.removeWhere("alert_history", `related_id=eq.${id}`),
+      window.DocGestorDB.removeWhere("alert_history", `related_id=eq.${id}&status=neq.sent`),
       window.DocGestorDB.removeWhere("agenda_events", `related_id=eq.${id}`),
       window.DocGestorDB.removeWhere("environmental_process_stage_deadlines", `process_id=eq.${id}`),
     ]);
@@ -5276,7 +5298,7 @@ async function deleteEnvironmentalProcessFromDatabase(process) {
       const likeToken = encodeURIComponent(`*${token}*`);
       await Promise.all([
         window.DocGestorDB.removeWhere("alert_queue", `alert_key=like.${likeToken}`),
-        window.DocGestorDB.removeWhere("alert_history", `alert_key=like.${likeToken}`),
+        window.DocGestorDB.removeWhere("alert_history", `alert_key=like.${likeToken}&status=neq.sent`),
         window.DocGestorDB.removeWhere("agenda_events", `alert_key=like.${likeToken}`),
       ]);
     }
@@ -5326,6 +5348,8 @@ document.querySelector("#license-status-list")?.addEventListener("click", async 
     alertHistoryItems = alertHistoryItems.filter((item) => {
       const related = String(item.related_id || item.relatedId || "");
       const key = String(item.alert_key || "");
+      const sent = String(item.status || item.last_event || "").toLowerCase() === "sent";
+      if (sent && alertHistoryWithinRetention(item)) return true;
       return related !== String(process.id) && !tokens.some((token) => key.includes(token));
     });
     renderLicenseStatus(currentLicenseStatus);
@@ -7767,7 +7791,7 @@ async function loadSupabaseData() {
     relatedId: row.related_id || "",
   })).filter((event) => event.date);
 
-  alertHistoryItems = alertHistoryRows.map((row) => ({
+  alertHistoryItems = retainedAlertHistoryRows(alertHistoryRows).map((row) => ({
     id: row.id,
     alert_key: row.alert_key || "",
     subject: row.subject,
@@ -7867,7 +7891,7 @@ async function processPendingAlertsOnServer() {
     await fetch("/api/processar-alertas", { method: "POST" });
     const rows = await dbList("alert_history", "select=*&order=created_at.desc");
     if (rows.length) {
-      alertHistoryItems = rows.map((row) => ({
+      alertHistoryItems = retainedAlertHistoryRows(rows).map((row) => ({
         id: row.id,
         alert_key: row.alert_key || "",
         subject: row.subject,

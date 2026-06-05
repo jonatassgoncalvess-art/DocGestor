@@ -53,6 +53,7 @@ create index if not exists idx_alert_queue_due_status on alert_queue(status, sch
 create index if not exists idx_alert_queue_alert_key on alert_queue(alert_key);
 create index if not exists idx_alert_history_alert_key on alert_history(alert_key);
 create index if not exists idx_alert_history_status on alert_history(status);
+create index if not exists idx_alert_history_status_sent_at on alert_history(status, sent_at);
 
 update alert_queue
 set status = 'pending'

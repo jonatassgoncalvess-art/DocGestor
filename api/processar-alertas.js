@@ -10,6 +10,7 @@ const supabaseKey =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
   "sb_publishable_zj5K-AVbwC_G2kJy5LC-sQ_RJUw-vdJ";
 const resend = new Resend(process.env.RESEND_API_KEY);
+const SENT_HISTORY_RETENTION_DAYS = 90;
 
 function headers() {
   return {
@@ -50,6 +51,20 @@ async function markQueue(queueItem, patch) {
     method: "PATCH",
     body: patch,
   });
+}
+
+function sentHistoryCutoffIso() {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - SENT_HISTORY_RETENTION_DAYS);
+  return cutoff.toISOString();
+}
+
+async function cleanupOldSentHistory() {
+  const cutoff = encodeURIComponent(sentHistoryCutoffIso());
+  await Promise.all([
+    supabaseRequest("alert_history", `status=eq.sent&sent_at=lt.${cutoff}`, { method: "DELETE" }),
+    supabaseRequest("alert_history", `status=eq.sent&sent_at=is.null&last_event_at=lt.${cutoff}`, { method: "DELETE" }),
+  ]);
 }
 
 async function updateHistory(queueItem, recipient, status, resendResult = null) {
@@ -104,6 +119,7 @@ export default async function handler(request, response) {
   }
 
   try {
+    await cleanupOldSentHistory().catch(() => null);
     const now = new Date().toISOString();
     const queue = await supabaseRequest(
       "alert_queue",
