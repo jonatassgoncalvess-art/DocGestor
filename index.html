@@ -61,9 +61,10 @@
               <strong>01.2 Cadastros</strong>
               <button class="admin-link" data-admin-target="socios-admin">01.2.1 Sócios</button>
               <button class="admin-link" data-admin-target="empresas-filiais">01.2.2 Empresas e Filiais</button>
-              <button class="admin-link" data-admin-target="imoveis-admin">01.2.3 Imóveis</button>
-              <button class="admin-link" data-admin-target="empreendimentos-admin">01.2.4 Empreendimento</button>
-              <button class="admin-link" data-admin-target="atividades-admin">01.2.5 Atividades</button>
+              <button class="admin-link" data-admin-target="cidades-admin">01.2.3 Cidades</button>
+              <button class="admin-link" data-admin-target="imoveis-admin">01.2.4 Imóveis</button>
+              <button class="admin-link" data-admin-target="empreendimentos-admin">01.2.5 Empreendimento</button>
+              <button class="admin-link" data-admin-target="atividades-admin">01.2.6 Atividades</button>
             </div>
             <div class="side-tree-group">
               <strong>01.3 Ambiental</strong>
@@ -82,9 +83,14 @@
               <button class="admin-link" data-admin-target="backup-sistema">01.5.1 Backup</button>
             </div>
           </div>
-          <button class="nav-item" data-view="dashboard" data-permission-view="dashboard">
+          <button class="nav-item" data-view="dashboard" data-dashboard-menu-toggle="true" data-permission-view="dashboard" aria-expanded="false">
             <span>02</span> Painel geral
           </button>
+          <div class="admin-subnav dashboard-subnav" id="dashboard-subnav" data-permission-view="dashboard">
+            <button class="admin-link" data-dashboard-target="dashboard-ambiental" data-permission-view="environmental">02.1 Painel Ambiental</button>
+            <button class="admin-link" data-dashboard-target="dashboard-iptu" data-permission-view="iptu">02.2 Painel IPTU</button>
+            <button class="admin-link" data-dashboard-target="dashboard-agendamentos" data-permission-view="agenda">02.3 Painel Agendamentos</button>
+          </div>
           <button class="nav-item" data-view="modulos" data-module-menu-toggle="true" data-permission-view="modules" aria-expanded="false">
             <span>03</span> Módulos
           </button>
@@ -246,10 +252,24 @@
                 </section>
               </section>
 
+              <section class="admin-panel" id="admin-cidades-admin">
+                <div class="section-title">
+                  <div>
+                    <p class="eyebrow">01.2.3 Cidades</p>
+                    <h2>Cidades utilizadas nos cadastros de imóveis</h2>
+                  </div>
+                  <button class="primary" id="city-new">Nova Cidade</button>
+                </div>
+                <section class="panel">
+                  <div class="list-head"><h3>Cidades cadastradas</h3><span id="city-count">0 itens</span></div>
+                  <div class="crud-list" id="city-list"></div>
+                </section>
+              </section>
+
               <section class="admin-panel" id="admin-imoveis-admin">
                 <div class="section-title">
                   <div>
-                    <p class="eyebrow">01.2.3 Imóveis</p>
+                    <p class="eyebrow">01.2.4 Imóveis</p>
                     <h2>Imóveis urbanos ou rurais vinculados ao proprietário</h2>
                   </div>
                   <button class="primary" id="property-new">Novo Imóvel</button>
@@ -263,7 +283,7 @@
               <section class="admin-panel" id="admin-empreendimentos-admin">
                 <div class="section-title">
                   <div>
-                    <p class="eyebrow">01.2.4 Empreendimento</p>
+                    <p class="eyebrow">01.2.5 Empreendimento</p>
                     <h2>Vínculo entre empresa e imóvel onde o empreendimento será construído</h2>
                   </div>
                   <button class="primary" id="enterprise-new">Novo Empreendimento</button>
@@ -277,7 +297,7 @@
               <section class="admin-panel" id="admin-atividades-admin">
                 <div class="section-title">
                   <div>
-                    <p class="eyebrow">01.2.5 Atividades</p>
+                    <p class="eyebrow">01.2.6 Atividades</p>
                     <h2>Atividades vinculadas a CNPJ e empreendimentos</h2>
                   </div>
                   <button class="primary" id="activity-new">Nova Atividade</button>
@@ -565,6 +585,66 @@
               <ul class="task-list" id="dashboard-task-list"></ul>
             </section>
           </div>
+        </section>
+
+        <section class="view" id="dashboard-ambiental">
+          <div class="module-banner">
+            <div>
+              <p class="eyebrow">02.1 Painel Ambiental</p>
+              <h2>Indicadores exclusivos do módulo ambiental</h2>
+            </div>
+            <button class="ghost" data-view-target="licencas" data-permission-view="environmental">Abrir módulo ambiental</button>
+          </div>
+          <div class="metric-grid">
+            <article class="metric"><span>Processos abertos</span><strong id="environmental-dashboard-open">0</strong><small>Em andamento</small></article>
+            <article class="metric warning"><span>Pendentes</span><strong id="environmental-dashboard-pending">0</strong><small>Com prazo ou etapa pendente</small></article>
+            <article class="metric danger"><span>Vencidos</span><strong id="environmental-dashboard-expired">0</strong><small>Processos ou licenças vencidas</small></article>
+            <article class="metric success"><span>Licenças ativas</span><strong id="environmental-dashboard-licenses">0</strong><small>Listadas em 03.1.5</small></article>
+          </div>
+          <section class="panel">
+            <div class="panel-head"><h2>Próximos prazos ambientais</h2></div>
+            <div class="table" id="environmental-dashboard-table"></div>
+          </section>
+        </section>
+
+        <section class="view" id="dashboard-iptu">
+          <div class="module-banner">
+            <div>
+              <p class="eyebrow">02.2 Painel IPTU</p>
+              <h2>Indicadores exclusivos do módulo IPTU</h2>
+            </div>
+            <button class="ghost" data-view-target="iptu" data-permission-view="iptu">Abrir IPTU</button>
+          </div>
+          <div class="metric-grid">
+            <article class="metric"><span>Imóveis cadastrados</span><strong id="iptu-dashboard-properties">0</strong><small>Base para cobranças e guias</small></article>
+            <article class="metric"><span>Urbanos</span><strong id="iptu-dashboard-urban">0</strong><small>Com inscrição imobiliária</small></article>
+            <article class="metric warning"><span>Sem inscrição</span><strong id="iptu-dashboard-missing">0</strong><small>Imóveis urbanos para revisar</small></article>
+            <article class="metric success"><span>Cidades vinculadas</span><strong id="iptu-dashboard-cities">0</strong><small>Municípios usados nos imóveis</small></article>
+          </div>
+          <section class="panel">
+            <div class="panel-head"><h2>Base de imóveis para IPTU</h2></div>
+            <div class="table" id="iptu-dashboard-table"></div>
+          </section>
+        </section>
+
+        <section class="view" id="dashboard-agendamentos">
+          <div class="module-banner">
+            <div>
+              <p class="eyebrow">02.3 Painel Agendamentos</p>
+              <h2>Indicadores exclusivos da agenda</h2>
+            </div>
+            <button class="ghost" data-view-target="agenda-notes" data-permission-view="agenda">Abrir anotações</button>
+          </div>
+          <div class="metric-grid">
+            <article class="metric"><span>Agendamentos</span><strong id="agenda-dashboard-total">0</strong><small>Registros ativos</small></article>
+            <article class="metric warning"><span>Próximos 7 dias</span><strong id="agenda-dashboard-week">0</strong><small>Com vencimento próximo</small></article>
+            <article class="metric danger"><span>Atrasados</span><strong id="agenda-dashboard-late">0</strong><small>Datas anteriores pendentes</small></article>
+            <article class="metric success"><span>Alertas aguardando</span><strong id="agenda-dashboard-alerts">0</strong><small>Fila de envio</small></article>
+          </div>
+          <section class="panel">
+            <div class="panel-head"><h2>Agenda operacional</h2></div>
+            <div class="table" id="agenda-dashboard-table"></div>
+          </section>
         </section>
 
         <section class="view" id="cadastros">
@@ -1345,11 +1425,42 @@
       </section>
     </div>
 
+    <div class="modal-backdrop" id="city-modal" aria-hidden="true">
+      <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="city-modal-title">
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">01.2.3 Cidades</p>
+            <h2 id="city-modal-title">Nova Cidade</h2>
+          </div>
+          <button class="ghost small" data-close-modal="city-modal">Fechar</button>
+        </div>
+        <form class="user-form" id="city-form">
+          <input type="hidden" id="city-id" value="0" />
+          <label>Nome da cidade<input id="city-name" required /></label>
+          <label>Estado
+            <select id="city-state" required>
+              <option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option><option value="AM">AM</option>
+              <option value="BA">BA</option><option value="CE">CE</option><option value="DF">DF</option><option value="ES">ES</option>
+              <option value="GO">GO</option><option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option>
+              <option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option><option value="PR">PR</option>
+              <option value="PE">PE</option><option value="PI">PI</option><option value="RJ">RJ</option><option value="RN">RN</option>
+              <option value="RS">RS</option><option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option>
+              <option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
+            </select>
+          </label>
+        </form>
+        <div class="modal-actions">
+          <button class="ghost" data-close-modal="city-modal">Cancelar</button>
+          <button class="primary" id="city-save">Salvar cidade</button>
+        </div>
+      </section>
+    </div>
+
     <div class="modal-backdrop" id="property-modal" aria-hidden="true">
       <section class="modal-panel wide-modal" role="dialog" aria-modal="true" aria-labelledby="property-modal-title">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">01.2.3 Imóveis</p>
+            <p class="eyebrow">01.2.4 Imóveis</p>
             <h2 id="property-modal-title">Novo Imóvel</h2>
           </div>
           <button class="ghost small" data-close-modal="property-modal">Fechar</button>
@@ -1373,6 +1484,8 @@
           </label>
           <label>Matrícula<input id="property-registration" /></label>
           <label>Referência de localização<input id="property-reference" /></label>
+          <label>Endereço<input id="property-address" /></label>
+          <label>Cidade<select id="property-city"></select></label>
           <label class="urban-field">Inscricao imobiliaria<input id="property-municipal-registration" /></label>
           <label>Lote<input id="property-lot" /></label>
           <label class="urban-field">Quadra<input id="property-block" /></label>
@@ -1428,7 +1541,7 @@
       <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="enterprise-modal-title">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">01.2.4 Empreendimento</p>
+            <p class="eyebrow">01.2.5 Empreendimento</p>
             <h2 id="enterprise-modal-title">Novo Empreendimento</h2>
           </div>
           <button class="ghost small" data-close-modal="enterprise-modal">Fechar</button>
@@ -1482,7 +1595,7 @@
       <section class="modal-panel wide-modal" role="dialog" aria-modal="true" aria-labelledby="enterprise-property-title">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">01.2.4 Empreendimento</p>
+            <p class="eyebrow">01.2.5 Empreendimento</p>
             <h2 id="enterprise-property-title">Selecionar imóvel</h2>
           </div>
           <button class="ghost small" data-close-modal="enterprise-property-modal">Fechar</button>
@@ -1648,7 +1761,7 @@
       <section class="modal-panel wide-modal" role="dialog" aria-modal="true" aria-labelledby="property-pdf-title">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">01.2.3 Imóveis</p>
+            <p class="eyebrow">01.2.4 Imóveis</p>
             <h2 id="property-pdf-title">Filtros do PDF</h2>
           </div>
           <button class="ghost small" data-close-modal="property-pdf-modal">Fechar</button>
@@ -1709,7 +1822,7 @@
       <section class="modal-panel confirm-modal" role="dialog" aria-modal="true" aria-labelledby="enterprise-modules-title">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">01.2.4 Empreendimento</p>
+            <p class="eyebrow">01.2.5 Empreendimento</p>
             <h2 id="enterprise-modules-title">Inserir módulos</h2>
           </div>
           <button class="ghost small" data-close-modal="enterprise-modules-modal">Fechar</button>
@@ -1726,7 +1839,7 @@
       <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="activity-modal-title">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">01.2.5 Atividades</p>
+            <p class="eyebrow">01.2.6 Atividades</p>
             <h2 id="activity-modal-title">Nova Atividade</h2>
           </div>
           <button class="ghost small" data-close-modal="activity-modal">Fechar</button>
@@ -1759,7 +1872,7 @@
       <section class="modal-panel confirm-modal" role="dialog" aria-modal="true" aria-labelledby="activity-enterprises-title">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">01.2.5 Atividades</p>
+            <p class="eyebrow">01.2.6 Atividades</p>
             <h2 id="activity-enterprises-title">Selecionar empreendimentos</h2>
           </div>
           <button class="ghost small" data-close-modal="activity-enterprises-modal">Fechar</button>

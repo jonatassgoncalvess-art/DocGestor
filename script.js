@@ -2,6 +2,7 @@
 const views = document.querySelectorAll(".view");
 const title = document.querySelector("#page-title");
 const adminSubnav = document.querySelector("#admin-subnav");
+const dashboardSubnav = document.querySelector("#dashboard-subnav");
 const moduleSubnav = document.querySelector("#module-subnav");
 const agendaSubnav = document.querySelector("#agenda-subnav");
 const settingsSubnav = document.querySelector("#settings-subnav");
@@ -13,6 +14,9 @@ const titles = {
   home: "Home",
   admin: "Painel Admin",
   dashboard: "Painel geral",
+  "dashboard-ambiental": "02.1 Painel Ambiental",
+  "dashboard-iptu": "02.2 Painel IPTU",
+  "dashboard-agendamentos": "02.3 Painel Agendamentos",
   cadastros: "Cadastros",
   modulos: "Módulos",
   licencas: "03.1 Licenças Ambientais",
@@ -51,6 +55,8 @@ function openView(viewName) {
   }
   const parentView = ["cadastros", "usuarios"].includes(viewName)
     ? "admin"
+    : ["dashboard-ambiental", "dashboard-iptu", "dashboard-agendamentos"].includes(viewName)
+      ? "dashboard"
     : ["licencas", "iptu", "documentos-diversos"].includes(viewName)
       ? "modulos"
       : viewName === "agenda-notes"
@@ -65,6 +71,15 @@ function openView(viewName) {
   if (adminSubnav && parentView !== "admin") {
     adminSubnav.classList.remove("open");
     document.querySelector("[data-admin-menu-toggle]")?.setAttribute("aria-expanded", "false");
+  }
+
+  if (dashboardSubnav && parentView !== "dashboard") {
+    dashboardSubnav.classList.remove("open");
+    document.querySelector("[data-dashboard-menu-toggle]")?.setAttribute("aria-expanded", "false");
+  }
+  if (dashboardSubnav && parentView === "dashboard") {
+    dashboardSubnav.classList.add("open");
+    document.querySelector("[data-dashboard-menu-toggle]")?.setAttribute("aria-expanded", "true");
   }
 
   if (moduleSubnav && parentView !== "modulos") {
@@ -99,6 +114,10 @@ function openView(viewName) {
     if (item.dataset.viewTarget === "licencas") item.classList.toggle("parent-active", viewName === "licencas");
   });
 
+  document.querySelectorAll("[data-dashboard-target]").forEach((item) => {
+    item.classList.toggle("active", item.dataset.dashboardTarget === viewName);
+  });
+
   document.querySelectorAll("[data-agenda-target]").forEach((item) => {
     item.classList.toggle("active", item.dataset.agendaTarget === viewName);
   });
@@ -117,6 +136,9 @@ navItems.forEach((item) => {
     const isAdminToggle = item.hasAttribute("data-admin-menu-toggle");
     const isAdminActive = item.classList.contains("active");
     const wasAdminOpen = adminSubnav?.classList.contains("open");
+    const isDashboardToggle = item.hasAttribute("data-dashboard-menu-toggle");
+    const isDashboardActive = item.classList.contains("active");
+    const wasDashboardOpen = dashboardSubnav?.classList.contains("open");
     const isModuleToggle = item.hasAttribute("data-module-menu-toggle");
     const isModuleActive = item.classList.contains("active");
     const wasModuleOpen = moduleSubnav?.classList.contains("open");
@@ -132,6 +154,12 @@ navItems.forEach((item) => {
     if (isAdminToggle && adminSubnav) {
       const shouldOpen = !isAdminActive || !wasAdminOpen;
       adminSubnav.classList.toggle("open", shouldOpen);
+      item.setAttribute("aria-expanded", String(shouldOpen));
+    }
+
+    if (isDashboardToggle && dashboardSubnav) {
+      const shouldOpen = !isDashboardActive || !wasDashboardOpen;
+      dashboardSubnav.classList.toggle("open", shouldOpen);
       item.setAttribute("aria-expanded", String(shouldOpen));
     }
 
@@ -206,6 +234,16 @@ document.querySelectorAll("[data-admin-target]").forEach((button) => {
   });
 });
 
+document.querySelectorAll("[data-dashboard-target]").forEach((button) => {
+  button.addEventListener("click", () => {
+    openView(button.dataset.dashboardTarget);
+    if (dashboardSubnav) {
+      dashboardSubnav.classList.add("open");
+      document.querySelector("[data-dashboard-menu-toggle]")?.setAttribute("aria-expanded", "true");
+    }
+  });
+});
+
 document.querySelectorAll("[data-agenda-target]").forEach((button) => {
   button.addEventListener("click", () => {
     openView(button.dataset.agendaTarget);
@@ -235,9 +273,10 @@ const searchableEnvironments = [
   { code: "01.1", title: "Usuários", detail: "Cadastro, acesso, senha e permissões", permission: "users", action: () => openAdminSearchPanel("usuarios-admin") },
   { code: "01.2.1", title: "Sócios", detail: "Sócios e responsáveis legais", permission: "registries", action: () => openAdminSearchPanel("socios-admin") },
   { code: "01.2.2", title: "Empresas e Filiais", detail: "Matrizes, filiais e sócios vinculados", permission: "registries", action: () => openAdminSearchPanel("empresas-filiais") },
-  { code: "01.2.3", title: "Imóveis", detail: "Imóveis urbanos, rurais e proprietários", permission: "registries", action: () => openAdminSearchPanel("imoveis-admin") },
-  { code: "01.2.4", title: "Empreendimento", detail: "Empresas vinculadas a imóveis", permission: "registries", action: () => openAdminSearchPanel("empreendimentos-admin") },
-  { code: "01.2.5", title: "Atividades", detail: "Atividades, CNAE, CNPJ e CTF/APP", permission: "registries", action: () => openAdminSearchPanel("atividades-admin") },
+  { code: "01.2.3", title: "Cidades", detail: "Cidades usadas nos imóveis", permission: "registries", action: () => openAdminSearchPanel("cidades-admin") },
+  { code: "01.2.4", title: "Imóveis", detail: "Imóveis urbanos, rurais e proprietários", permission: "registries", action: () => openAdminSearchPanel("imoveis-admin") },
+  { code: "01.2.5", title: "Empreendimento", detail: "Empresas vinculadas a imóveis", permission: "registries", action: () => openAdminSearchPanel("empreendimentos-admin") },
+  { code: "01.2.6", title: "Atividades", detail: "Atividades, CNAE, CNPJ e CTF/APP", permission: "registries", action: () => openAdminSearchPanel("atividades-admin") },
   { code: "01.3.1", title: "Tipos de Licenças", detail: "Classificação ambiental", permission: "adminEnvironmental", action: () => openAdminSearchPanel("tipos-licencas") },
   { code: "01.3.2", title: "Documentos", detail: "Documentos ambientais por licença", permission: "adminEnvironmental", action: () => openAdminSearchPanel("documentos-ambientais") },
   { code: "01.3.3", title: "Modelos de Check-list", detail: "Modelos usados nos processos", permission: "adminEnvironmental", action: () => openAdminSearchPanel("modelos-checklist") },
@@ -246,6 +285,9 @@ const searchableEnvironments = [
   { code: "01.4.3", title: "Histórico de Alertas", detail: "Status dos envios no Resend", permission: "admin", action: () => openAdminSearchPanel("historico-alertas") },
   { code: "01.5.1", title: "Backup", detail: "Frequencia, horario e armazenamento", permission: "admin", action: () => openAdminSearchPanel("backup-sistema") },
   { code: "02", title: "Painel Geral", detail: "Indicadores e prazos reais", permission: "dashboard", action: () => openView("dashboard") },
+  { code: "02.1", title: "Painel Ambiental", detail: "Indicadores exclusivos ambientais", permission: "environmental", action: () => openView("dashboard-ambiental") },
+  { code: "02.2", title: "Painel IPTU", detail: "Indicadores exclusivos de IPTU", permission: "iptu", action: () => openView("dashboard-iptu") },
+  { code: "02.3", title: "Painel Agendamentos", detail: "Indicadores exclusivos da agenda", permission: "agenda", action: () => openView("dashboard-agendamentos") },
   { code: "03", title: "Módulos", detail: "Entrada dos módulos operacionais", permission: "modules", action: () => openView("modulos") },
   { code: "03.1", title: "Licenças Ambientais", detail: "Relatório geral de processos e licenças", permission: "environmental", action: () => openLicenseStatus("general") },
   { code: "03.1.1", title: "Abertas", detail: "Processos ambientais em aberto", permission: "environmental", action: () => openLicenseStatus("open") },
@@ -1698,6 +1740,9 @@ function canAccess(permissionKey) {
 function viewPermission(viewName) {
   if (viewName === "admin" || viewName === "usuarios" || viewName === "cadastros") return "admin";
   if (viewName === "dashboard") return "dashboard";
+  if (viewName === "dashboard-ambiental") return "environmental";
+  if (viewName === "dashboard-iptu") return "iptu";
+  if (viewName === "dashboard-agendamentos") return "agenda";
   if (viewName === "modulos") return "modules";
   if (viewName === "iptu") return "iptu";
   if (viewName === "documentos-diversos") return "diverseDocuments";
@@ -1725,7 +1770,7 @@ function applyAccessControl() {
   document.querySelectorAll('[data-admin-target="usuarios-admin"]').forEach((element) => {
     element.hidden = !canAccess("users");
   });
-  document.querySelectorAll('[data-admin-target="socios-admin"], [data-admin-target="empresas-filiais"], [data-admin-target="imoveis-admin"], [data-admin-target="empreendimentos-admin"], [data-admin-target="atividades-admin"]').forEach((element) => {
+  document.querySelectorAll('[data-admin-target="socios-admin"], [data-admin-target="empresas-filiais"], [data-admin-target="cidades-admin"], [data-admin-target="imoveis-admin"], [data-admin-target="empreendimentos-admin"], [data-admin-target="atividades-admin"]').forEach((element) => {
     element.hidden = !canAccess("registries");
   });
   document.querySelectorAll('[data-admin-target="tipos-licencas"], [data-admin-target="documentos-ambientais"], [data-admin-target="modelos-checklist"]').forEach((element) => {
@@ -3583,6 +3628,118 @@ if (companyTree) {
   renderCompanies();
 }
 
+let cities = [];
+let selectedCityId = 0;
+const cityList = document.querySelector("#city-list");
+const cityCount = document.querySelector("#city-count");
+
+function cityLabel(city) {
+  return city ? `${city.name}/${city.state}` : "";
+}
+
+function cityById(cityId) {
+  return cities.find((city) => sameId(city.id, cityId));
+}
+
+function cityIdByLabel(label) {
+  return cities.find((city) => cityLabel(city) === label)?.id || null;
+}
+
+function populatePropertyCities(selectedCityIdOrLabel = "") {
+  const select = field("property-city");
+  if (!select) return;
+  select.innerHTML = cities.length
+    ? cities.map((city) => `<option value="${city.id}">${cityLabel(city)}</option>`).join("")
+    : `<option value="">Cadastre uma cidade em 01.2.3</option>`;
+  const selectedId = cityIdByLabel(selectedCityIdOrLabel) || selectedCityIdOrLabel;
+  if (selectedId && cities.some((city) => sameId(city.id, selectedId))) select.value = selectedId;
+}
+
+function renderCities() {
+  if (!cityList) return;
+  cityCount.textContent = `${cities.length} itens`;
+  cityList.innerHTML = cities
+    .sort((a, b) => cityLabel(a).localeCompare(cityLabel(b)))
+    .map(
+      (city) => `
+        <article>
+          <strong>${city.name}</strong>
+          <span>Estado: ${city.state}</span>
+          <div>
+            <button type="button" data-city-action="edit" data-city-id="${city.id}">Editar</button>
+            <button type="button" data-city-action="delete" data-city-id="${city.id}">Excluir</button>
+          </div>
+        </article>
+      `,
+    )
+    .join("");
+  populatePropertyCities();
+}
+
+function fillCityForm(city) {
+  if (!city) return;
+  selectedCityId = city.id;
+  field("city-id").value = city.id;
+  field("city-name").value = city.name;
+  field("city-state").value = city.state;
+}
+
+function newCity() {
+  const id = Date.now();
+  selectedCityId = id;
+  field("city-id").value = id;
+  field("city-name").value = "";
+  field("city-state").value = "PR";
+  document.querySelector("#city-modal-title").textContent = "Nova Cidade";
+  openModal("city-modal");
+}
+
+async function saveCity() {
+  const id = field("city-id").value;
+  const existing = cities.find((city) => sameId(city.id, id));
+  const wasExisting = Boolean(existing);
+  const payload = {
+    id: id || Date.now(),
+    name: field("city-name").value.trim(),
+    state: field("city-state").value,
+  };
+  if (!payload.name) {
+    alert("Informe o nome da cidade.");
+    return;
+  }
+  if (existing) Object.assign(existing, payload);
+  else cities.push(payload);
+  selectedCityId = payload.id;
+  renderCities();
+  closeModal("city-modal");
+  await persistCity(payload, wasExisting);
+}
+
+document.querySelector("#city-new")?.addEventListener("click", newCity);
+document.querySelector("#city-save")?.addEventListener("click", saveCity);
+cityList?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-city-action]");
+  if (!button) return;
+  const city = cities.find((item) => sameId(item.id, button.dataset.cityId));
+  if (!city) return;
+  if (button.dataset.cityAction === "edit") {
+    fillCityForm(city);
+    document.querySelector("#city-modal-title").textContent = "Editar Cidade";
+    openModal("city-modal");
+  }
+  if (button.dataset.cityAction === "delete") {
+    confirmDelete(`Deseja realmente excluir a cidade ${cityLabel(city)}?`, () => {
+      const index = cities.findIndex((item) => sameId(item.id, city.id));
+      if (index >= 0) cities.splice(index, 1);
+      selectedCityId = cities[0]?.id ?? 0;
+      renderCities();
+      persistDelete("cities", city.id, "cidade");
+    });
+  }
+});
+
+if (cityList) renderCities();
+
 let properties = [];
 
 let selectedPropertyId = 0;
@@ -3683,7 +3840,7 @@ function renderProperties() {
       return `
         <article>
           <strong>Matrícula ${property.registration}</strong>
-          <span>${typeLabel} - ${areaLabel} - ${registryLabel} - proprietário: ${property.owner} - referência: ${property.reference || "Não informada"}</span>
+          <span>${typeLabel} - ${areaLabel} - ${registryLabel} - proprietário: ${property.owner} - cidade: ${property.city || "Não informada"} - endereço: ${property.address || "Não informado"} - referência: ${property.reference || "Não informada"}</span>
           <div>
             <button type="button" data-property-action="edit" data-property-id="${property.id}">Editar</button>
             <button type="button" data-property-action="delete" data-property-id="${property.id}">Excluir</button>
@@ -3703,6 +3860,8 @@ function fillPropertyForm(property) {
   field("property-type").value = property.type;
   field("property-registration").value = property.registration;
   field("property-reference").value = property.reference || "";
+  field("property-address").value = property.address || "";
+  populatePropertyCities(property.cityId || property.city || "");
   field("property-lot").value = property.lot;
   field("property-municipal-registration").value = property.municipalRegistration || "";
   field("property-block").value = property.block;
@@ -3732,6 +3891,8 @@ function newProperty() {
   field("property-type").value = "urban";
   field("property-registration").value = "";
   field("property-reference").value = "";
+  field("property-address").value = "";
+  populatePropertyCities();
   field("property-lot").value = "";
   field("property-municipal-registration").value = "";
   field("property-block").value = "";
@@ -3759,6 +3920,10 @@ async function saveProperty() {
   const existing = properties.find((property) => sameId(property.id, id));
   const wasExisting = Boolean(existing);
   const type = field("property-type").value;
+  if (cities.length && !field("property-city").value) {
+    alert("Selecione a cidade do imóvel.");
+    return;
+  }
   const payload = {
     id: id || Date.now(),
     ownerType: field("property-owner-type").value,
@@ -3766,6 +3931,9 @@ async function saveProperty() {
     type,
     registration: field("property-registration").value,
     reference: field("property-reference").value,
+    address: field("property-address").value,
+    cityId: field("property-city").value,
+    city: cityLabel(cityById(field("property-city").value)),
     lot: field("property-lot").value,
     municipalRegistration: type === "urban" ? field("property-municipal-registration").value : "",
     block: type === "urban" ? field("property-block").value : "",
@@ -3943,6 +4111,8 @@ function enterprisePropertySearchText(property) {
   return normalizeSearchText([
     property.registration,
     property.reference,
+    property.address,
+    property.city,
     property.lot,
     property.block,
     property.glebe,
@@ -5229,7 +5399,7 @@ function populateEnvironmentalProcessSelects() {
       .join("");
   }
   if (propertySelect) {
-    propertySelect.innerHTML = properties.map((property) => `<option value="Matrícula ${property.registration}">Matrícula ${property.registration} - ${property.reference || propertyOwnerLabel(property)}</option>`).join("");
+    propertySelect.innerHTML = properties.map((property) => `<option value="Matrícula ${property.registration}">Matrícula ${property.registration} - ${property.city || "Cidade não informada"} - ${property.reference || propertyOwnerLabel(property)}</option>`).join("");
   }
   if (responsibleSelect) {
     responsibleSelect.innerHTML = partners.map((partner) => `<option value="${partner.name}">${partner.name}</option>`).join("");
@@ -6721,7 +6891,7 @@ function buildCompaniesReport(filters = {}) {
 function buildPropertiesRelationReport(filteredProperties, filters = {}) {
   return {
     title: "Relação de Imóveis",
-    module: "01.2.3 Imóveis",
+    module: "01.2.4 Imóveis",
     subtitle: filters.summary || "Ficha consolidada dos imóveis cadastrados.",
     sections: filteredProperties.map((property) => {
       const isRural = property.type === "rural";
@@ -6732,6 +6902,8 @@ function buildPropertiesRelationReport(filteredProperties, filters = {}) {
         ["Tipo de proprietário", property.ownerType === "pf" ? "Pessoa física" : "Pessoa jurídica"],
         ["Tipo de imóvel", isRural ? "Rural" : "Urbano"],
         ["Referência", property.reference],
+        ["Endereço", property.address],
+        ["Cidade", property.city],
         ["Lote", property.lot],
         [isRural ? "Gleba" : "Quadra", isRural ? property.glebe : property.block],
         [isRural ? "Número do CAR" : "Inscrição imobiliária", isRural ? property.carNumber : property.municipalRegistration],
@@ -6776,7 +6948,7 @@ function buildPropertiesEnvironmentalReport(filteredProperties, filters = {}) {
 
   return {
     title: "Relatório Ambiental de Imóveis",
-    module: "01.2.3 Imóveis",
+    module: "01.2.4 Imóveis",
     subtitle: filters.summary || "Análise consolidada de área rural, reserva legal e APP.",
     orientation: "landscape",
     sections: [
@@ -6812,7 +6984,7 @@ function buildPropertiesReport(filters = {}) {
 function buildEnterprisesReport() {
   return {
     title: "Relatório de Empreendimentos",
-    module: "01.2.4 Empreendimento",
+    module: "01.2.5 Empreendimento",
     subtitle: "Empreendimentos vinculados a empresas e imóveis.",
     sections: [
       pdfTableSection(
@@ -7288,7 +7460,7 @@ function pickerConfig(kind) {
   if (kind === "property-owners") {
     return {
       title: "Selecionar proprietários",
-      context: "01.2.3 Imóveis",
+      context: "01.2.4 Imóveis",
       options: propertyOwnersForPdf().map((owner) => ({ value: owner, label: owner })),
       selected: pdfFilterState.propertyOwners,
       apply(values) {
@@ -7301,7 +7473,7 @@ function pickerConfig(kind) {
     const available = filterPropertiesForPdf({ ...basePropertyPdfFilterValues(), selectionMode: "all" });
     return {
       title: "Selecionar imóveis",
-      context: "01.2.3 Imóveis",
+      context: "01.2.4 Imóveis",
       options: available.map((property) => ({
         value: String(property.id),
         label: `Matrícula ${property.registration} - ${propertyOwnerLabel(property)}`,
@@ -7503,6 +7675,84 @@ function renderDashboard() {
       ? nextEvents.map((event) => `<li><strong>${escapeHtml(event.title)}</strong><span>${escapeHtml(event.type)} - ${escapeHtml(formatAgendaDate(event.date))} ${escapeHtml(event.time || "")}</span></li>`).join("")
       : `<li><strong>Nenhum agendamento pendente</strong><span>Cadastre prazos na Agenda ou nas etapas dos processos.</span></li>`;
   }
+
+  renderEnvironmentalDashboard();
+  renderIptuDashboard();
+  renderScheduleDashboard();
+}
+
+function renderDashboardTable(targetId, columns, rows, emptyMessage) {
+  const target = field(targetId);
+  if (!target) return;
+  const head = `<div class="table-row table-head">${columns.map((column) => `<span>${column}</span>`).join("")}</div>`;
+  target.innerHTML = `${head}${
+    rows.length
+      ? rows.map((row) => `<div class="table-row">${row.map((cell) => `<span>${cell}</span>`).join("")}</div>`).join("")
+      : `<div class="table-row"><span>${emptyMessage}</span><span>-</span><span>-</span><span class="pill green">Em dia</span></div>`
+  }`;
+}
+
+function renderEnvironmentalDashboard() {
+  environmentalProcesses.forEach(applyProcessDeadlineRules);
+  const open = environmentalProcesses.filter((process) => process.status === "open");
+  const pending = environmentalProcesses.filter((process) => process.status === "pending");
+  const expired = environmentalProcesses.filter((process) => process.status === "expired");
+  const activeLicenses = environmentalProcesses.map((process) => process.activeLicense).filter((license) => license?.number && license.status !== "Substituída");
+  if (field("environmental-dashboard-open")) field("environmental-dashboard-open").textContent = open.length;
+  if (field("environmental-dashboard-pending")) field("environmental-dashboard-pending").textContent = pending.length;
+  if (field("environmental-dashboard-expired")) field("environmental-dashboard-expired").textContent = expired.length;
+  if (field("environmental-dashboard-licenses")) field("environmental-dashboard-licenses").textContent = activeLicenses.length;
+  const rows = [...environmentalProcesses]
+    .filter((process) => process.status !== "done")
+    .sort((a, b) => String(a.due || "").localeCompare(String(b.due || "")))
+    .slice(0, 8)
+    .map((process) => [
+      escapeHtml(process.internalNumber || process.number || "Processo"),
+      escapeHtml(process.enterprise || "Empreendimento não informado"),
+      escapeHtml(process.due || "Sem prazo"),
+      `<span class="pill ${process.status === "expired" ? "red" : process.status === "pending" ? "yellow" : "green"}">${escapeHtml(processStatusLabel(process.status))}</span>`,
+    ]);
+  renderDashboardTable("environmental-dashboard-table", ["Processo", "Empreendimento", "Prazo", "Status"], rows, "Nenhum processo ambiental em risco");
+}
+
+function renderIptuDashboard() {
+  const urbanProperties = properties.filter((property) => property.type === "urban");
+  const missingRegistration = urbanProperties.filter((property) => !property.municipalRegistration);
+  const linkedCities = new Set(properties.map((property) => property.city).filter(Boolean));
+  if (field("iptu-dashboard-properties")) field("iptu-dashboard-properties").textContent = properties.length;
+  if (field("iptu-dashboard-urban")) field("iptu-dashboard-urban").textContent = urbanProperties.length;
+  if (field("iptu-dashboard-missing")) field("iptu-dashboard-missing").textContent = missingRegistration.length;
+  if (field("iptu-dashboard-cities")) field("iptu-dashboard-cities").textContent = linkedCities.size;
+  const rows = urbanProperties.slice(0, 8).map((property) => [
+    escapeHtml(`Matrícula ${property.registration || "Não informada"}`),
+    escapeHtml(property.city || "Cidade não informada"),
+    escapeHtml(property.municipalRegistration || "Sem inscrição"),
+    `<span class="pill ${property.municipalRegistration ? "green" : "yellow"}">${property.municipalRegistration ? "Cadastrado" : "Revisar"}</span>`,
+  ]);
+  renderDashboardTable("iptu-dashboard-table", ["Imóvel", "Cidade", "Inscrição", "Status"], rows, "Nenhum imóvel urbano cadastrado");
+}
+
+function renderScheduleDashboard() {
+  const today = dateKey(new Date());
+  const weekLimit = dateKey(new Date(Date.now() + 7 * 86400000));
+  const pendingEvents = agendaEvents.filter((event) => event.status !== "Concluído");
+  const weekEvents = pendingEvents.filter((event) => event.date >= today && event.date <= weekLimit);
+  const lateEvents = pendingEvents.filter((event) => event.date < today);
+  const waitingAlerts = alertHistoryItems.filter((item) => ["waiting", "scheduled", "aguardando"].includes(String(item.status || "").toLowerCase()));
+  if (field("agenda-dashboard-total")) field("agenda-dashboard-total").textContent = pendingEvents.length;
+  if (field("agenda-dashboard-week")) field("agenda-dashboard-week").textContent = weekEvents.length;
+  if (field("agenda-dashboard-late")) field("agenda-dashboard-late").textContent = lateEvents.length;
+  if (field("agenda-dashboard-alerts")) field("agenda-dashboard-alerts").textContent = waitingAlerts.length;
+  const rows = [...pendingEvents]
+    .sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`))
+    .slice(0, 8)
+    .map((event) => [
+      escapeHtml(event.title || "Agendamento"),
+      escapeHtml(formatAgendaDate(event.date)),
+      escapeHtml(event.time || "09:00"),
+      `<span class="pill ${event.date < today ? "red" : event.date <= weekLimit ? "yellow" : "green"}">${event.date < today ? "Atrasado" : "Programado"}</span>`,
+    ]);
+  renderDashboardTable("agenda-dashboard-table", ["Agendamento", "Data", "Hora", "Status"], rows, "Nenhum agendamento pendente");
 }
 
 function looksLikeUuid(value) {
@@ -7665,12 +7915,42 @@ async function persistCompany(company, wasExisting) {
   }
 }
 
+async function persistCity(city, wasExisting) {
+  if (!window.DocGestorDB) return;
+  const organizationId = await defaultOrganizationId();
+  if (!organizationId) return;
+  const payload = {
+    organization_id: organizationId,
+    name: city.name,
+    state: city.state,
+    status: "Ativa",
+  };
+  try {
+    let saved = null;
+    if (wasExisting && looksLikeUuid(city.id)) {
+      [saved] = await window.DocGestorDB.update("cities", city.id, payload);
+    } else {
+      [saved] = await window.DocGestorDB.create("cities", payload);
+    }
+    if (saved?.id) {
+      updateLocalId(cities, city.id, saved.id);
+      city.id = saved.id;
+      selectedCityId = saved.id;
+      renderCities();
+    }
+  } catch (error) {
+    console.warn("Não foi possível salvar a cidade no Supabase.", error.message);
+    alert(`Não foi possível salvar a cidade no banco: ${error.message}`);
+  }
+}
+
 async function persistProperty(property, wasExisting) {
   if (!window.DocGestorDB) return;
   const organizationId = await defaultOrganizationId();
   if (!organizationId) return;
   const ownerPartnerId = property.ownerType === "pf" ? partnerIdByName(property.owner) : null;
   const ownerCompanyId = property.ownerType === "pj" ? companyIdByName(property.owner) : null;
+  const cityId = property.cityId || cityIdByLabel(property.city);
   if ((property.ownerType === "pf" && !looksLikeUuid(ownerPartnerId)) || (property.ownerType === "pj" && !looksLikeUuid(ownerCompanyId))) {
     alert("Não foi possível salvar o imóvel no banco porque o proprietário ainda não possui ID válido no Supabase.");
     return;
@@ -7683,6 +7963,8 @@ async function persistProperty(property, wasExisting) {
     type: property.type,
     registration: property.registration,
     reference: property.reference,
+    address: property.address,
+    city_id: looksLikeUuid(cityId) ? cityId : null,
     lot: property.lot,
     block: property.type === "urban" ? property.block : null,
     glebe: property.type === "rural" ? property.glebe : null,
@@ -8142,6 +8424,7 @@ async function loadSupabaseData() {
     partnerRows,
     companyRows,
     companyPartnerRows,
+    cityRows,
     propertyRows,
     enterpriseRows,
     enterpriseModuleRows,
@@ -8169,6 +8452,7 @@ async function loadSupabaseData() {
     dbList("partners"),
     dbList("companies"),
     dbList("company_partners"),
+    dbList("cities"),
     dbList("properties"),
     dbList("enterprises"),
     dbList("enterprise_modules"),
@@ -8196,6 +8480,7 @@ async function loadSupabaseData() {
 
   const partnerById = Object.fromEntries(partnerRows.map((row) => [row.id, row]));
   const companyById = Object.fromEntries(companyRows.map((row) => [row.id, row]));
+  const cityByRowId = Object.fromEntries(cityRows.map((row) => [row.id, row]));
   const propertyById = Object.fromEntries(propertyRows.map((row) => [row.id, row]));
   const licenseTypeById = Object.fromEntries(licenseTypeRows.map((row) => [row.id, row]));
   const documentById = Object.fromEntries(documentRows.map((row) => [row.id, row]));
@@ -8241,8 +8526,16 @@ async function loadSupabaseData() {
     showBranches: row.show_branches ?? true,
   }));
 
+  cities = cityRows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    state: row.state,
+    status: row.status || "Ativa",
+  }));
+
   properties = propertyRows.map((row) => {
     const ownerRow = row.owner_type === "pf" ? partnerById[row.owner_partner_id] : companyById[row.owner_company_id];
+    const cityRow = cityByRowId[row.city_id];
     return {
       id: row.id,
       ownerType: row.owner_type,
@@ -8252,6 +8545,9 @@ async function loadSupabaseData() {
       type: row.type,
       registration: row.registration,
       reference: row.reference || "",
+      address: row.address || "",
+      cityId: row.city_id || "",
+      city: cityRow ? `${cityRow.name}/${cityRow.state}` : "",
       lot: row.lot || "",
       block: row.block || "",
       glebe: row.glebe || "",
@@ -8506,6 +8802,7 @@ async function loadSupabaseData() {
 
   selectedPartnerId = partners[0]?.id ?? 0;
   selectedCompanyId = companies[0]?.id ?? 0;
+  selectedCityId = cities[0]?.id ?? 0;
   selectedPropertyId = properties[0]?.id ?? 0;
   selectedEnterpriseId = enterprises[0]?.id ?? 0;
   selectedSendRecipientId = sendRecipients[0]?.id ?? 0;
@@ -8518,7 +8815,9 @@ async function loadSupabaseData() {
   renderPartners();
   renderCompanies();
   populateCompanyParents();
+  renderCities();
   populatePropertyOwners();
+  populatePropertyCities();
   renderProperties();
   populateEnterpriseSelects();
   renderEnterprises();
