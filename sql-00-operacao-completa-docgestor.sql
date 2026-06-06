@@ -213,6 +213,13 @@ create table if not exists enterprise_modules (
   created_at timestamptz not null default now()
 );
 
+create table if not exists enterprise_properties (
+  enterprise_id uuid not null,
+  property_id uuid not null,
+  created_at timestamptz not null default now(),
+  primary key (enterprise_id, property_id)
+);
+
 create table if not exists activities (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid,
@@ -486,7 +493,16 @@ create index if not exists idx_properties_owner_partner on properties(owner_part
 create index if not exists idx_properties_owner_company on properties(owner_company_id);
 create index if not exists idx_enterprises_company on enterprises(company_id);
 create index if not exists idx_enterprises_property on enterprises(property_id);
+create index if not exists idx_enterprise_properties_enterprise on enterprise_properties(enterprise_id);
+create index if not exists idx_enterprise_properties_property on enterprise_properties(property_id);
 create index if not exists idx_activities_company on activities(company_id);
+
+insert into enterprise_properties (enterprise_id, property_id)
+select id, property_id
+from enterprises
+where property_id is not null
+on conflict (enterprise_id, property_id) do nothing;
+
 create index if not exists idx_environmental_licenses_process_number on environmental_licenses(process_number);
 create index if not exists idx_environmental_licenses_expiration on environmental_licenses(expiration_date);
 create index if not exists idx_environmental_stage_deadlines_process on environmental_process_stage_deadlines(process_id);
@@ -510,6 +526,7 @@ begin
     'properties',
     'enterprises',
     'enterprise_modules',
+    'enterprise_properties',
     'activities',
     'activity_enterprises',
     'app_users',

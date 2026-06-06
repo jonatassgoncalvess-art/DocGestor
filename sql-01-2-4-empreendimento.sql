@@ -60,6 +60,16 @@ create table if not exists enterprise_modules (
 create index if not exists enterprise_modules_enterprise_id_idx on enterprise_modules(enterprise_id);
 create index if not exists enterprise_modules_module_id_idx on enterprise_modules(module_id);
 
+create table if not exists enterprise_properties (
+  enterprise_id uuid not null references enterprises(id) on delete cascade,
+  property_id uuid not null references properties(id) on delete restrict,
+  created_at timestamptz not null default now(),
+  primary key (enterprise_id, property_id)
+);
+
+create index if not exists enterprise_properties_enterprise_id_idx on enterprise_properties(enterprise_id);
+create index if not exists enterprise_properties_property_id_idx on enterprise_properties(property_id);
+
 create or replace function set_updated_at()
 returns trigger
 language plpgsql
@@ -79,6 +89,7 @@ execute function set_updated_at();
 
 alter table enterprises enable row level security;
 alter table enterprise_modules enable row level security;
+alter table enterprise_properties enable row level security;
 
 drop policy if exists enterprises_prototype_all on enterprises;
 
@@ -92,6 +103,14 @@ drop policy if exists enterprise_modules_prototype_all on enterprise_modules;
 
 create policy enterprise_modules_prototype_all
 on enterprise_modules
+for all
+using (true)
+with check (true);
+
+drop policy if exists enterprise_properties_prototype_all on enterprise_properties;
+
+create policy enterprise_properties_prototype_all
+on enterprise_properties
 for all
 using (true)
 with check (true);

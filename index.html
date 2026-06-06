@@ -1100,36 +1100,6 @@
           <label>Telefone<input id="user-phone" /></label>
           <label>CPF<input id="user-cpf" /></label>
           <label>Cargo/função<input id="user-role-title" /></label>
-          <label>Empresa vinculada
-            <select id="user-company">
-              <option></option>
-              <option></option>
-            </select>
-          </label>
-          <label>Filial vinculada
-            <select id="user-branch">
-              <option></option>
-              <option></option>
-            </select>
-          </label>
-          <label>Perfil de acesso
-            <select id="user-profile">
-              <option>Administrador Geral</option>
-              <option selected>Administrador do Grupo</option>
-              <option>Gestor Ambiental</option>
-              <option>Operador Ambiental</option>
-              <option>Consulta</option>
-            </select>
-          </label>
-          <label>Status
-            <select id="user-status">
-              <option selected>Ativo</option>
-              <option>Convite enviado</option>
-              <option>Bloqueado</option>
-              <option>Inativo</option>
-              <option>Senha pendente</option>
-            </select>
-          </label>
         </form>
         <div class="modal-actions">
           <button class="ghost" data-close-modal="user-modal">Cancelar</button>
@@ -1465,6 +1435,7 @@
           <input type="hidden" id="enterprise-id" value="0" />
           <label>Nome do empreendimento<input id="enterprise-name" /></label>
           <label>Empresa vinculada<select id="enterprise-company"></select></label>
+          <label>Empresa proprietária do imóvel<select id="enterprise-property-owner-company"></select></label>
           <input type="hidden" id="enterprise-property" />
           <label>Tipo de empreendimento
             <select id="enterprise-type">
@@ -1486,10 +1457,10 @@
         </form>
         <div class="module-link-box">
           <div>
-            <span>Imóvel vinculado</span>
+            <span>Imóveis vinculados</span>
             <strong id="enterprise-property-summary">Nenhum imóvel selecionado</strong>
           </div>
-          <button class="ghost" id="enterprise-property-open" type="button">Selecionar</button>
+          <button class="ghost" id="enterprise-property-open" type="button">Selecionar imóvel vinculado</button>
         </div>
         <div class="module-link-box">
           <div>
@@ -1506,7 +1477,7 @@
     </div>
 
     <div class="modal-backdrop" id="enterprise-property-modal" aria-hidden="true">
-      <section class="modal-panel confirm-modal" role="dialog" aria-modal="true" aria-labelledby="enterprise-property-title">
+      <section class="modal-panel wide-modal" role="dialog" aria-modal="true" aria-labelledby="enterprise-property-title">
         <div class="modal-head">
           <div>
             <p class="eyebrow">01.2.4 Empreendimento</p>
@@ -1514,7 +1485,16 @@
           </div>
           <button class="ghost small" data-close-modal="enterprise-property-modal">Fechar</button>
         </div>
+        <div class="picker-toolbar">
+          <label>Pesquisar imóvel
+            <input id="enterprise-property-search" type="search" placeholder="Buscar por matrícula, referência, lote, quadra ou gleba" />
+          </label>
+        </div>
         <div class="picker-list" id="enterprise-property-list"></div>
+        <div class="modal-actions">
+          <button class="ghost" data-close-modal="enterprise-property-modal">Cancelar</button>
+          <button class="primary" id="enterprise-property-apply" type="button">Aplicar imóveis</button>
+        </div>
       </section>
     </div>
 

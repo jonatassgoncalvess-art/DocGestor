@@ -1954,10 +1954,6 @@ function fillUserForm(user) {
   field("user-phone").value = user.phone;
   field("user-cpf").value = user.cpf;
   field("user-role-title").value = user.roleTitle;
-  field("user-company").value = user.company;
-  field("user-branch").value = user.branch;
-  field("user-profile").value = user.profile;
-  field("user-status").value = user.status;
   if (permissionUser) permissionUser.textContent = user.name;
 }
 
@@ -2048,12 +2044,12 @@ async function saveCurrentUser() {
     phone: field("user-phone").value,
     cpf: field("user-cpf").value,
     roleTitle: field("user-role-title").value,
-    company: field("user-company").value,
-    branch: field("user-branch").value,
-    profile: field("user-profile").value,
-    status: field("user-status").value,
+    company: existing?.company || "",
+    branch: existing?.branch || "Todas",
+    profile: existing?.profile || "Consulta",
+    status: existing?.status || "Ativo",
     password: existing?.password || "123456",
-    permissions: existing?.permissions || defaultPermissionsForProfile(field("user-profile").value),
+    permissions: existing?.permissions || defaultPermissionsForProfile(existing?.profile || "Consulta"),
   };
 
   if (existing) {
@@ -2081,10 +2077,6 @@ function newUser() {
   field("user-phone").value = "";
   field("user-cpf").value = "";
   field("user-role-title").value = "";
-  field("user-company").value = "";
-  field("user-branch").value = "Todas";
-  field("user-profile").value = "Consulta";
-  field("user-status").value = "Convite enviado";
   if (permissionUser) permissionUser.textContent = "Novo usuário";
   renderUsers();
   document.querySelector("#user-modal-title").textContent = "Novo usuário";
@@ -3855,11 +3847,13 @@ let enterprises = [];
 let selectedEnterpriseId = 0;
 let pendingEnterpriseDeleteId = null;
 let enterpriseModuleSelection = ["environmental"];
+let enterprisePropertySelection = [];
 const enterpriseList = document.querySelector("#enterprise-list");
 const enterpriseCount = document.querySelector("#enterprise-count");
 const enterpriseCompany = document.querySelector("#enterprise-company");
 const enterpriseProperty = document.querySelector("#enterprise-property");
 const enterprisePropertyList = document.querySelector("#enterprise-property-list");
+const enterprisePropertyOwnerCompany = document.querySelector("#enterprise-property-owner-company");
 
 function activeSystemModules() {
   return availableAlertModules.length ? availableAlertModules : [...defaultSystemModules];
@@ -3908,25 +3902,52 @@ function enterprisesForModule(moduleId) {
   return enterprises.filter((enterprise) => enterpriseModules(enterprise).includes(moduleId));
 }
 
-function companyProperties(companyName = enterpriseCompany?.value) {
-  return properties.filter((property) => property.owner === companyName);
+function propertyCompanyOwnerName(property) {
+  if (property.ownerType !== "pj") return "";
+  return property.owner || companyNameById(property.ownerCompanyId);
 }
 
-function updateEnterprisePropertySummary(value = enterpriseProperty?.value) {
+function enterprisePropertyLabels(ids = enterprisePropertySelection) {
+  const labels = ids
+    .map((id) => properties.find((property) => sameId(property.id, id)))
+    .filter(Boolean)
+    .map((property) => `Matrícula ${property.registration}`);
+  return labels;
+}
+
+function updateEnterprisePropertySummary(ids = enterprisePropertySelection) {
   const summary = field("enterprise-property-summary");
-  if (summary) summary.textContent = value || "Nenhum imóvel selecionado";
+  const labels = enterprisePropertyLabels(ids);
+  if (summary) summary.textContent = labels.length ? labels.join(", ") : "Nenhum imóvel selecionado";
+  if (enterpriseProperty) enterpriseProperty.value = labels[0] || "";
 }
 
-function populateEnterpriseProperties(selectedProperty = "") {
-  if (!enterpriseProperty || !enterpriseCompany) return;
-  const propertyNames = companyProperties().map((property) => `Matrícula ${property.registration}`);
-  enterpriseProperty.value = selectedProperty && propertyNames.includes(selectedProperty) ? selectedProperty : "";
-  updateEnterprisePropertySummary();
+function selectedEnterpriseOwnerCompanyName() {
+  return enterprisePropertyOwnerCompany?.value || enterpriseCompany?.value || "";
+}
+
+function companyProperties(companyName = selectedEnterpriseOwnerCompanyName()) {
+  return properties.filter((property) => property.ownerType === "pj" && propertyCompanyOwnerName(property) === companyName);
+}
+
+function enterprisePropertySearchText(property) {
+  return normalizeSearchText([
+    property.registration,
+    property.reference,
+    property.lot,
+    property.block,
+    property.glebe,
+    property.municipalRegistration,
+    property.carNumber,
+    property.ccirIncra,
+    propertyOwnerLabel(property),
+  ].filter(Boolean).join(" "));
 }
 
 function renderEnterprisePropertyPicker() {
   if (!enterprisePropertyList) return;
-  const available = companyProperties();
+  const search = normalizeSearchText(field("enterprise-property-search")?.value || "");
+  const available = companyProperties().filter((property) => !search || enterprisePropertySearchText(property).includes(search));
   enterprisePropertyList.innerHTML = available.length
     ? available
         .map(
@@ -3936,15 +3957,19 @@ function renderEnterprisePropertyPicker() {
                 <strong>Matrícula ${property.registration}</strong>
                 <span>${property.reference || propertyOwnerLabel(property)} - ${property.type === "rural" ? "Rural" : "Urbano"}</span>
               </div>
-              <button type="button" data-enterprise-property-pick="Matrícula ${property.registration}">Selecionar</button>
+              <label class="checkbox-line">
+                <input type="checkbox" name="enterprise-property-pick" value="${property.id}" ${enterprisePropertySelection.some((id) => sameId(id, property.id)) ? "checked" : ""} />
+                Vincular
+              </label>
             </article>
           `,
         )
         .join("")
-    : `<article><strong>Nenhum imóvel encontrado</strong><span>Cadastre um imóvel vinculado a ${enterpriseCompany?.value || "empresa selecionada"}.</span></article>`;
+    : `<article><strong>Nenhum imóvel encontrado</strong><span>Cadastre um imóvel vinculado a ${selectedEnterpriseOwnerCompanyName() || "empresa proprietária selecionada"}.</span></article>`;
 }
 
 function openEnterprisePropertyPicker() {
+  if (field("enterprise-property-search")) field("enterprise-property-search").value = "";
   renderEnterprisePropertyPicker();
   openModal("enterprise-property-modal");
 }
@@ -3956,7 +3981,19 @@ function populateEnterpriseSelects(selectedCompany = "", selectedProperty = "") 
     if (selectedCompany && companyNames.includes(selectedCompany)) enterpriseCompany.value = selectedCompany;
   }
 
-  populateEnterpriseProperties(selectedProperty);
+  if (enterprisePropertyOwnerCompany) {
+    const companyNames = companies.map((company) => company.name);
+    enterprisePropertyOwnerCompany.innerHTML = companyNames.map((name) => `<option>${name}</option>`).join("");
+    const selectedOwner = selectedEnterpriseOwnerCompanyName() || selectedCompany;
+    if (selectedOwner && companyNames.includes(selectedOwner)) enterprisePropertyOwnerCompany.value = selectedOwner;
+    else if (enterpriseCompany?.value) enterprisePropertyOwnerCompany.value = enterpriseCompany.value;
+  }
+
+  if (selectedProperty && !enterprisePropertySelection.length) {
+    const propertyId = propertyIdByLabel(selectedProperty);
+    enterprisePropertySelection = looksLikeUuid(propertyId) ? [propertyId] : [];
+  }
+  updateEnterprisePropertySummary();
 }
 
 function renderEnterprises() {
@@ -3966,10 +4003,11 @@ function renderEnterprises() {
     .map(
       (enterprise) => {
         const modules = enterpriseModules(enterprise);
+        const propertyLabel = enterprisePropertyLabels(enterprise.propertyIds || []).join(", ") || enterprise.property;
         return `
           <article>
             <strong>${enterprise.name}</strong>
-            <span>${enterprise.company} - ${enterprise.property} - ${enterprise.type} - ${enterprise.status} - modulos: ${enterpriseModuleLabels(modules)} - ${enterprise.potentialPolluter ? "CTF/APP: potencialmente poluidor" : "CTF/APP: não classificado"}</span>
+            <span>${enterprise.company} - imóveis: ${propertyLabel} - ${enterprise.type} - ${enterprise.status} - modulos: ${enterpriseModuleLabels(modules)} - ${enterprise.potentialPolluter ? "CTF/APP: potencialmente poluidor" : "CTF/APP: não classificado"}</span>
             <div>
               <button type="button" data-enterprise-action="edit" data-enterprise-id="${enterprise.id}">Editar</button>
               <button type="button" data-enterprise-action="delete" data-enterprise-id="${enterprise.id}">Excluir</button>
@@ -3985,7 +4023,10 @@ function fillEnterpriseForm(enterprise) {
   if (!enterprise) return;
   selectedEnterpriseId = enterprise.id;
   field("enterprise-id").value = enterprise.id;
+  enterprisePropertySelection = [...(enterprise.propertyIds || [])];
   populateEnterpriseSelects(enterprise.company, enterprise.property);
+  if (field("enterprise-property-owner-company")) field("enterprise-property-owner-company").value = enterprise.propertyOwnerCompany || enterprise.company;
+  updateEnterprisePropertySummary();
   field("enterprise-name").value = enterprise.name;
   field("enterprise-type").value = enterprise.type;
   field("enterprise-status").value = enterprise.status;
@@ -3998,6 +4039,7 @@ function newEnterprise() {
   const id = Date.now();
   selectedEnterpriseId = id;
   field("enterprise-id").value = id;
+  enterprisePropertySelection = [];
   populateEnterpriseSelects();
   field("enterprise-name").value = "";
   field("enterprise-type").value = "Industrial";
@@ -4017,7 +4059,9 @@ async function saveEnterprise() {
     id: id || Date.now(),
     name: field("enterprise-name").value,
     company: field("enterprise-company").value,
+    propertyOwnerCompany: field("enterprise-property-owner-company")?.value || field("enterprise-company").value,
     property: field("enterprise-property").value,
+    propertyIds: [...enterprisePropertySelection],
     type: field("enterprise-type").value,
     status: field("enterprise-status").value,
     responsible: "",
@@ -4039,11 +4083,23 @@ document.querySelector("#enterprise-save")?.addEventListener("click", saveEnterp
 document.querySelector("#enterprise-property-open")?.addEventListener("click", openEnterprisePropertyPicker);
 document.querySelector("#enterprise-modules-open")?.addEventListener("click", openEnterpriseModulesModal);
 document.querySelector("#enterprise-modules-apply")?.addEventListener("click", applyEnterpriseModules);
-enterpriseCompany?.addEventListener("change", () => populateEnterpriseProperties());
+enterpriseCompany?.addEventListener("change", () => {
+  if (enterprisePropertyOwnerCompany && !enterprisePropertyOwnerCompany.value) enterprisePropertyOwnerCompany.value = enterpriseCompany.value;
+});
+enterprisePropertyOwnerCompany?.addEventListener("change", () => {
+  enterprisePropertySelection = enterprisePropertySelection.filter((id) => companyProperties().some((property) => sameId(property.id, id)));
+  updateEnterprisePropertySummary();
+});
+field("enterprise-property-search")?.addEventListener("input", renderEnterprisePropertyPicker);
 enterprisePropertyList?.addEventListener("click", (event) => {
-  const button = event.target.closest("[data-enterprise-property-pick]");
-  if (!button) return;
-  enterpriseProperty.value = button.dataset.enterprisePropertyPick;
+  const checkbox = event.target.closest('input[name="enterprise-property-pick"]');
+  if (!checkbox) return;
+  const id = checkbox.value;
+  if (checkbox.checked && !enterprisePropertySelection.some((item) => sameId(item, id))) enterprisePropertySelection.push(id);
+  if (!checkbox.checked) enterprisePropertySelection = enterprisePropertySelection.filter((item) => !sameId(item, id));
+  updateEnterprisePropertySummary();
+});
+field("enterprise-property-apply")?.addEventListener("click", () => {
   updateEnterprisePropertySummary();
   closeModal("enterprise-property-modal");
 });
@@ -7657,7 +7713,8 @@ async function persistEnterprise(enterprise, wasExisting) {
   const organizationId = await defaultOrganizationId();
   if (!organizationId) return;
   const companyId = companyIdByName(enterprise.company);
-  const propertyId = propertyIdByLabel(enterprise.property);
+  const selectedPropertyIds = (enterprise.propertyIds || []).filter(looksLikeUuid);
+  const propertyId = selectedPropertyIds[0] || propertyIdByLabel(enterprise.property);
   const responsibleId = partnerIdByName(enterprise.responsible);
   if (!looksLikeUuid(companyId) || !looksLikeUuid(propertyId)) {
     alert("Não foi possível salvar o empreendimento no banco porque empresa ou imóvel ainda não possui ID válido no Supabase.");
@@ -7690,6 +7747,11 @@ async function persistEnterprise(enterprise, wasExisting) {
         enterprise_id: saved.id,
         module_id: moduleId,
       })));
+      await window.DocGestorDB.removeWhere("enterprise_properties", `enterprise_id=eq.${encodeURIComponent(saved.id)}`).catch(() => null);
+      await Promise.all(selectedPropertyIds.map((selectedPropertyId) => window.DocGestorDB.create("enterprise_properties", {
+        enterprise_id: saved.id,
+        property_id: selectedPropertyId,
+      }).catch(() => null)));
       renderEnterprises();
       populateEnvironmentalProcessSelects();
     }
@@ -8074,6 +8136,7 @@ async function loadSupabaseData() {
     propertyRows,
     enterpriseRows,
     enterpriseModuleRows,
+    enterprisePropertyRows,
     activityRows,
     activityEnterpriseRows,
     licenseTypeRows,
@@ -8100,6 +8163,7 @@ async function loadSupabaseData() {
     dbList("properties"),
     dbList("enterprises"),
     dbList("enterprise_modules"),
+    dbList("enterprise_properties"),
     dbList("activities"),
     dbList("activity_enterprises"),
     dbList("environmental_license_types"),
@@ -8173,6 +8237,8 @@ async function loadSupabaseData() {
     return {
       id: row.id,
       ownerType: row.owner_type,
+      ownerPartnerId: row.owner_partner_id || "",
+      ownerCompanyId: row.owner_company_id || "",
       owner: ownerRow?.name || "Proprietário não encontrado",
       type: row.type,
       registration: row.registration,
@@ -8199,6 +8265,11 @@ async function loadSupabaseData() {
     name: row.name,
     company: companyById[row.company_id]?.name || "Empresa não encontrada",
     property: propertyById[row.property_id] ? `Matrícula ${propertyById[row.property_id].registration}` : "Imóvel não encontrado",
+    propertyOwnerCompany: propertyById[row.property_id]?.owner_company_id ? companyById[propertyById[row.property_id].owner_company_id]?.name : companyById[row.company_id]?.name || "",
+    propertyIds: [
+      ...enterprisePropertyRows.filter((link) => sameId(link.enterprise_id, row.id)).map((link) => link.property_id),
+      row.property_id,
+    ].filter(Boolean).filter((id, index, all) => all.findIndex((item) => sameId(item, id)) === index),
     type: row.type || "",
     status: row.status || "Planejado",
     responsible: partnerById[row.responsible_partner_id]?.name || "",
