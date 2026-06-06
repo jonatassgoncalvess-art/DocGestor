@@ -1,6 +1,6 @@
 -- DocGestor by Carminatti
--- Ambiente 01.2.3 Cidades e atualização do ambiente 01.2.4 Imóveis
--- Execute este SQL no Supabase antes de salvar cidades ou imóveis com endereço/cidade.
+-- Ambiente 01.2.3 Cidades e atualizacao do ambiente 01.2.4 Imoveis
+-- Execute este SQL no Supabase antes de salvar cidades ou imoveis com endereco/cidade.
 
 create extension if not exists pgcrypto;
 
