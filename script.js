@@ -4951,6 +4951,43 @@ function findActiveLicense(processId, stageNumber = null) {
   });
 }
 
+function normalizedLicenseText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase();
+}
+
+function operationalLicenseCode(license) {
+  const text = normalizedLicenseText([license?.type, license?.licenseType, license?.name].filter(Boolean).join(" "));
+  const tokens = text.split(/[^A-Z0-9]+/).filter(Boolean);
+  if (tokens.includes("LAC") || text.includes("LICENCA AMBIENTAL CORRETIVA")) return "LAC";
+  if (tokens.includes("LAS") || text.includes("LICENCA AMBIENTAL SIMPLIFICADA")) return "LAS";
+  if (tokens.includes("LO") || text.includes("LICENCA DE OPERACAO") || text.includes("LICENCA OPERACAO")) return "LO";
+  return "";
+}
+
+function licenseActiveAt(license, referenceDate = new Date()) {
+  if (!license?.expiryDate) return false;
+  if (["substituida", "substituída", "cancelada", "excluida", "excluída"].includes(String(license.status || "").toLowerCase())) return false;
+  const expiry = parseDateKey(license.expiryDate);
+  if (Number.isNaN(expiry.getTime())) return false;
+  expiry.setHours(23, 59, 59, 999);
+  return expiry >= referenceDate;
+}
+
+function licenseBelongsToEnterprise(license, enterprise) {
+  const process = license?.process || {};
+  if (license?.enterpriseId && sameId(license.enterpriseId, enterprise.id)) return true;
+  if (process.enterpriseId && sameId(process.enterpriseId, enterprise.id)) return true;
+  const enterpriseNames = [process.enterprise, process.title, license.title].map(normalizeSearchText);
+  return enterpriseNames.includes(normalizeSearchText(enterprise.name)) && normalizeSearchText(process.company || license.company) === normalizeSearchText(enterprise.company);
+}
+
+function operationalLicensesForEnterprise(enterprise, referenceDate = new Date()) {
+  return activeLicenses().filter((license) => operationalLicenseCode(license) && licenseBelongsToEnterprise(license, enterprise) && licenseActiveAt(license, referenceDate));
+}
+
 function isOperationLicense(license) {
   return String(license?.type || "").toLowerCase().includes("operação");
 }
@@ -5535,6 +5572,7 @@ async function saveEnvironmentalProcess() {
     stages: processStagesForFormat(licensingFormat),
     number: internalNumber,
     title: enterprise?.name || branch || company,
+    enterpriseId: enterprise?.id || "",
     enterprise: enterprise?.name || "",
     company,
     branch,
@@ -5839,6 +5877,7 @@ function registerStageData(process, stage) {
     const license = {
       id: `${process.id}-${stage.number}-${record.licenseNumber}`,
       processId: process.id,
+      enterpriseId: process.enterpriseId || enterpriseIdByName(process.enterprise || process.title),
       processNumber: process.internalNumber,
       stageNumber: stage.number,
       type: record.licenseType || licenseForLicenseStage(process, stage.number),
@@ -7753,6 +7792,85 @@ function renderEnvironmentalDashboard() {
       `<span class="pill ${process.status === "expired" ? "red" : process.status === "pending" ? "yellow" : "green"}">${escapeHtml(processStatusLabel(process.status))}</span>`,
     ]);
   renderDashboardTable("environmental-dashboard-table", ["Processo", "Empreendimento", "Prazo", "Status"], rows, "Nenhum processo ambiental em risco");
+  renderEnvironmentalLegalCompliance();
+}
+
+function endOfMonthReference(monthOffset = 0) {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth() + monthOffset + 1, 0, 23, 59, 59, 999);
+}
+
+function monthShortLabel(date) {
+  return new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(date).replace(".", "");
+}
+
+function environmentalLegalComplianceSnapshot(referenceDate = new Date()) {
+  const environmentalEnterprises = enterprisesForModule("environmental");
+  const rows = environmentalEnterprises.map((enterprise) => {
+    const licenses = operationalLicensesForEnterprise(enterprise, referenceDate);
+    const codes = licenses.map(operationalLicenseCode).filter(Boolean);
+    const uniqueCodes = [...new Set(codes)];
+    const compliant = licenses.length === 1 && uniqueCodes.length === 1;
+    const conflict = licenses.length > 1 || uniqueCodes.length > 1;
+    return {
+      enterprise,
+      licenses,
+      codes,
+      compliant,
+      conflict,
+      status: compliant ? "Conforme" : conflict ? "Conflito operacional" : "Sem licença operacional",
+    };
+  });
+  const compliant = rows.filter((row) => row.compliant).length;
+  const conflict = rows.filter((row) => row.conflict).length;
+  const missing = rows.length - compliant - conflict;
+  const percent = rows.length ? Math.round((compliant / rows.length) * 100) : 0;
+  return { rows, total: rows.length, compliant, conflict, missing, percent };
+}
+
+function renderEnvironmentalLegalCompliance() {
+  const current = environmentalLegalComplianceSnapshot(new Date());
+  if (field("environmental-legal-compliance-percent")) field("environmental-legal-compliance-percent").textContent = `${current.percent}%`;
+  if (field("environmental-legal-total")) field("environmental-legal-total").textContent = current.total;
+  if (field("environmental-legal-ok")) field("environmental-legal-ok").textContent = current.compliant;
+  if (field("environmental-legal-missing")) field("environmental-legal-missing").textContent = current.missing;
+  if (field("environmental-legal-conflict")) field("environmental-legal-conflict").textContent = current.conflict;
+
+  const chart = field("environmental-legal-compliance-chart");
+  if (chart) {
+    const points = Array.from({ length: 6 }, (_, index) => {
+      const reference = index === 0 ? new Date() : endOfMonthReference(index);
+      return {
+        label: index === 0 ? "Atual" : monthShortLabel(reference),
+        percent: environmentalLegalComplianceSnapshot(reference).percent,
+      };
+    });
+    chart.innerHTML = points
+      .map((point) => `
+        <div class="compliance-bar-item">
+          <div class="compliance-bar-track">
+            <span style="height: ${point.percent}%"></span>
+          </div>
+          <strong>${point.percent}%</strong>
+          <small>${point.label}</small>
+        </div>
+      `)
+      .join("");
+  }
+
+  const tableRows = current.rows.map((row) => {
+    const licenseLabel = row.licenses.length
+      ? row.licenses.map((license) => `${operationalLicenseCode(license)} ${license.number || ""}`.trim()).join(", ")
+      : "Nenhuma LAC, LAS ou LO ativa";
+    const pill = row.compliant ? "green" : row.conflict ? "red" : "yellow";
+    return [
+      escapeHtml(row.enterprise.name),
+      escapeHtml(row.enterprise.company || "Empresa não informada"),
+      escapeHtml(licenseLabel),
+      `<span class="pill ${pill}">${row.status}</span>`,
+    ];
+  });
+  renderDashboardTable("environmental-legal-compliance-table", ["Empreendimento", "Empresa", "Licença operacional", "Conformidade"], tableRows, "Nenhum empreendimento com módulo ambiental vinculado");
 }
 
 function renderIptuDashboard() {
@@ -8679,6 +8797,7 @@ async function loadSupabaseData() {
       licensingFormatLabel: "Monofasico",
       number: row.license_number || row.process_number || "Sem número",
       title: enterprises.find((enterprise) => sameId(enterprise.id, row.enterprise_id))?.name || company,
+      enterpriseId: row.enterprise_id || "",
       company,
       type: licenseType,
       licenseTypes: [licenseType],
@@ -8698,6 +8817,7 @@ async function loadSupabaseData() {
         ? {
             id: row.id,
             processId: row.id,
+            enterpriseId: row.enterprise_id || "",
             processNumber: row.process_number || row.license_number,
             stageNumber: 3,
             type: licenseType,

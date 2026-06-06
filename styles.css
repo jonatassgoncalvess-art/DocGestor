@@ -603,6 +603,93 @@ button {
   margin-top: 16px;
 }
 
+.legal-compliance-panel {
+  margin-top: 16px;
+  padding: 16px;
+}
+
+.panel-note {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 6px 0 14px;
+}
+
+.legal-compliance-layout {
+  align-items: stretch;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1.4fr) minmax(220px, 0.7fr);
+  margin-bottom: 16px;
+}
+
+.compliance-chart-screen {
+  align-items: end;
+  background: linear-gradient(180deg, #fff, #f7f8fa);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(6, minmax(48px, 1fr));
+  min-height: 240px;
+  padding: 16px;
+}
+
+.compliance-bar-item {
+  align-items: center;
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+}
+
+.compliance-bar-track {
+  align-items: end;
+  background: #eef1f4;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  height: 150px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.compliance-bar-track span {
+  background: linear-gradient(180deg, var(--green), #0b8a4a);
+  display: block;
+  width: 100%;
+}
+
+.compliance-bar-item strong {
+  font-size: 14px;
+}
+
+.compliance-bar-item small,
+.legal-compliance-summary span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.legal-compliance-summary {
+  display: grid;
+  gap: 10px;
+}
+
+.legal-compliance-summary article {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+}
+
+.legal-compliance-summary strong {
+  font-size: 24px;
+}
+
+.compact-table {
+  box-shadow: none;
+}
+
 .agenda-layout {
   align-items: start;
   display: grid;
