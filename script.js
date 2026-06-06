@@ -1680,7 +1680,8 @@ function defaultPermissionsForProfile(profile) {
 }
 
 function userPermissions(user) {
-  return user?.permissions?.length ? user.permissions : defaultPermissionsForProfile(user?.profile);
+  if (Array.isArray(user?.permissions)) return user.permissions;
+  return defaultPermissionsForProfile(user?.profile);
 }
 
 function canAccess(permissionKey) {
@@ -1709,8 +1710,11 @@ function viewPermission(viewName) {
 function firstAccessibleView() {
   if (canAccess("dashboard")) return "dashboard";
   if (canAccess("environmental")) return "licencas";
+  if (canAccess("iptu")) return "iptu";
+  if (canAccess("diverseDocuments")) return "documentos-diversos";
   if (canAccess("agenda")) return "agenda";
   if (canAccess("admin")) return "admin";
+  if (canAccess("modules")) return "modulos";
   return "home";
 }
 
@@ -2054,7 +2058,7 @@ async function saveCurrentUser() {
     profile: existing?.profile || "Consulta",
     status: existing?.status || "Ativo",
     password: existing?.password || "123456",
-    permissions: existing?.permissions || defaultPermissionsForProfile(existing?.profile || "Consulta"),
+    permissions: Array.isArray(existing?.permissions) ? existing.permissions : [],
   };
 
   if (existing) {
