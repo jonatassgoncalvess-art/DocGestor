@@ -97,8 +97,8 @@
               <button class="admin-link" data-module-license-status="done" data-permission-view="environmental">03.1.4 Concluídas</button>
               <button class="admin-link" data-module-license-status="licenses" data-permission-view="environmental">03.1.5 Licenças</button>
             </div>
-            <button class="admin-link" data-view-target="iptu" data-permission-view="modules">03.2 IPTU</button>
-            <button class="admin-link" data-view-target="documentos-diversos" data-permission-view="modules">03.3 Lembretes Diversos</button>
+            <button class="admin-link" data-view-target="iptu" data-permission-view="iptu">03.2 IPTU</button>
+            <button class="admin-link" data-view-target="documentos-diversos" data-permission-view="diverseDocuments">03.3 Lembretes Diversos</button>
           </div>
           <button class="nav-item" data-view="agenda" data-agenda-menu-toggle="true" data-permission-view="agenda" aria-expanded="false">
             <span>04</span> Agenda
@@ -706,13 +706,13 @@
               <span>03.2 Módulo</span>
               <h3>IPTU</h3>
               <p>Controle de guias, vencimentos, imóveis vinculados e comprovantes de pagamento.</p>
-              <button class="ghost small" data-view-target="iptu" data-permission-view="modules">Abrir 03.2</button>
+              <button class="ghost small" data-view-target="iptu" data-permission-view="iptu">Abrir 03.2</button>
             </article>
             <article class="module-card">
               <span>03.3 Módulo</span>
               <h3>Lembretes Diversos</h3>
               <p>Lembretes avulsos, alertas por data, repetição e estabelecimento vinculado.</p>
-              <button class="ghost small" data-view-target="documentos-diversos" data-permission-view="modules">Abrir 03.3</button>
+              <button class="ghost small" data-view-target="documentos-diversos" data-permission-view="diverseDocuments">Abrir 03.3</button>
             </article>
           </div>
         </section>
@@ -1123,6 +1123,8 @@
           <label><input type="checkbox" data-permission-key="dashboard" /> 02 Painel Geral</label>
           <label><input type="checkbox" data-permission-key="modules" /> 03 Módulos</label>
           <label><input type="checkbox" data-permission-key="environmental" /> 03.1 Licenças Ambientais</label>
+          <label><input type="checkbox" data-permission-key="iptu" /> 03.2 IPTU</label>
+          <label><input type="checkbox" data-permission-key="diverseDocuments" /> 03.3 Lembretes Diversos</label>
           <label><input type="checkbox" data-permission-key="agenda" /> 04 Agenda</label>
           <label><input type="checkbox" data-permission-key="users" /> 01.1 Usuários</label>
           <label><input type="checkbox" data-permission-key="registries" /> 01.2 Cadastros</label>

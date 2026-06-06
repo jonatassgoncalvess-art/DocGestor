@@ -253,8 +253,8 @@ const searchableEnvironments = [
   { code: "03.1.3", title: "Vencidas", detail: "Processos e licenças vencidos", permission: "environmental", action: () => openLicenseStatus("expired") },
   { code: "03.1.4", title: "Concluídas", detail: "Processos concluídos", permission: "environmental", action: () => openLicenseStatus("done") },
   { code: "03.1.5", title: "Licenças", detail: "Licenças ambientais geradas", permission: "environmental", action: () => openLicenseStatus("licenses") },
-  { code: "03.2", title: "IPTU", detail: "Guias, vencimentos e comprovantes", permission: "modules", action: () => openView("iptu") },
-  { code: "03.3", title: "Lembretes Diversos", detail: "Lembretes avulsos, prazos e alertas", permission: "modules", action: () => openView("documentos-diversos") },
+  { code: "03.2", title: "IPTU", detail: "Guias, vencimentos e comprovantes", permission: "iptu", action: () => openView("iptu") },
+  { code: "03.3", title: "Lembretes Diversos", detail: "Lembretes avulsos, prazos e alertas", permission: "diverseDocuments", action: () => openView("documentos-diversos") },
   { code: "04.1", title: "Calendário", detail: "Agenda em formato calendário", permission: "agenda", action: () => openView("agenda") },
   { code: "04.2", title: "Anotações", detail: "Agendamentos e alertas pendentes", permission: "agenda", action: () => openView("agenda-notes") },
   { code: "05.1", title: "Perfil", detail: "Dados cadastrais e senha do usuário", permission: "profile", action: () => openView("profile-settings") },
@@ -1641,7 +1641,7 @@ const MASTER_USER = {
   email: "Admin",
   profile: "Administrador Maximo",
   status: "Ativo",
-  permissions: ["admin", "dashboard", "modules", "environmental", "agenda", "users", "registries", "adminEnvironmental"],
+  permissions: ["admin", "dashboard", "modules", "environmental", "iptu", "diverseDocuments", "agenda", "users", "registries", "adminEnvironmental"],
   isMaster: true,
 };
 
@@ -1671,7 +1671,7 @@ function selectedUser() {
 
 function defaultPermissionsForProfile(profile) {
   if (profile === "Administrador Geral" || profile === "Administrador do Grupo") {
-    return ["admin", "dashboard", "modules", "environmental", "agenda", "users", "registries", "adminEnvironmental"];
+    return ["admin", "dashboard", "modules", "environmental", "iptu", "diverseDocuments", "agenda", "users", "registries", "adminEnvironmental"];
   }
   if (profile === "Gestor Ambiental" || profile === "Operador Ambiental") {
     return ["dashboard", "modules", "environmental", "agenda"];
@@ -1687,14 +1687,19 @@ function canAccess(permissionKey) {
   if (!permissionKey || permissionKey === "home") return true;
   if (permissionKey === "profile") return Boolean(currentUser);
   if (!currentUser) return false;
-  return userPermissions(currentUser).includes(permissionKey);
+  const permissions = userPermissions(currentUser);
+  if (permissionKey === "modules") {
+    return permissions.some((permission) => ["modules", "environmental", "iptu", "diverseDocuments"].includes(permission));
+  }
+  return permissions.includes(permissionKey);
 }
 
 function viewPermission(viewName) {
   if (viewName === "admin" || viewName === "usuarios" || viewName === "cadastros") return "admin";
   if (viewName === "dashboard") return "dashboard";
   if (viewName === "modulos") return "modules";
-  if (viewName === "iptu" || viewName === "documentos-diversos") return "modules";
+  if (viewName === "iptu") return "iptu";
+  if (viewName === "documentos-diversos") return "diverseDocuments";
   if (viewName === "licencas") return "environmental";
   if (viewName === "agenda" || viewName === "agenda-notes") return "agenda";
   if (viewName === "settings" || viewName === "profile-settings") return "profile";
@@ -2731,7 +2736,7 @@ function sendModuleLabel(moduleKey) {
 const alertModulePermissionMap = {
   environmental: "environmental",
   iptu: "iptu",
-  "diverse-documents": "documentos-diversos",
+  "diverse-documents": "diverseDocuments",
 };
 
 function userHasModuleAccess(user, moduleId) {
