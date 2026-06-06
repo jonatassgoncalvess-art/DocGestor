@@ -1749,6 +1749,18 @@ button {
   gap: 8px;
 }
 
+.search-inline {
+  color: var(--muted);
+  display: grid;
+  font-size: 13px;
+  gap: 6px;
+  margin: 0 0 12px;
+}
+
+.search-inline input {
+  max-width: 520px;
+}
+
 .crud-list {
   display: grid;
   gap: 10px;

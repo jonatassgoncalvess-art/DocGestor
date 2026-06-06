@@ -63,6 +63,8 @@
               <button class="admin-link" data-admin-target="empresas-filiais">01.2.2 Empresas e Filiais</button>
               <button class="admin-link" data-admin-target="cidades-admin">01.2.3 Cidades</button>
               <button class="admin-link" data-admin-target="imoveis-admin">01.2.4 Imóveis</button>
+              <button class="admin-link" data-admin-target="imoveis-urbanos-admin">01.2.4.1 Urbanos</button>
+              <button class="admin-link" data-admin-target="imoveis-rurais-admin">01.2.4.2 Rurais</button>
               <button class="admin-link" data-admin-target="empreendimentos-admin">01.2.5 Empreendimento</button>
               <button class="admin-link" data-admin-target="atividades-admin">01.2.6 Atividades</button>
             </div>
@@ -276,7 +278,42 @@
                 </div>
                 <section class="panel">
                   <div class="list-head"><h3>Imóveis cadastrados</h3><span id="property-count">2 itens</span></div>
+                  <label class="search-inline">Buscar imóvel
+                    <input id="property-search" type="search" placeholder="Buscar por matrícula, proprietário, lote, quadra, gleba ou referência" />
+                  </label>
                   <div class="crud-list" id="property-list"></div>
+                </section>
+              </section>
+
+              <section class="admin-panel" id="admin-imoveis-urbanos-admin">
+                <div class="section-title">
+                  <div>
+                    <p class="eyebrow">01.2.4.1 Urbanos</p>
+                    <h2>Listagem automática de imóveis urbanos</h2>
+                  </div>
+                </div>
+                <section class="panel">
+                  <div class="list-head"><h3>Imóveis urbanos</h3><span id="urban-property-count">0 itens</span></div>
+                  <label class="search-inline">Buscar imóvel urbano
+                    <input id="urban-property-search" type="search" placeholder="Buscar por matrícula, proprietário, lote, quadra ou referência" />
+                  </label>
+                  <div class="crud-list" id="urban-property-list"></div>
+                </section>
+              </section>
+
+              <section class="admin-panel" id="admin-imoveis-rurais-admin">
+                <div class="section-title">
+                  <div>
+                    <p class="eyebrow">01.2.4.2 Rurais</p>
+                    <h2>Listagem automática de imóveis rurais</h2>
+                  </div>
+                </div>
+                <section class="panel">
+                  <div class="list-head"><h3>Imóveis rurais</h3><span id="rural-property-count">0 itens</span></div>
+                  <label class="search-inline">Buscar imóvel rural
+                    <input id="rural-property-search" type="search" placeholder="Buscar por matrícula, proprietário, lote, gleba ou referência" />
+                  </label>
+                  <div class="crud-list" id="rural-property-list"></div>
                 </section>
               </section>
 

@@ -275,6 +275,8 @@ const searchableEnvironments = [
   { code: "01.2.2", title: "Empresas e Filiais", detail: "Matrizes, filiais e sócios vinculados", permission: "registries", action: () => openAdminSearchPanel("empresas-filiais") },
   { code: "01.2.3", title: "Cidades", detail: "Cidades usadas nos imóveis", permission: "registries", action: () => openAdminSearchPanel("cidades-admin") },
   { code: "01.2.4", title: "Imóveis", detail: "Imóveis urbanos, rurais e proprietários", permission: "registries", action: () => openAdminSearchPanel("imoveis-admin") },
+  { code: "01.2.4.1", title: "Urbanos", detail: "Listagem automática de imóveis urbanos", permission: "registries", action: () => openAdminSearchPanel("imoveis-urbanos-admin") },
+  { code: "01.2.4.2", title: "Rurais", detail: "Listagem automática de imóveis rurais", permission: "registries", action: () => openAdminSearchPanel("imoveis-rurais-admin") },
   { code: "01.2.5", title: "Empreendimento", detail: "Empresas vinculadas a imóveis", permission: "registries", action: () => openAdminSearchPanel("empreendimentos-admin") },
   { code: "01.2.6", title: "Atividades", detail: "Atividades, CNAE, CNPJ e CTF/APP", permission: "registries", action: () => openAdminSearchPanel("atividades-admin") },
   { code: "01.3.1", title: "Tipos de Licenças", detail: "Classificação ambiental", permission: "adminEnvironmental", action: () => openAdminSearchPanel("tipos-licencas") },
@@ -1770,7 +1772,7 @@ function applyAccessControl() {
   document.querySelectorAll('[data-admin-target="usuarios-admin"]').forEach((element) => {
     element.hidden = !canAccess("users");
   });
-  document.querySelectorAll('[data-admin-target="socios-admin"], [data-admin-target="empresas-filiais"], [data-admin-target="cidades-admin"], [data-admin-target="imoveis-admin"], [data-admin-target="empreendimentos-admin"], [data-admin-target="atividades-admin"]').forEach((element) => {
+  document.querySelectorAll('[data-admin-target="socios-admin"], [data-admin-target="empresas-filiais"], [data-admin-target="cidades-admin"], [data-admin-target="imoveis-admin"], [data-admin-target="imoveis-urbanos-admin"], [data-admin-target="imoveis-rurais-admin"], [data-admin-target="empreendimentos-admin"], [data-admin-target="atividades-admin"]').forEach((element) => {
     element.hidden = !canAccess("registries");
   });
   document.querySelectorAll('[data-admin-target="tipos-licencas"], [data-admin-target="documentos-ambientais"], [data-admin-target="modelos-checklist"]').forEach((element) => {
@@ -3746,6 +3748,10 @@ let selectedPropertyId = 0;
 let pendingPropertyDeleteId = null;
 const propertyList = document.querySelector("#property-list");
 const propertyCount = document.querySelector("#property-count");
+const urbanPropertyList = document.querySelector("#urban-property-list");
+const urbanPropertyCount = document.querySelector("#urban-property-count");
+const ruralPropertyList = document.querySelector("#rural-property-list");
+const ruralPropertyCount = document.querySelector("#rural-property-count");
 const propertyOwnerType = document.querySelector("#property-owner-type");
 const propertyOwner = document.querySelector("#property-owner");
 const propertyType = document.querySelector("#property-type");
@@ -3823,32 +3829,63 @@ function updatePropertyFields() {
   updateReserveCalculation();
 }
 
-function renderProperties() {
-  if (!propertyList) return;
-  propertyCount.textContent = `${properties.length} itens`;
-  propertyList.innerHTML = properties
+function propertyListSummary(property) {
+  const owner = property.owner || propertyOwnerLabel(property) || "Proprietário não informado";
+  const locationFields = property.type === "urban"
+    ? `Lote ${property.lot || "não informado"} - Quadra ${property.block || "não informada"}`
+    : `Lote ${property.lot || "não informado"} - Gleba ${property.glebe || "não informada"}`;
+  return `Proprietário: ${owner} - ${locationFields} - Referência: ${property.reference || "Não informada"}`;
+}
+
+function propertySearchText(property) {
+  return normalizeSearchText([
+    property.registration,
+    property.owner,
+    propertyOwnerLabel(property),
+    property.lot,
+    property.block,
+    property.glebe,
+    property.reference,
+    property.city,
+  ].filter(Boolean).join(" "));
+}
+
+function filteredPropertiesByMode(mode, searchValue = "") {
+  const search = normalizeSearchText(searchValue);
+  return properties.filter((property) => {
+    if (mode === "urban" && property.type !== "urban") return false;
+    if (mode === "rural" && property.type !== "rural") return false;
+    return !search || propertySearchText(property).includes(search);
+  });
+}
+
+function renderPropertyList(target, countTarget, items, options = {}) {
+  if (!target || !countTarget) return;
+  countTarget.textContent = `${items.length} itens`;
+  target.innerHTML = items.length
+    ? items
     .map((property) => {
-      const typeLabel = property.type === "urban" ? `Urbano - ${property.block}` : `Rural - ${property.glebe}`;
-      const areaLabel =
-        property.type === "urban"
-          ? `${property.hasConstruction ? `Construção ${property.constructionArea} m2` : "Sem construção informada"}`
-          : `${property.ruralArea} m2 total | RL ${property.legalReserve} m2 | APP ${property.appArea} m2`;
-      const registryLabel =
-        property.type === "urban"
-          ? `inscricao imobiliaria: ${property.municipalRegistration || "Não informada"}`
-          : `CAR: ${property.carNumber || "Não informado"} | CCIR/INCRA: ${property.ccirIncra || "Não informado"}`;
       return `
         <article>
           <strong>Matrícula ${property.registration}</strong>
-          <span>${typeLabel} - ${areaLabel} - ${registryLabel} - proprietário: ${property.owner} - cidade: ${property.city || "Não informada"} - endereço: ${property.address || "Não informado"} - referência: ${property.reference || "Não informada"}</span>
-          <div>
-            <button type="button" data-property-action="edit" data-property-id="${property.id}">Editar</button>
-            <button type="button" data-property-action="delete" data-property-id="${property.id}">Excluir</button>
-          </div>
+          <span>${propertyListSummary(property)}</span>
+          ${options.actions ? `
+            <div>
+              <button type="button" data-property-action="edit" data-property-id="${property.id}">Editar</button>
+              <button type="button" data-property-action="delete" data-property-id="${property.id}">Excluir</button>
+            </div>
+          ` : "<div></div>"}
         </article>
       `;
     })
-    .join("");
+    .join("")
+    : `<article><strong>Nenhum imóvel encontrado</strong><span>Ajuste a busca ou cadastre um novo imóvel.</span><div></div></article>`;
+}
+
+function renderProperties() {
+  renderPropertyList(propertyList, propertyCount, filteredPropertiesByMode("all", field("property-search")?.value || ""), { actions: true });
+  renderPropertyList(urbanPropertyList, urbanPropertyCount, filteredPropertiesByMode("urban", field("urban-property-search")?.value || ""));
+  renderPropertyList(ruralPropertyList, ruralPropertyCount, filteredPropertiesByMode("rural", field("rural-property-search")?.value || ""));
 }
 
 function fillPropertyForm(property) {
@@ -3974,6 +4011,9 @@ propertyOwnerType?.addEventListener("change", () => populatePropertyOwners());
 propertyType?.addEventListener("change", updatePropertyFields);
 propertyRuralUse?.addEventListener("change", updatePropertyFields);
 propertyHasConstruction?.addEventListener("change", updatePropertyFields);
+field("property-search")?.addEventListener("input", renderProperties);
+field("urban-property-search")?.addEventListener("input", renderProperties);
+field("rural-property-search")?.addEventListener("input", renderProperties);
 ["property-urban-area", "property-rural-area", "property-legal-reserve", "property-legal-reserve-ha", "property-app-area", "property-app-area-ha", "property-construction-area"].forEach((id) => {
   document.querySelector(`#${id}`)?.addEventListener("input", () => {
     const input = field(id);
