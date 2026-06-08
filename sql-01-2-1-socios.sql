@@ -25,7 +25,7 @@ create table if not exists partners (
   updated_at timestamptz not null default now(),
   constraint partners_document_by_organization_unique unique (organization_id, document),
   constraint partners_status_check check (status in ('Ativo', 'Inativo')),
-  constraint partners_role_check check (role in ('Socio', 'Socio administrador', 'Procurador', 'Responsavel legal'))
+  constraint partners_role_check check (role in ('Sócio', 'Sócio administrador', 'Procurador', 'Responsável legal', 'Socio', 'Socio administrador', 'Responsavel legal'))
 );
 
 create or replace function set_updated_at()
@@ -62,4 +62,3 @@ on partners
 for all
 using (true)
 with check (true);
-
