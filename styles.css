@@ -229,6 +229,10 @@ textarea {
   color: #ffffff;
 }
 
+.login-brand .brand-doc-text {
+  color: var(--ink);
+}
+
 .brand-gestor-text,
 .brand .brand-submark {
   color: var(--brand-red);
