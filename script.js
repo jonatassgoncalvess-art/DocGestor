@@ -7793,6 +7793,7 @@ function renderEnvironmentalDashboard() {
     ]);
   renderDashboardTable("environmental-dashboard-table", ["Processo", "Empreendimento", "Prazo", "Status"], rows, "Nenhum processo ambiental em risco");
   renderEnvironmentalLegalCompliance();
+  renderEnvironmentalReserveDashboard();
 }
 
 function endOfMonthReference(monthOffset = 0) {
@@ -7871,6 +7872,65 @@ function renderEnvironmentalLegalCompliance() {
     ];
   });
   renderDashboardTable("environmental-legal-compliance-table", ["Empreendimento", "Empresa", "Licença operacional", "Conformidade"], tableRows, "Nenhum empreendimento com módulo ambiental vinculado");
+}
+
+function renderEnvironmentalReserveDashboard() {
+  const ruralProperties = properties.filter((property) => property.type === "rural");
+  const totals = ruralProperties.reduce(
+    (acc, property) => {
+      acc.area += Number(property.ruralArea || 0);
+      acc.reserve += Number(property.legalReserve || 0);
+      return acc;
+    },
+    { area: 0, reserve: 0 },
+  );
+  const required = totals.area * 0.2;
+  const reservePercent = totals.area ? Math.round((totals.reserve / totals.area) * 100) : 0;
+  const reserveRatio = totals.area ? Math.min(100, (totals.reserve / totals.area) * 100) : 0;
+  const requiredRatio = totals.area ? Math.min(100, (required / totals.area) * 100) : 0;
+
+  if (field("environmental-reserve-percent")) {
+    field("environmental-reserve-percent").textContent = `${reservePercent}%`;
+    field("environmental-reserve-percent").className = `pill ${totals.reserve >= required ? "green" : "yellow"}`;
+  }
+  if (field("environmental-reserve-properties")) field("environmental-reserve-properties").textContent = ruralProperties.length;
+  if (field("environmental-reserve-total-area")) field("environmental-reserve-total-area").textContent = formatAreaM2(totals.area);
+  if (field("environmental-reserve-total-area-reserved")) field("environmental-reserve-total-area-reserved").textContent = formatAreaM2(totals.reserve);
+  if (field("environmental-reserve-required-area")) field("environmental-reserve-required-area").textContent = formatAreaM2(required);
+
+  const chart = field("environmental-reserve-chart");
+  if (chart) {
+    const bars = [
+      { label: "Área total", percent: totals.area ? 100 : 0, value: formatAreaM2(totals.area), tone: "total" },
+      { label: "Reserva legal", percent: reserveRatio, value: formatAreaM2(totals.reserve), tone: totals.reserve >= required ? "ok" : "warning" },
+      { label: "Mínimo 20%", percent: requiredRatio, value: formatAreaM2(required), tone: "required" },
+    ];
+    chart.innerHTML = bars
+      .map((bar) => `
+        <div class="compliance-bar-item reserve-bar-item">
+          <div class="compliance-bar-track reserve-${bar.tone}">
+            <span style="height: ${bar.percent}%"></span>
+          </div>
+          <strong>${bar.value}</strong>
+          <small>${bar.label}</small>
+        </div>
+      `)
+      .join("");
+  }
+
+  const rows = ruralProperties.map((property) => {
+    const requiredByProperty = propertyReserveRequired(property);
+    const reserve = Number(property.legalReserve || 0);
+    const percent = Number(property.ruralArea || 0) ? Math.round((reserve / Number(property.ruralArea || 0)) * 100) : 0;
+    return [
+      escapeHtml(`Matrícula ${property.registration || "Não informada"}`),
+      escapeHtml(propertyOwnerLabel(property)),
+      escapeHtml(formatAreaM2(property.ruralArea)),
+      escapeHtml(`${formatAreaM2(reserve)} (${percent}%)`),
+      `<span class="pill ${reserve >= requiredByProperty ? "green" : "yellow"}">${reserve >= requiredByProperty ? "Conforme" : "Abaixo de 20%"}</span>`,
+    ];
+  });
+  renderDashboardTable("environmental-reserve-table", ["Imóvel", "Proprietário", "Área total", "Reserva legal", "Status"], rows, "Nenhum imóvel rural cadastrado");
 }
 
 function renderIptuDashboard() {

@@ -658,6 +658,30 @@ button {
   width: 100%;
 }
 
+.reserve-chart-screen {
+  grid-template-columns: repeat(3, minmax(80px, 1fr));
+}
+
+.reserve-bar-item .compliance-bar-track {
+  height: 170px;
+}
+
+.reserve-total span {
+  background: linear-gradient(180deg, #25313f, #0b1118);
+}
+
+.reserve-required span {
+  background: linear-gradient(180deg, var(--brand-red), #9f1020);
+}
+
+.reserve-warning span {
+  background: linear-gradient(180deg, var(--yellow), #b97900);
+}
+
+.reserve-ok span {
+  background: linear-gradient(180deg, var(--green), #0b8a4a);
+}
+
 .compliance-bar-item strong {
   font-size: 14px;
 }
