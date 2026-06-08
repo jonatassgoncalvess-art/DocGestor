@@ -3,7 +3,40 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "main": "desktop/main.cjs",
+  "description": "DocGestor by Carminatti",
+  "author": "Grupo Carminatti",
+  "scripts": {
+    "desktop": "electron .",
+    "build:win": "electron-builder --win nsis",
+    "build:win:portable": "electron-builder --win portable"
+  },
   "dependencies": {
     "resend": "^4.0.1"
+  },
+  "devDependencies": {
+    "electron": "^42.3.3",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "br.com.carminatti.docgestor",
+    "productName": "DocGestor by Carminatti",
+    "artifactName": "DocGestor-by-Carminatti-${version}-${arch}.${ext}",
+    "files": [
+      "desktop/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "DocGestor"
+    }
   }
 }
