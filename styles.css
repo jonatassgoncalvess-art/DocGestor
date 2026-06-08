@@ -45,6 +45,7 @@ body {
   min-height: 100vh;
   padding: 24px;
   place-items: center;
+  position: relative;
 }
 
 .login-card {
@@ -86,6 +87,28 @@ body {
   color: var(--brand-red);
   font-size: 13px;
   padding: 10px 12px;
+}
+
+.login-download {
+  align-items: center;
+  background: var(--primary);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  bottom: 24px;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.24);
+  color: #fff;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 700;
+  min-height: 42px;
+  padding: 0 16px;
+  position: absolute;
+  right: 24px;
+  text-decoration: none;
+}
+
+.login-download:hover {
+  background: var(--primary-dark);
 }
 
 .current-user {
@@ -2912,6 +2935,17 @@ textarea {
 }
 
 @media (max-width: 700px) {
+  .login-screen {
+    padding-bottom: 84px;
+  }
+
+  .login-download {
+    bottom: 18px;
+    justify-content: center;
+    left: 24px;
+    right: 24px;
+  }
+
   .main,
   .sidebar {
     padding: 18px;
