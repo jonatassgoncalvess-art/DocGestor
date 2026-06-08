@@ -9,6 +9,8 @@ const settingsSubnav = document.querySelector("#settings-subnav");
 const SESSION_USER_KEY = "docgestor.sessionUser";
 const SESSION_VIEW_KEY = "docgestor.sessionView";
 const SESSION_LICENSE_STATUS_KEY = "docgestor.licenseStatus";
+const APP_VERSION_MANIFEST_URL = "downloads/app-version.json";
+const APP_INSTALLER_URL = "downloads/DocGestor-by-Carminatti-1.0.1-x64.exe";
 
 const titles = {
   home: "Home",
@@ -31,6 +33,46 @@ const titles = {
 
 function sameId(left, right) {
   return String(left) === String(right);
+}
+
+function compareVersions(currentVersion, availableVersion) {
+  const currentParts = String(currentVersion || "0").split(".").map((part) => Number(part) || 0);
+  const availableParts = String(availableVersion || "0").split(".").map((part) => Number(part) || 0);
+  const length = Math.max(currentParts.length, availableParts.length);
+  for (let index = 0; index < length; index += 1) {
+    const current = currentParts[index] || 0;
+    const available = availableParts[index] || 0;
+    if (available > current) return 1;
+    if (available < current) return -1;
+  }
+  return 0;
+}
+
+async function configureDesktopDownloadButton() {
+  const link = document.querySelector("#desktop-download-link");
+  if (!link) return;
+  link.href = APP_INSTALLER_URL;
+  link.hidden = false;
+
+  const desktopInfo = window.DocGestorDesktop;
+  if (!desktopInfo?.version) {
+    link.textContent = "Baixar app Windows";
+    return;
+  }
+
+  link.hidden = true;
+  try {
+    const response = await fetch(`${APP_VERSION_MANIFEST_URL}?t=${Date.now()}`, { cache: "no-store" });
+    if (!response.ok) return;
+    const manifest = await response.json();
+    const hasUpdate = compareVersions(desktopInfo.version, manifest.version) > 0;
+    if (!hasUpdate) return;
+    link.href = manifest.downloadUrl || APP_INSTALLER_URL;
+    link.textContent = `Atualização disponível (${manifest.version})`;
+    link.hidden = false;
+  } catch (error) {
+    console.warn("Não foi possível verificar atualização do app Windows.", error.message);
+  }
 }
 
 function createUuid() {
@@ -9089,6 +9131,7 @@ async function processPendingAlertsOnServer() {
   }
 }
 
+configureDesktopDownloadButton();
 renderDashboard();
 loadSupabaseData().then(() => {
   processPendingAlertsOnServer();

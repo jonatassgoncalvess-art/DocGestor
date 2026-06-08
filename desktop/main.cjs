@@ -1,3 +1,4 @@
+const path = require("path");
 const { app, BrowserWindow, dialog, shell } = require("electron");
 
 const APP_URL = "https://doc-gestor.vercel.app";
@@ -9,12 +10,14 @@ function createWindow() {
     minWidth: 1100,
     minHeight: 700,
     title: "DocGestor by Carminatti",
+    icon: path.join(__dirname, "../assets/app-icon.ico"),
     autoHideMenuBar: true,
     backgroundColor: "#f3f4f6",
     webPreferences: {
+      preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true,
+      sandbox: false,
     },
   });
 

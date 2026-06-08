@@ -146,23 +146,22 @@ textarea {
 }
 
 .brand-mark {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, var(--brand-red), var(--brand-red-dark));
-  border: 1px solid #2b2b2b;
-  border-radius: 10px 22px 22px 10px;
-  box-shadow: inset -10px 0 0 #f7f7f7, 0 10px 24px rgba(237, 16, 31, 0.18);
+  width: 52px;
+  height: 52px;
   display: grid;
   place-items: center;
-  position: relative;
+  flex: 0 0 52px;
 }
 
 .brand-mark::after {
-  background: var(--brand-black);
-  border-radius: 6px 16px 16px 6px;
-  content: "";
-  inset: 9px 12px 9px 9px;
-  position: absolute;
+  display: none;
+}
+
+.brand-logo-image {
+  display: block;
+  height: 52px;
+  object-fit: contain;
+  width: 52px;
 }
 
 .brand-doc {

@@ -1,6 +1,6 @@
 {
   "name": "docgestor",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "main": "desktop/main.cjs",
@@ -24,9 +24,11 @@
     "artifactName": "DocGestor-by-Carminatti-${version}-${arch}.${ext}",
     "files": [
       "desktop/**/*",
+      "assets/**/*",
       "package.json"
     ],
     "win": {
+      "icon": "assets/app-icon.ico",
       "target": [
         "nsis"
       ]
