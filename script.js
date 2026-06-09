@@ -10,7 +10,7 @@ const SESSION_USER_KEY = "docgestor.sessionUser";
 const SESSION_VIEW_KEY = "docgestor.sessionView";
 const SESSION_LICENSE_STATUS_KEY = "docgestor.licenseStatus";
 const APP_VERSION_MANIFEST_URL = "downloads/app-version.json";
-const APP_INSTALLER_URL = "downloads/DocGestor-by-Carminatti-1.0.1-x64.exe";
+const APP_INSTALLER_URL = "downloads/DocGestor-by-Carminatti-1.0.2-x64.exe";
 
 const titles = {
   home: "Home",

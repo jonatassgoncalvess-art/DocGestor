@@ -1,8 +1,8 @@
 {
-  "version": "1.0.1",
+  "version": "1.0.2",
   "platform": "windows",
-  "downloadUrl": "downloads/DocGestor-by-Carminatti-1.0.1-x64.exe",
-  "fileName": "DocGestor-by-Carminatti-1.0.1-x64.exe",
-  "releasedAt": "2026-06-08",
-  "notes": "Atualiza o logo oficial do DocGestor e habilita o aviso de nova versão no app Windows."
+  "downloadUrl": "downloads/DocGestor-by-Carminatti-1.0.2-x64.exe",
+  "fileName": "DocGestor-by-Carminatti-1.0.2-x64.exe",
+  "releasedAt": "2026-06-09",
+  "notes": "Atualiza o ícone oficial do app Windows."
 }
