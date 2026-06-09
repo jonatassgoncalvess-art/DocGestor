@@ -4669,13 +4669,45 @@ function renderEnvironmentalDocuments() {
   environmentalDocumentList.innerHTML = environmentalDocuments.map((item) => `
     <article>
       <strong>${item.name}</strong>
-      <span>Licenças: ${item.licenses.join(", ")} - vencimento: ${item.expiration} - obrigatório: ${item.required} - parâmetros: ${item.parameters || "Não informado"}</span>
+      <span>${item.licenses.length} licença(s) vinculada(s)</span>
       <div>
+        <button type="button" data-document-action="view" data-document-id="${item.id}">Ver</button>
         <button type="button" data-document-action="edit" data-document-id="${item.id}">Editar</button>
         <button type="button" data-document-action="delete" data-document-id="${item.id}">Excluir</button>
       </div>
     </article>
   `).join("");
+}
+
+function openEnvironmentalDocumentView(item) {
+  const titleElement = field("environmental-document-view-title");
+  const content = field("environmental-document-view-content");
+  if (titleElement) titleElement.textContent = item.name || "Documento";
+  if (content) {
+    content.innerHTML = `
+      <div>
+        <span>Nome</span>
+        <strong>${escapeHtml(item.name || "Não informado")}</strong>
+      </div>
+      <div>
+        <span>Licenças vinculadas</span>
+        <p>${escapeHtml(item.licenses?.length ? item.licenses.join(", ") : "Nenhuma licença vinculada")}</p>
+      </div>
+      <div>
+        <span>Exige vencimento</span>
+        <strong>${escapeHtml(item.expiration || "Não informado")}</strong>
+      </div>
+      <div>
+        <span>Obrigatório por padrão</span>
+        <strong>${escapeHtml(item.required || "Não informado")}</strong>
+      </div>
+      <div>
+        <span>Parâmetros do Documento</span>
+        <p>${escapeHtml(item.parameters || "Não informado")}</p>
+      </div>
+    `;
+  }
+  openModal("environmental-document-view-modal");
 }
 
 function renderDocumentLicenseChecks(selectedLicenses = []) {
@@ -4827,6 +4859,9 @@ environmentalDocumentList?.addEventListener("click", (event) => {
   const id = button.dataset.documentId;
   const item = environmentalDocuments.find((entry) => sameId(entry.id, id));
   if (!item) return;
+  if (button.dataset.documentAction === "view") {
+    openEnvironmentalDocumentView(item);
+  }
   if (button.dataset.documentAction === "edit") {
     field("environmental-document-id").value = item.id;
     field("environmental-document-name").value = item.name;

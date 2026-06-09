@@ -1577,6 +1577,40 @@ button {
   flex: 0 0 auto;
 }
 
+.detail-list {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  margin-top: 12px;
+  overflow: hidden;
+}
+
+.detail-list div {
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+}
+
+.detail-list div:last-child {
+  border-bottom: 0;
+}
+
+.detail-list span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.detail-list strong,
+.detail-list p {
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.45;
+  margin: 0;
+}
+
 .partner-checks > span {
   color: var(--muted);
   font-size: 13px;
