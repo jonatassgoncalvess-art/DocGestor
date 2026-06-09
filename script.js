@@ -2054,6 +2054,16 @@ function confirmDelete(message, onConfirm) {
   openModal("generic-delete-modal");
 }
 
+function showSystemMessage(message, titleText = "Aviso") {
+  const titleElement = field("system-message-title");
+  const textElement = field("system-message-text");
+  if (titleElement) titleElement.textContent = titleText;
+  if (textElement) textElement.textContent = String(message || "");
+  openModal("system-message-modal");
+}
+
+window.alert = (message) => showSystemMessage(message);
+
 function fillUserForm(user) {
   if (!user) return;
   selectedUserId = user.id;
@@ -2288,10 +2298,17 @@ document.querySelectorAll(".modal-backdrop").forEach((modal) => {
     if (event.target === modal) closeModal(modal.id);
   });
 });
-document.querySelector("#generic-delete-confirm")?.addEventListener("click", () => {
-  if (typeof genericDeleteCallback === "function") genericDeleteCallback();
+document.querySelector("#system-message-ok")?.addEventListener("click", () => closeModal("system-message-modal"));
+document.querySelector("#generic-delete-confirm")?.addEventListener("click", async () => {
+  const callback = genericDeleteCallback;
   genericDeleteCallback = null;
-  closeModal("generic-delete-modal");
+  try {
+    if (typeof callback === "function") await callback();
+    closeModal("generic-delete-modal");
+  } catch (error) {
+    console.warn("Não foi possível concluir a exclusão.", error.message);
+    showSystemMessage(`Não foi possível concluir a exclusão: ${error.message}`, "Exclusão não concluída");
+  }
 });
 userList?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-user-action]");
@@ -8152,10 +8169,60 @@ function documentIdByName(name) {
 async function persistDelete(table, id, label) {
   if (!window.DocGestorDB || !looksLikeUuid(id)) return;
   try {
+    await cleanupBeforeDelete(table, id);
     await window.DocGestorDB.remove(table, id);
+    return true;
   } catch (error) {
     console.warn(`Não foi possível excluir ${label} no Supabase.`, error.message);
+    showSystemMessage(
+      `Não foi possível excluir ${label} no banco de dados: ${error.message}`,
+      "Exclusão não concluída",
+    );
+    return false;
   }
+}
+
+async function cleanupBeforeDelete(table, id) {
+  const encodedId = encodeURIComponent(id);
+  const removalsByTable = {
+    app_users: [
+      ["user_permissions", `user_id=eq.${encodedId}`],
+      ["alert_recipient_modules", `recipient_id=eq.${encodedId}`],
+    ],
+    partners: [
+      ["company_partners", `partner_id=eq.${encodedId}`],
+    ],
+    companies: [
+      ["company_partners", `company_id=eq.${encodedId}`],
+    ],
+    properties: [
+      ["enterprise_properties", `property_id=eq.${encodedId}`],
+    ],
+    enterprises: [
+      ["enterprise_modules", `enterprise_id=eq.${encodedId}`],
+      ["enterprise_properties", `enterprise_id=eq.${encodedId}`],
+      ["activity_enterprises", `enterprise_id=eq.${encodedId}`],
+    ],
+    activities: [
+      ["activity_enterprises", `activity_id=eq.${encodedId}`],
+    ],
+    environmental_license_types: [
+      ["environmental_license_type_phases", `license_type_id=eq.${encodedId}`],
+      ["environmental_document_license_types", `license_type_id=eq.${encodedId}`],
+    ],
+    environmental_documents: [
+      ["environmental_document_license_types", `document_id=eq.${encodedId}`],
+      ["environmental_checklist_model_documents", `document_id=eq.${encodedId}`],
+    ],
+    environmental_checklist_models: [
+      ["environmental_checklist_model_documents", `checklist_model_id=eq.${encodedId}`],
+    ],
+    alert_recipients: [
+      ["alert_recipient_modules", `recipient_id=eq.${encodedId}`],
+    ],
+  };
+  const removals = removalsByTable[table] || [];
+  await Promise.all(removals.map(([relatedTable, query]) => window.DocGestorDB.removeWhere(relatedTable, query).catch(() => null)));
 }
 
 async function persistPartner(partner, wasExisting) {
