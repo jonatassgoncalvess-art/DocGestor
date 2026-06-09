@@ -578,6 +578,33 @@ function diverseReminderMessageHtml(reminder, alert, dateValue) {
   `;
 }
 
+function addDiverseReminderAlertHistory(reminder, alert, dateValue, recipient = null, status = "waiting", repeatIndex = 0) {
+  const alertKey = diverseReminderAlertKey(reminder, alert, repeatIndex);
+  const localId = `${alertKey}|${recipient?.email || "module"}`;
+  if (alertHistoryItems.some((item) => item.id === localId || (item.alert_key === alertKey && (!recipient?.email || item.recipient_emails?.includes(recipient.email))))) return;
+  alertHistoryItems.unshift({
+    id: localId,
+    alert_key: alertKey,
+    subject: "Alerta de Prazo",
+    recipient_emails: recipient?.email ? [recipient.email] : [],
+    sender_email: systemEmailConfig.address,
+    status,
+    status_label: status === "sent" ? "Enviado" : "Aguardando",
+    related_type: "diverse_reminder",
+    related_id: reminder.id,
+    related_label: reminder.name,
+    created_at: new Date().toISOString(),
+    sent_at: status === "sent" ? new Date().toISOString() : null,
+    message_html: diverseReminderMessageHtml(reminder, alert, dateValue),
+    raw_payload: {
+      scheduled_for: `${dateValue}T${alert.time || "09:00"}:00`,
+      alert_type: alert.key,
+      reminder_name: reminder.name,
+    },
+  });
+  renderAlertHistory(alertHistoryItems);
+}
+
 function daysBetweenDates(startDateValue, endDateValue) {
   if (!startDateValue || !endDateValue) return 0;
   const start = parseDateKey(startDateValue);
@@ -925,8 +952,10 @@ function scheduleEnvironmentalAlert(alertInfo) {
 }
 
 async function persistDiverseReminderAlert(reminder, alert, dateValue, repeatIndex = 0) {
-  const recipients = activeModuleRecipients("diverse-documents");
+  const recipients = await ensureModuleAlertRecipients("diverse-documents");
   const alertKey = diverseReminderAlertKey(reminder, alert, repeatIndex);
+  const scheduledFor = `${dateValue}T${alert.time || "09:00"}:00`;
+  const messageHtml = diverseReminderMessageHtml(reminder, alert, dateValue);
   addAgendaEvent({
     alertKey,
     date: dateValue,
@@ -946,10 +975,44 @@ async function persistDiverseReminderAlert(reminder, alert, dateValue, repeatInd
       label: reminder.name,
     },
   });
-  if (!window.DocGestorDB || !recipients.length) return;
+  if (!recipients.length) {
+    addDiverseReminderAlertHistory(reminder, alert, dateValue, null, "waiting", repeatIndex);
+    if (window.DocGestorDB) {
+      try {
+        await window.DocGestorDB.removeWhere("alert_history", `alert_key=eq.${encodeURIComponent(alertKey)}&status=eq.waiting`);
+        await window.DocGestorDB.create("alert_history", {
+          alert_key: alertKey,
+          recipient_id: null,
+          module_id: "diverse-documents",
+          subject: "Alerta de Prazo",
+          sender_email: systemEmailConfig.address,
+          recipient_emails: [],
+          status: "waiting",
+          status_label: "Aguardando",
+          related_type: "diverse_reminder",
+          related_id: looksLikeUuid(reminder.id) ? reminder.id : null,
+          related_label: reminder.name,
+          message_html: messageHtml,
+          raw_payload: {
+            scheduled_for: scheduledFor,
+            alert_type: alert.key,
+            reminder_name: reminder.name,
+            warning: "Nenhum destinatário ativo configurado para o módulo 03.3.",
+          },
+        });
+      } catch (error) {
+        console.warn("Não foi possível salvar histórico de lembrete diverso no Supabase.", error.message);
+      }
+    }
+    return;
+  }
+  if (!window.DocGestorDB) {
+    recipients.forEach((recipient) => addDiverseReminderAlertHistory(reminder, alert, dateValue, recipient, "waiting", repeatIndex));
+    return;
+  }
   await Promise.all(recipients.map(async (recipient) => {
     if (!looksLikeUuid(recipient.id)) return;
-    const scheduledFor = `${dateValue}T${alert.time || "09:00"}:00`;
+    addDiverseReminderAlertHistory(reminder, alert, dateValue, recipient, "waiting", repeatIndex);
     try {
       await window.DocGestorDB.removeWhere("alert_queue", `alert_key=eq.${encodeURIComponent(alertKey)}&recipient_id=eq.${encodeURIComponent(recipient.id)}&status=eq.pending`);
       await window.DocGestorDB.create("alert_queue", {
@@ -960,7 +1023,7 @@ async function persistDiverseReminderAlert(reminder, alert, dateValue, repeatInd
         related_id: looksLikeUuid(reminder.id) ? reminder.id : null,
         related_label: reminder.name,
         subject: "Alerta de Prazo",
-        message_html: diverseReminderMessageHtml(reminder, alert, dateValue),
+        message_html: messageHtml,
         status: "pending",
         scheduled_for: scheduledFor,
       });
@@ -977,7 +1040,7 @@ async function persistDiverseReminderAlert(reminder, alert, dateValue, repeatInd
         related_type: "diverse_reminder",
         related_id: looksLikeUuid(reminder.id) ? reminder.id : null,
         related_label: reminder.name,
-        message_html: diverseReminderMessageHtml(reminder, alert, dateValue),
+        message_html: messageHtml,
         raw_payload: {
           scheduled_for: scheduledFor,
           alert_type: alert.key,
@@ -1271,11 +1334,11 @@ function renderDiverseReminders() {
           <article>
             <div>
               <strong>${escapeHtml(reminder.name)}</strong>
-              <span>${escapeHtml(reminder.companyLabel || "Sem estabelecimento vinculado")}</span>
+              ${reminder.companyLabel ? `<span>${escapeHtml(reminder.companyLabel)}</span>` : ""}
             </div>
             <div>
               <strong>${nextAlert ? `${nextAlert.label}: ${formatAgendaDate(nextAlert.date)} às ${nextAlert.time}` : "Sem prazo informado"}</strong>
-              <span>${escapeHtml(reminder.description || "Sem descrição.")}</span>
+              ${reminder.description ? `<span>${escapeHtml(reminder.description)}</span>` : ""}
               <span class="pill ${reminder.status === "resolved" ? "green" : "yellow"}">${reminder.status === "resolved" ? "Resolvido" : "Pendente"}</span>
             </div>
             <div>
@@ -1361,7 +1424,7 @@ function validateDiverseReminderPayload(payload) {
 }
 
 async function persistDiverseReminder(reminder, wasExisting) {
-  if (!window.DocGestorDB) return;
+  if (!window.DocGestorDB) return true;
   try {
     const payload = {
       name: reminder.name,
@@ -1383,8 +1446,11 @@ async function persistDiverseReminder(reminder, wasExisting) {
       [saved] = await window.DocGestorDB.create("diverse_reminders", payload);
     }
     if (saved?.id) reminder.id = saved.id;
+    return true;
   } catch (error) {
     console.warn("Não foi possível salvar o lembrete diverso no Supabase.", error.message);
+    alert(`Não foi possível salvar o lembrete no banco: ${error.message}`);
+    return false;
   }
 }
 
@@ -1425,7 +1491,12 @@ async function saveDiverseReminder() {
   if (existing) await cancelDiverseReminderPendingAlerts(existing);
   if (existing) Object.assign(existing, payload);
   else diverseReminders.push(payload);
-  await persistDiverseReminder(payload, Boolean(existing));
+  const saved = await persistDiverseReminder(payload, Boolean(existing));
+  if (!saved) {
+    if (!existing) diverseReminders = diverseReminders.filter((item) => !sameId(item.id, payload.id));
+    renderDiverseReminders();
+    return;
+  }
   await scheduleDiverseReminderAlerts(payload);
   closeModal("diverse-reminder-modal");
   renderDiverseReminders();
@@ -2934,6 +3005,13 @@ function allModuleRecipients(moduleId) {
 
 function activeModuleRecipients(moduleId) {
   return allModuleRecipients(moduleId).filter(recipientReceivesAlerts);
+}
+
+async function ensureModuleAlertRecipients(moduleId) {
+  if (!window.DocGestorDB) return activeModuleRecipients(moduleId);
+  const moduleUsers = users.filter((user) => user?.email && String(user.status || "Ativo") === "Ativo" && userHasModuleAccess(user, moduleId));
+  await Promise.all(moduleUsers.map((user) => syncUserAlertRecipient(user)));
+  return activeModuleRecipients(moduleId).filter((recipient) => looksLikeUuid(recipient.id));
 }
 
 function renderSendRecipientModuleChecks(selectedModules = ["environmental"]) {
@@ -8761,10 +8839,12 @@ async function persistSendRecipient(recipient, wasExisting) {
         return;
       } catch (fallbackError) {
         console.warn("Não foi possível salvar o e-mail de alerta no Supabase.", fallbackError.message);
+        showSystemMessage(`Não foi possível salvar o e-mail de alerta no banco: ${fallbackError.message}`, "Envios não atualizados");
         return;
       }
     }
     console.warn("Não foi possível salvar o e-mail de alerta no Supabase.", error.message);
+    showSystemMessage(`Não foi possível salvar o e-mail de alerta no banco: ${error.message}`, "Envios não atualizados");
   }
 }
 
