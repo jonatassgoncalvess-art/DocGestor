@@ -1565,7 +1565,7 @@ button {
 }
 
 #pdf-preview-frame {
-  background: #d8dde1;
+  background: #f4f6f7;
   border: 1px solid var(--line);
   border-radius: 6px;
   flex: 1 1 auto;

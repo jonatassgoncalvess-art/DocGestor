@@ -2036,8 +2036,14 @@ function closeModal(id) {
   modal.setAttribute("aria-hidden", "true");
   if (id === "pdf-preview-modal") {
     const frame = field("pdf-preview-frame");
-    if (frame) frame.srcdoc = "";
+    const frameDocument = frame?.contentDocument || frame?.contentWindow?.document;
+    if (frameDocument) {
+      frameDocument.open();
+      frameDocument.write("");
+      frameDocument.close();
+    }
     activePdfPreviewHtml = "";
+    activePdfPreviewLoaded = false;
   }
 }
 
@@ -6655,6 +6661,7 @@ function paginatePdfSections(sections, orientation = "portrait") {
 
 function renderPdfSection(section) {
   if (section.type === "html") return section.html;
+  if (section.type === "table") return renderPdfTable(section, section.rows);
   return `
     <section class="pdf-section ${section.className || ""}">
       <h2>${escapePdfText(section.title)}</h2>
@@ -6665,7 +6672,6 @@ function renderPdfSection(section) {
 
 function pdfDocumentHtml(report) {
   const orientation = report.orientation || "portrait";
-  const pages = paginatePdfSections(report.sections, orientation);
   const generatedAt = formatPdfDate();
   const pageSize = orientation === "landscape" ? "A4 landscape" : "A4 portrait";
 
@@ -6690,17 +6696,11 @@ function pdfDocumentHtml(report) {
             background: #fff;
             display: flex;
             flex-direction: column;
-            min-height: ${orientation === "landscape" ? "210mm" : "297mm"};
-            margin: 0 auto 10mm;
+            margin: 0 auto;
+            min-height: auto;
             overflow: visible;
             padding: ${PDF_STANDARD.margin};
             width: ${orientation === "landscape" ? "297mm" : "210mm"};
-            break-after: page;
-            page-break-after: always;
-          }
-          .pdf-page:last-child {
-            break-after: auto;
-            page-break-after: auto;
           }
           .pdf-header {
             background: #ffffff;
@@ -6870,61 +6870,67 @@ function pdfDocumentHtml(report) {
           .pdf-footer {
             border-top: 1px solid #dfe5ea;
             display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 12px;
+            grid-template-columns: 1fr;
             padding-top: 4mm;
           }
           @media print {
             body { background: #fff; }
-            .pdf-page { margin: 0; }
+            .pdf-page {
+              margin: 0;
+              padding: ${PDF_STANDARD.margin};
+              width: auto;
+            }
+            .pdf-section {
+              border-radius: 0;
+            }
           }
         </style>
       </head>
       <body>
-        ${pages
-          .map(
-            (pageSections, index) => `
-              <main class="pdf-page ${index === 0 ? "pdf-page-first" : "pdf-page-continuation"}">
-                ${
-                  index === 0
-                    ? `
-                      <header class="pdf-header">
-                        <div class="pdf-brand">
-                          <span class="pdf-wordmark">
-                            <strong><span class="pdf-doc">Doc</span><span class="pdf-gestor">Gestor</span></strong>
-                            <small><span class="pdf-by">by</span> <span class="pdf-carminatti">Carminatti</span></small>
-                          </span>
-                        </div>
-                        <div class="pdf-meta">
-                          <strong>${escapePdfText(report.module || "Relatório")}</strong>
-                          <span>Formato ${PDF_STANDARD.page} - ${orientation === "landscape" ? "Paisagem" : "Retrato"}</span>
-                          <span>Gerado em ${escapePdfText(generatedAt)}</span>
-                        </div>
-                      </header>
-                      <section class="pdf-title">
-                        <h1>${escapePdfText(report.title)}</h1>
-                        <p>${escapePdfText(report.subtitle || "Documento gerado automaticamente pelo DocGestor by Carminatti.")}</p>
-                      </section>
-                    `
-                    : ""
-                }
-                <div class="pdf-body">
-                  ${pageSections.map(renderPdfSection).join("")}
-                </div>
-                <footer class="pdf-footer">
-                  <span>Documento gerado automaticamente pelo DocGestor by Carminatti. Conferir dados antes de protocolo externo.</span>
-                  <span>Pagina ${index + 1} de ${pages.length}</span>
-                </footer>
-              </main>
-            `,
-          )
-          .join("")}
+        <main class="pdf-page pdf-page-first">
+          <header class="pdf-header">
+            <div class="pdf-brand">
+              <span class="pdf-wordmark">
+                <strong><span class="pdf-doc">Doc</span><span class="pdf-gestor">Gestor</span></strong>
+                <small><span class="pdf-by">by</span> <span class="pdf-carminatti">Carminatti</span></small>
+              </span>
+            </div>
+            <div class="pdf-meta">
+              <strong>${escapePdfText(report.module || "Relatório")}</strong>
+              <span>Formato ${PDF_STANDARD.page} - ${orientation === "landscape" ? "Paisagem" : "Retrato"}</span>
+              <span>Gerado em ${escapePdfText(generatedAt)}</span>
+            </div>
+          </header>
+          <section class="pdf-title">
+            <h1>${escapePdfText(report.title)}</h1>
+            <p>${escapePdfText(report.subtitle || "Documento gerado automaticamente pelo DocGestor by Carminatti.")}</p>
+          </section>
+          <div class="pdf-body">
+            ${report.sections.map(renderPdfSection).join("")}
+          </div>
+          <footer class="pdf-footer">
+            <span>Documento gerado automaticamente pelo DocGestor by Carminatti. Conferir dados antes de protocolo externo.</span>
+          </footer>
+        </main>
       </body>
     </html>
   `;
 }
 
 let activePdfPreviewHtml = "";
+let activePdfPreviewLoaded = false;
+
+function writePdfPreviewFrame(html) {
+  const frame = field("pdf-preview-frame");
+  const frameDocument = frame?.contentDocument || frame?.contentWindow?.document;
+  if (!frameDocument) return false;
+  activePdfPreviewLoaded = false;
+  frameDocument.open();
+  frameDocument.write(html);
+  frameDocument.close();
+  activePdfPreviewLoaded = true;
+  return true;
+}
 
 function openPdfReport(report) {
   const frame = field("pdf-preview-frame");
@@ -6935,19 +6941,22 @@ function openPdfReport(report) {
   }
   activePdfPreviewHtml = pdfDocumentHtml(report);
   if (titleElement) titleElement.textContent = report.title || "Relatório";
-  frame.srcdoc = activePdfPreviewHtml;
+  if (!writePdfPreviewFrame(activePdfPreviewHtml)) {
+    alert("Não foi possível carregar a pré-visualização do PDF.");
+    return;
+  }
   openModal("pdf-preview-modal");
 }
 
 function printPdfPreview() {
   const frame = field("pdf-preview-frame");
   const frameWindow = frame?.contentWindow;
-  if (!frameWindow) {
+  if (!frameWindow || !activePdfPreviewLoaded) {
     alert("Não foi possível acessar a pré-visualização para impressão.");
     return;
   }
   frameWindow.focus();
-  frameWindow.print();
+  setTimeout(() => frameWindow.print(), 150);
 }
 
 field("pdf-preview-print")?.addEventListener("click", printPdfPreview);
