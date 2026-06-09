@@ -2034,6 +2034,11 @@ function closeModal(id) {
   if (!modal) return;
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
+  if (id === "pdf-preview-modal") {
+    const frame = field("pdf-preview-frame");
+    if (frame) frame.srcdoc = "";
+    activePdfPreviewHtml = "";
+  }
 }
 
 function confirmDelete(message, onConfirm) {
@@ -6914,26 +6919,38 @@ function pdfDocumentHtml(report) {
             `,
           )
           .join("")}
-        <script>
-          window.addEventListener("load", () => {
-            setTimeout(() => window.print(), 250);
-          });
-        </script>
       </body>
     </html>
   `;
 }
 
+let activePdfPreviewHtml = "";
+
 function openPdfReport(report) {
-  const pdfWindow = window.open("", "_blank");
-  if (!pdfWindow) {
-    alert("O navegador bloqueou a janela do PDF. Autorize pop-ups para baixar o relatório.");
+  const frame = field("pdf-preview-frame");
+  const titleElement = field("pdf-preview-title");
+  if (!frame) {
+    alert("Não foi possível abrir a pré-visualização do PDF.");
     return;
   }
-  pdfWindow.document.open();
-  pdfWindow.document.write(pdfDocumentHtml(report));
-  pdfWindow.document.close();
+  activePdfPreviewHtml = pdfDocumentHtml(report);
+  if (titleElement) titleElement.textContent = report.title || "Relatório";
+  frame.srcdoc = activePdfPreviewHtml;
+  openModal("pdf-preview-modal");
 }
+
+function printPdfPreview() {
+  const frame = field("pdf-preview-frame");
+  const frameWindow = frame?.contentWindow;
+  if (!frameWindow) {
+    alert("Não foi possível acessar a pré-visualização para impressão.");
+    return;
+  }
+  frameWindow.focus();
+  frameWindow.print();
+}
+
+field("pdf-preview-print")?.addEventListener("click", printPdfPreview);
 
 function companyNameById(id) {
   return companies.find((company) => sameId(company.id, id))?.name || "Não informado";

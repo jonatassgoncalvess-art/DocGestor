@@ -2300,6 +2300,23 @@
       </section>
     </div>
 
+    <div class="modal-backdrop" id="pdf-preview-modal" aria-hidden="true">
+      <section class="modal-panel pdf-preview-modal" role="dialog" aria-modal="true" aria-labelledby="pdf-preview-title">
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">Pré-visualização do PDF</p>
+            <h2 id="pdf-preview-title">Relatório</h2>
+          </div>
+          <button class="ghost small" data-close-modal="pdf-preview-modal">Fechar</button>
+        </div>
+        <iframe id="pdf-preview-frame" title="Pré-visualização do PDF"></iframe>
+        <div class="modal-actions">
+          <button class="ghost" data-close-modal="pdf-preview-modal">Fechar</button>
+          <button class="primary" id="pdf-preview-print">Imprimir</button>
+        </div>
+      </section>
+    </div>
+
     <script src="supabase-config.js?v=20260605-process-fk-fix-1"></script>
     <script src="database.js?v=20260605-process-fk-fix-1"></script>
     <script src="script.js?v=20260605-process-fk-fix-1"></script>

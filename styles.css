@@ -1552,6 +1552,31 @@ button {
   overflow: auto;
 }
 
+.pdf-preview-modal {
+  display: flex;
+  flex-direction: column;
+  height: min(92vh, 980px);
+  max-width: 1180px;
+  width: min(96vw, 1180px);
+}
+
+.pdf-preview-modal .modal-head {
+  flex: 0 0 auto;
+}
+
+#pdf-preview-frame {
+  background: #d8dde1;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  flex: 1 1 auto;
+  min-height: 420px;
+  width: 100%;
+}
+
+.pdf-preview-modal .modal-actions {
+  flex: 0 0 auto;
+}
+
 .partner-checks > span {
   color: var(--muted);
   font-size: 13px;
