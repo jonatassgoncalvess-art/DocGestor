@@ -884,7 +884,7 @@ button {
   align-items: start;
   display: grid;
   gap: 16px;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
 }
 
 .agenda-head {
@@ -913,6 +913,69 @@ button {
   display: block;
   font-size: 22px;
   margin-top: 3px;
+}
+
+.agenda-toolbar {
+  align-items: end;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(150px, 1fr) 110px minmax(170px, 1fr) auto;
+  margin-bottom: 12px;
+  padding: 12px;
+}
+
+.agenda-toolbar label {
+  color: var(--muted);
+  display: grid;
+  font-size: 12px;
+  font-weight: 700;
+  gap: 5px;
+}
+
+.agenda-toolbar input,
+.agenda-toolbar select {
+  min-height: 38px;
+}
+
+.agenda-legend {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 12px;
+}
+
+.agenda-legend span {
+  align-items: center;
+  color: var(--muted);
+  display: inline-flex;
+  font-size: 12px;
+  gap: 6px;
+}
+
+.legend-dot {
+  border-radius: 999px;
+  display: inline-block;
+  height: 10px;
+  width: 10px;
+}
+
+.legend-dot.event {
+  background: var(--primary);
+}
+
+.legend-dot.warning {
+  background: var(--accent-yellow);
+}
+
+.legend-dot.danger {
+  background: var(--brand-red);
+}
+
+.legend-dot.holiday {
+  background: var(--blue);
 }
 
 .agenda-weekdays,
@@ -948,9 +1011,10 @@ button {
   border-bottom: 1px solid var(--line);
   border-right: 1px solid var(--line);
   cursor: pointer;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 6px;
-  min-height: 118px;
+  min-height: 126px;
   padding: 9px;
   text-align: left;
 }
@@ -966,9 +1030,19 @@ button {
   opacity: 0.72;
 }
 
+.agenda-day.has-holiday {
+  background: #f7fbff;
+}
+
 .agenda-day.today .agenda-day-number {
   background: var(--brand-red);
   color: #fff;
+}
+
+.agenda-day-top {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
 }
 
 .agenda-day-number {
@@ -982,6 +1056,12 @@ button {
   width: 26px;
 }
 
+.agenda-day-badge {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
 .agenda-event-chip {
   border-left: 3px solid var(--primary);
   background: var(--green-soft);
@@ -993,6 +1073,12 @@ button {
   padding: 5px 7px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.agenda-event-chip.holiday {
+  background: #eef6ff;
+  border-left-color: var(--blue);
+  color: #184b7c;
 }
 
 .agenda-event-chip.warning {
@@ -1037,6 +1123,63 @@ button {
   border-radius: 8px;
   padding: 14px;
   text-align: center;
+}
+
+.agenda-side-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.agenda-mini-panel {
+  padding: 14px;
+}
+
+.agenda-mini-panel > strong {
+  display: block;
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+.agenda-month-breakdown {
+  display: grid;
+  gap: 8px;
+}
+
+.agenda-month-breakdown article {
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+}
+
+.agenda-month-breakdown span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.agenda-month-breakdown strong {
+  font-size: 18px;
+}
+
+.agenda-holiday-list {
+  display: grid;
+  gap: 8px;
+}
+
+.agenda-holiday-list article {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--blue);
+  border-radius: 8px;
+  display: grid;
+  gap: 3px;
+  padding: 10px;
+}
+
+.agenda-holiday-list span {
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .module-banner,
@@ -3123,8 +3266,13 @@ textarea {
   .content-grid,
   .split,
   .license-layout,
-  .registry-grid {
+  .registry-grid,
+  .agenda-layout {
     grid-template-columns: 1fr;
+  }
+
+  .agenda-toolbar {
+    grid-template-columns: repeat(2, minmax(160px, 1fr));
   }
 
   .admin-tree {
@@ -3186,6 +3334,7 @@ textarea {
   .config-list,
   .builder-layout,
   .backup-layout,
+  .agenda-toolbar,
   .form-grid,
   .license-form,
   .process-stage-list,

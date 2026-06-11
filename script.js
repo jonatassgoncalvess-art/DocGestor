@@ -584,7 +584,17 @@ function formatAgendaDate(key, options = {}) {
 }
 
 function agendaEventsForDate(key) {
-  return agendaEvents.filter((event) => event.date === key).sort((a, b) => a.time.localeCompare(b.time));
+  return filteredAgendaEvents().filter((event) => event.date === key).sort((a, b) => a.time.localeCompare(b.time));
+}
+
+function agendaTypeFilterValue() {
+  return field("agenda-type-filter")?.value || "all";
+}
+
+function filteredAgendaEvents() {
+  const filter = agendaTypeFilterValue();
+  const normalizedFilter = normalizeSearchText(filter);
+  return agendaEvents.filter((event) => filter === "all" || normalizeSearchText(event.type) === normalizedFilter);
 }
 
 function addAgendaEvent(event) {
@@ -1735,6 +1745,121 @@ function renderAgendaUpcoming() {
     : `<div class="agenda-empty">Não há próximos compromissos.</div>`;
 }
 
+function easterDate(year) {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(year, month, day);
+}
+
+function shiftedDateKey(date, offsetDays) {
+  const shifted = new Date(date);
+  shifted.setDate(shifted.getDate() + offsetDays);
+  return dateKey(shifted);
+}
+
+function nationalHolidays(year) {
+  const easter = easterDate(year);
+  return [
+    { date: `${year}-01-01`, name: "Confraternização Universal" },
+    { date: shiftedDateKey(easter, -48), name: "Carnaval" },
+    { date: shiftedDateKey(easter, -47), name: "Carnaval" },
+    { date: shiftedDateKey(easter, -2), name: "Sexta-feira Santa" },
+    { date: `${year}-04-21`, name: "Tiradentes" },
+    { date: `${year}-05-01`, name: "Dia do Trabalho" },
+    { date: shiftedDateKey(easter, 60), name: "Corpus Christi" },
+    { date: `${year}-09-07`, name: "Independência do Brasil" },
+    { date: `${year}-10-12`, name: "Nossa Senhora Aparecida" },
+    { date: `${year}-11-02`, name: "Finados" },
+    { date: `${year}-11-15`, name: "Proclamação da República" },
+    { date: `${year}-11-20`, name: "Consciência Negra" },
+    { date: `${year}-12-25`, name: "Natal" },
+  ];
+}
+
+function holidaysByDate(year) {
+  return nationalHolidays(year).reduce((acc, holiday) => {
+    if (!acc[holiday.date]) acc[holiday.date] = [];
+    acc[holiday.date].push(holiday);
+    return acc;
+  }, {});
+}
+
+function eventChipClass(event) {
+  if (event.status === "danger") return "danger";
+  if (event.status === "warning") return "warning";
+  return "";
+}
+
+function renderAgendaSidePanels(monthEvents, monthHolidays) {
+  const selectedLabel = field("agenda-selected-inline-label");
+  const selectedCount = field("agenda-selected-count");
+  const selectedList = field("agenda-selected-inline-list");
+  const breakdown = field("agenda-month-breakdown");
+  const holidayList = field("agenda-holiday-list");
+  const selectedEvents = agendaEventsForDate(selectedAgendaDate);
+  const selectedHolidays = (holidaysByDate(parseDateKey(selectedAgendaDate).getFullYear())[selectedAgendaDate] || []);
+
+  if (selectedLabel) selectedLabel.textContent = formatAgendaDate(selectedAgendaDate, { long: true });
+  if (selectedCount) selectedCount.textContent = `${selectedEvents.length + selectedHolidays.length} itens`;
+  if (selectedList) {
+    const rows = [
+      ...selectedHolidays.map((holiday) => ({ title: holiday.name, type: "Feriado nacional", time: "", description: "Data destacada no calendário." })),
+      ...selectedEvents,
+    ];
+    selectedList.innerHTML = rows.length
+      ? rows
+          .map(
+            (event) => `
+              <article class="agenda-event">
+                <span>${escapeHtml(event.type || "Agenda")} ${event.time ? `- ${escapeHtml(event.time)}` : ""}</span>
+                <strong>${escapeHtml(event.title)}</strong>
+                <small>${escapeHtml(event.description || "")}</small>
+              </article>
+            `,
+          )
+          .join("")
+      : `<div class="agenda-empty">Nenhum compromisso para este dia.</div>`;
+  }
+
+  if (breakdown) {
+    const danger = monthEvents.filter((event) => event.status === "danger").length;
+    const warning = monthEvents.filter((event) => event.status === "warning").length;
+    breakdown.innerHTML = `
+      <article><span>Eventos filtrados</span><strong>${monthEvents.length}</strong></article>
+      <article><span>Prazos críticos</span><strong>${danger}</strong></article>
+      <article><span>Em atenção</span><strong>${warning}</strong></article>
+      <article><span>Feriados nacionais</span><strong>${monthHolidays.length}</strong></article>
+    `;
+  }
+
+  if (holidayList) {
+    holidayList.innerHTML = monthHolidays.length
+      ? monthHolidays
+          .map(
+            (holiday) => `
+              <article>
+                <strong>${escapeHtml(holiday.name)}</strong>
+                <span>${escapeHtml(formatAgendaDate(holiday.date))}</span>
+              </article>
+            `,
+          )
+          .join("")
+      : `<div class="agenda-empty">Nenhum feriado nacional neste mês.</div>`;
+  }
+}
+
 function renderAgenda() {
   const grid = field("agenda-grid");
   const monthLabel = field("agenda-month-label");
@@ -1744,31 +1869,48 @@ function renderAgenda() {
   const month = agendaCursor.getMonth();
   const firstDay = new Date(year, month, 1);
   const start = new Date(year, month, 1 - firstDay.getDay());
-  const monthEvents = agendaEvents.filter((event) => {
+  const yearHolidays = holidaysByDate(year);
+  const monthHolidays = nationalHolidays(year).filter((holiday) => {
+    const date = parseDateKey(holiday.date);
+    return date.getFullYear() === year && date.getMonth() === month;
+  });
+  const monthEvents = filteredAgendaEvents().filter((event) => {
     const date = parseDateKey(event.date);
     return date.getFullYear() === year && date.getMonth() === month;
   });
   monthLabel.textContent = new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(firstDay);
   monthCount.textContent = `${monthEvents.length} evento${monthEvents.length === 1 ? "" : "s"}`;
+  if (field("agenda-month-select")) field("agenda-month-select").value = String(month);
+  if (field("agenda-year-input")) field("agenda-year-input").value = String(year);
   grid.innerHTML = Array.from({ length: 42 })
     .map((_, index) => {
       const date = new Date(start);
       date.setDate(start.getDate() + index);
       const key = dateKey(date);
       const events = agendaEventsForDate(key);
+      const holidays = yearHolidays[key] || [];
       const isOutside = date.getMonth() !== month;
       const isToday = key === dateKey(new Date());
       return `
-        <button type="button" class="agenda-day ${isOutside ? "outside" : ""} ${isToday ? "today" : ""} ${key === selectedAgendaDate ? "selected" : ""}" data-agenda-date="${key}">
-          <span class="agenda-day-number">${date.getDate()}</span>
-          ${events
-            .slice(0, 3)
-            .map((event) => `<span class="agenda-event-chip ${event.status === "danger" ? "danger" : event.status === "warning" ? "warning" : ""}">${event.time} ${event.title}</span>`)
+        <button type="button" class="agenda-day ${isOutside ? "outside" : ""} ${isToday ? "today" : ""} ${holidays.length ? "has-holiday" : ""} ${key === selectedAgendaDate ? "selected" : ""}" data-agenda-date="${key}">
+          <span class="agenda-day-top">
+            <span class="agenda-day-number">${date.getDate()}</span>
+            ${events.length || holidays.length ? `<span class="agenda-day-badge">${events.length + holidays.length}</span>` : ""}
+          </span>
+          ${holidays
+            .slice(0, 1)
+            .map((holiday) => `<span class="agenda-event-chip holiday">${escapeHtml(holiday.name)}</span>`)
             .join("")}
+          ${events
+            .slice(0, holidays.length ? 2 : 3)
+            .map((event) => `<span class="agenda-event-chip ${eventChipClass(event)}">${escapeHtml(event.time)} ${escapeHtml(event.title)}</span>`)
+            .join("")}
+          ${events.length + holidays.length > 3 ? `<span class="agenda-day-badge">+${events.length + holidays.length - 3} itens</span>` : ""}
         </button>
       `;
     })
     .join("");
+  renderAgendaSidePanels(monthEvents, monthHolidays);
 }
 
 field("agenda-grid")?.addEventListener("click", (event) => {
@@ -1776,9 +1918,7 @@ field("agenda-grid")?.addEventListener("click", (event) => {
   if (!dayButton) return;
   selectedAgendaDate = dayButton.dataset.agendaDate;
   agendaCursor = parseDateKey(selectedAgendaDate);
-  document.querySelectorAll("[data-agenda-date]").forEach((button) => {
-    button.classList.toggle("selected", button.dataset.agendaDate === selectedAgendaDate);
-  });
+  renderAgenda();
 });
 
 field("agenda-grid")?.addEventListener("dblclick", (event) => {
@@ -1810,6 +1950,23 @@ field("agenda-today")?.addEventListener("click", () => {
   selectedAgendaDate = dateKey(today);
   renderAgenda();
 });
+
+field("agenda-month-select")?.addEventListener("change", () => {
+  const month = Number(field("agenda-month-select").value || 0);
+  agendaCursor = new Date(agendaCursor.getFullYear(), month, 1);
+  selectedAgendaDate = dateKey(new Date(agendaCursor.getFullYear(), month, 1));
+  renderAgenda();
+});
+
+field("agenda-year-input")?.addEventListener("change", () => {
+  const year = Math.min(2100, Math.max(2020, Number(field("agenda-year-input").value || agendaCursor.getFullYear())));
+  agendaCursor = new Date(year, agendaCursor.getMonth(), 1);
+  selectedAgendaDate = dateKey(new Date(year, agendaCursor.getMonth(), 1));
+  renderAgenda();
+});
+
+field("agenda-type-filter")?.addEventListener("change", renderAgenda);
+field("agenda-new-from-calendar")?.addEventListener("click", () => openAgendaNoteModal());
 
 field("agenda-note-new")?.addEventListener("click", () => openAgendaNoteModal());
 field("agenda-note-save")?.addEventListener("click", saveAgendaNote);

@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
     <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=20260611-sidebar-flyout-2" />
+    <link rel="stylesheet" href="styles.css?v=20260611-calendar-pro-1" />
   </head>
   <body>
     <section class="login-screen" id="login-screen">
@@ -964,9 +964,9 @@
               <h2>Calendário operacional</h2>
             </div>
             <div class="list-head-actions">
-              <button class="ghost small" id="agenda-prev-month">Mes anterior</button>
+              <button class="ghost small" id="agenda-prev-month">Mês anterior</button>
               <button class="ghost small" id="agenda-today">Hoje</button>
-              <button class="ghost small" id="agenda-next-month">Proximo mes</button>
+              <button class="ghost small" id="agenda-next-month">Próximo mês</button>
             </div>
           </div>
 
@@ -979,6 +979,49 @@
                 </div>
                 <span class="pill green" id="agenda-month-count">0 eventos</span>
               </div>
+              <div class="agenda-toolbar">
+                <label>Mês
+                  <select id="agenda-month-select">
+                    <option value="0">Janeiro</option>
+                    <option value="1">Fevereiro</option>
+                    <option value="2">Março</option>
+                    <option value="3">Abril</option>
+                    <option value="4">Maio</option>
+                    <option value="5">Junho</option>
+                    <option value="6">Julho</option>
+                    <option value="7">Agosto</option>
+                    <option value="8">Setembro</option>
+                    <option value="9">Outubro</option>
+                    <option value="10">Novembro</option>
+                    <option value="11">Dezembro</option>
+                  </select>
+                </label>
+                <label>Ano
+                  <input id="agenda-year-input" type="number" min="2020" max="2100" step="1" />
+                </label>
+                <label>Tipo
+                  <select id="agenda-type-filter">
+                    <option value="all">Todos</option>
+                    <option value="Ambiental">Ambiental</option>
+                    <option value="Licenças Ambientais">Licenças Ambientais</option>
+                    <option value="Prazo do processo">Prazo do processo</option>
+                    <option value="Vencimento">Vencimento</option>
+                    <option value="Pendência">Pendência</option>
+                    <option value="Reunião">Reunião</option>
+                    <option value="IPTU">IPTU</option>
+                    <option value="Lembretes Diversos">Lembretes Diversos</option>
+                    <option value="Administrativo">Administrativo</option>
+                    <option value="Outro">Outro</option>
+                  </select>
+                </label>
+                <button class="ghost small" id="agenda-new-from-calendar">Novo agendamento</button>
+              </div>
+              <div class="agenda-legend">
+                <span><i class="legend-dot event"></i>Evento</span>
+                <span><i class="legend-dot warning"></i>Atenção</span>
+                <span><i class="legend-dot danger"></i>Crítico</span>
+                <span><i class="legend-dot holiday"></i>Feriado</span>
+              </div>
               <div class="agenda-weekdays">
                 <span>Dom</span>
                 <span>Seg</span>
@@ -990,7 +1033,24 @@
               </div>
               <div class="agenda-grid" id="agenda-grid"></div>
             </section>
-
+            <aside class="agenda-side-panel">
+              <section class="panel agenda-mini-panel">
+                <div class="panel-head">
+                  <h2>Dia selecionado</h2>
+                  <span class="pill green" id="agenda-selected-count">0 itens</span>
+                </div>
+                <strong id="agenda-selected-inline-label">Hoje</strong>
+                <div class="agenda-upcoming-list" id="agenda-selected-inline-list"></div>
+              </section>
+              <section class="panel agenda-mini-panel">
+                <div class="panel-head"><h2>Resumo do mês</h2></div>
+                <div class="agenda-month-breakdown" id="agenda-month-breakdown"></div>
+              </section>
+              <section class="panel agenda-mini-panel">
+                <div class="panel-head"><h2>Feriados</h2></div>
+                <div class="agenda-holiday-list" id="agenda-holiday-list"></div>
+              </section>
+            </aside>
           </div>
         </section>
 
@@ -1117,7 +1177,10 @@
                   <option>Prazo do processo</option>
                   <option>Vencimento</option>
                   <option>Pendência</option>
-                  <option>Reuniao</option>
+                  <option>Reunião</option>
+                  <option>IPTU</option>
+                  <option>Lembretes Diversos</option>
+                  <option>Administrativo</option>
                   <option>Outro</option>
                 </select>
               </label>
@@ -2364,9 +2427,9 @@
       </section>
     </div>
 
-    <script src="supabase-config.js?v=20260611-sidebar-flyout-2"></script>
-    <script src="database.js?v=20260611-sidebar-flyout-2"></script>
-    <script src="script.js?v=20260611-sidebar-flyout-2"></script>
+    <script src="supabase-config.js?v=20260611-calendar-pro-1"></script>
+    <script src="database.js?v=20260611-calendar-pro-1"></script>
+    <script src="script.js?v=20260611-calendar-pro-1"></script>
   </body>
 </html>
 
