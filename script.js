@@ -92,7 +92,6 @@ function addSidebarFlyoutButton(sourceButton) {
   button.textContent = sidebarItemLabel(sourceButton);
   button.addEventListener("click", () => {
     sourceButton.click();
-    hideSidebarFlyout();
   });
   sidebarFlyout.appendChild(button);
 }
