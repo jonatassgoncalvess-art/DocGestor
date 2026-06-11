@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
     <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=20260605-process-fk-fix-1" />
+    <link rel="stylesheet" href="styles.css?v=20260611-sidebar-property-panel-1" />
   </head>
   <body>
     <section class="login-screen" id="login-screen">
@@ -57,6 +57,10 @@
             <small class="brand-submark"><span>by</span> Carminatti</small>
           </div>
         </div>
+        <button class="sidebar-toggle" id="sidebar-toggle" type="button" aria-label="Minimizar menu lateral" aria-expanded="true">
+          <span aria-hidden="true">‹</span>
+          <strong>Minimizar menu</strong>
+        </button>
 
         <nav class="nav" aria-label="Navegacao principal">
             <button class="nav-item active" data-view="home">
@@ -75,6 +79,7 @@
               <button class="admin-link" data-admin-target="imoveis-admin">01.2.4 Imóveis</button>
               <button class="admin-link" data-admin-target="imoveis-urbanos-admin">01.2.4.1 Urbanos</button>
               <button class="admin-link" data-admin-target="imoveis-rurais-admin">01.2.4.2 Rurais</button>
+              <button class="admin-link" data-admin-target="painel-imoveis-admin">01.2.4.3 Painel Imóveis</button>
               <button class="admin-link" data-admin-target="empreendimentos-admin">01.2.5 Empreendimento</button>
               <button class="admin-link" data-admin-target="atividades-admin">01.2.6 Atividades</button>
             </div>
@@ -324,6 +329,32 @@
                     <input id="rural-property-search" type="search" placeholder="Buscar por matrícula, proprietário, lote, gleba ou referência" />
                   </label>
                   <div class="crud-list" id="rural-property-list"></div>
+                </section>
+              </section>
+
+              <section class="admin-panel" id="admin-painel-imoveis-admin">
+                <div class="section-title">
+                  <div>
+                    <p class="eyebrow">01.2.4.3 Painel Imóveis</p>
+                    <h2>Indicadores ambientais dos imóveis rurais</h2>
+                  </div>
+                </div>
+                <section class="panel legal-compliance-panel">
+                  <div class="panel-head">
+                    <h2>Reserva Legal dos imóveis rurais</h2>
+                    <span class="pill green" id="environmental-reserve-percent">0%</span>
+                  </div>
+                  <p class="panel-note">Base: imóveis rurais cadastrados. O gráfico compara área total, reserva legal informada e mínimo legal de 20%.</p>
+                  <div class="legal-compliance-layout">
+                    <div class="compliance-chart-screen reserve-chart-screen" id="environmental-reserve-chart"></div>
+                    <div class="legal-compliance-summary">
+                      <article><span>Imóveis rurais</span><strong id="environmental-reserve-properties">0</strong></article>
+                      <article><span>Área total</span><strong id="environmental-reserve-total-area">0 m2</strong></article>
+                      <article><span>Reserva legal</span><strong id="environmental-reserve-total-area-reserved">0 m2</strong></article>
+                      <article><span>Mínimo exigido</span><strong id="environmental-reserve-required-area">0 m2</strong></article>
+                    </div>
+                  </div>
+                  <div class="table compact-table" id="environmental-reserve-table"></div>
                 </section>
               </section>
 
@@ -664,23 +695,6 @@
               </div>
             </div>
             <div class="table compact-table" id="environmental-legal-compliance-table"></div>
-          </section>
-          <section class="panel legal-compliance-panel">
-            <div class="panel-head">
-              <h2>Reserva Legal dos imóveis rurais</h2>
-              <span class="pill green" id="environmental-reserve-percent">0%</span>
-            </div>
-            <p class="panel-note">Base: imóveis rurais cadastrados. O gráfico compara área total, reserva legal informada e mínimo legal de 20%.</p>
-            <div class="legal-compliance-layout">
-              <div class="compliance-chart-screen reserve-chart-screen" id="environmental-reserve-chart"></div>
-              <div class="legal-compliance-summary">
-                <article><span>Imóveis rurais</span><strong id="environmental-reserve-properties">0</strong></article>
-                <article><span>Área total</span><strong id="environmental-reserve-total-area">0 m2</strong></article>
-                <article><span>Reserva legal</span><strong id="environmental-reserve-total-area-reserved">0 m2</strong></article>
-                <article><span>Mínimo exigido</span><strong id="environmental-reserve-required-area">0 m2</strong></article>
-              </div>
-            </div>
-            <div class="table compact-table" id="environmental-reserve-table"></div>
           </section>
           <section class="panel">
             <div class="panel-head"><h2>Próximos prazos ambientais</h2></div>
@@ -2349,9 +2363,9 @@
       </section>
     </div>
 
-    <script src="supabase-config.js?v=20260605-process-fk-fix-1"></script>
-    <script src="database.js?v=20260605-process-fk-fix-1"></script>
-    <script src="script.js?v=20260605-process-fk-fix-1"></script>
+    <script src="supabase-config.js?v=20260611-sidebar-property-panel-1"></script>
+    <script src="database.js?v=20260611-sidebar-property-panel-1"></script>
+    <script src="script.js?v=20260611-sidebar-property-panel-1"></script>
   </body>
 </html>
 

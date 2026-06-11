@@ -1,6 +1,8 @@
 ﻿const navItems = document.querySelectorAll(".nav-item");
 const views = document.querySelectorAll(".view");
 const title = document.querySelector("#page-title");
+const appShell = document.querySelector("#app-shell");
+const sidebarToggle = document.querySelector("#sidebar-toggle");
 const adminSubnav = document.querySelector("#admin-subnav");
 const dashboardSubnav = document.querySelector("#dashboard-subnav");
 const moduleSubnav = document.querySelector("#module-subnav");
@@ -9,6 +11,7 @@ const settingsSubnav = document.querySelector("#settings-subnav");
 const SESSION_USER_KEY = "docgestor.sessionUser";
 const SESSION_VIEW_KEY = "docgestor.sessionView";
 const SESSION_LICENSE_STATUS_KEY = "docgestor.licenseStatus";
+const SIDEBAR_COLLAPSED_KEY = "docgestor.sidebarCollapsed";
 const APP_VERSION_MANIFEST_URL = "downloads/app-version.json";
 const APP_INSTALLER_URL = "downloads/DocGestor-by-Carminatti-1.0.2-x64.exe";
 
@@ -30,6 +33,19 @@ const titles = {
   settings: "05 Configurações",
   "profile-settings": "05.1 Perfil",
 };
+
+function setSidebarCollapsed(collapsed) {
+  appShell?.classList.toggle("sidebar-collapsed", collapsed);
+  sidebarToggle?.setAttribute("aria-expanded", String(!collapsed));
+  sidebarToggle?.setAttribute("aria-label", collapsed ? "Expandir menu lateral" : "Minimizar menu lateral");
+  localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? "true" : "false");
+}
+
+setSidebarCollapsed(localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true");
+
+sidebarToggle?.addEventListener("click", () => {
+  setSidebarCollapsed(!appShell?.classList.contains("sidebar-collapsed"));
+});
 
 function sameId(left, right) {
   return String(left) === String(right);
@@ -319,6 +335,7 @@ const searchableEnvironments = [
   { code: "01.2.4", title: "Imóveis", detail: "Imóveis urbanos, rurais e proprietários", permission: "registries", action: () => openAdminSearchPanel("imoveis-admin") },
   { code: "01.2.4.1", title: "Urbanos", detail: "Listagem automática de imóveis urbanos", permission: "registries", action: () => openAdminSearchPanel("imoveis-urbanos-admin") },
   { code: "01.2.4.2", title: "Rurais", detail: "Listagem automática de imóveis rurais", permission: "registries", action: () => openAdminSearchPanel("imoveis-rurais-admin") },
+  { code: "01.2.4.3", title: "Painel Imóveis", detail: "Indicadores ambientais dos imóveis rurais", permission: "registries", action: () => openAdminSearchPanel("painel-imoveis-admin") },
   { code: "01.2.5", title: "Empreendimento", detail: "Empresas vinculadas a imóveis", permission: "registries", action: () => openAdminSearchPanel("empreendimentos-admin") },
   { code: "01.2.6", title: "Atividades", detail: "Atividades, CNAE, CNPJ e CTF/APP", permission: "registries", action: () => openAdminSearchPanel("atividades-admin") },
   { code: "01.3.1", title: "Tipos de Licenças", detail: "Classificação ambiental", permission: "adminEnvironmental", action: () => openAdminSearchPanel("tipos-licencas") },
@@ -1885,7 +1902,7 @@ function applyAccessControl() {
   document.querySelectorAll('[data-admin-target="usuarios-admin"]').forEach((element) => {
     element.hidden = !canAccess("users");
   });
-  document.querySelectorAll('[data-admin-target="socios-admin"], [data-admin-target="empresas-filiais"], [data-admin-target="cidades-admin"], [data-admin-target="imoveis-admin"], [data-admin-target="imoveis-urbanos-admin"], [data-admin-target="imoveis-rurais-admin"], [data-admin-target="empreendimentos-admin"], [data-admin-target="atividades-admin"]').forEach((element) => {
+  document.querySelectorAll('[data-admin-target="socios-admin"], [data-admin-target="empresas-filiais"], [data-admin-target="cidades-admin"], [data-admin-target="imoveis-admin"], [data-admin-target="imoveis-urbanos-admin"], [data-admin-target="imoveis-rurais-admin"], [data-admin-target="painel-imoveis-admin"], [data-admin-target="empreendimentos-admin"], [data-admin-target="atividades-admin"]').forEach((element) => {
     element.hidden = !canAccess("registries");
   });
   document.querySelectorAll('[data-admin-target="tipos-licencas"], [data-admin-target="documentos-ambientais"], [data-admin-target="modelos-checklist"]').forEach((element) => {
@@ -4034,6 +4051,7 @@ function renderProperties() {
   renderPropertyList(propertyList, propertyCount, filteredPropertiesByMode("all", field("property-search")?.value || ""), { actions: true });
   renderPropertyList(urbanPropertyList, urbanPropertyCount, filteredPropertiesByMode("urban", field("urban-property-search")?.value || ""));
   renderPropertyList(ruralPropertyList, ruralPropertyCount, filteredPropertiesByMode("rural", field("rural-property-search")?.value || ""));
+  renderEnvironmentalReserveDashboard();
 }
 
 function fillPropertyForm(property) {

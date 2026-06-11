@@ -128,6 +128,11 @@ textarea {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
   min-height: 100vh;
+  transition: grid-template-columns 0.18s ease;
+}
+
+.app-shell.sidebar-collapsed {
+  grid-template-columns: 88px minmax(0, 1fr);
 }
 
 .sidebar {
@@ -137,6 +142,36 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 28px;
+  min-width: 0;
+  transition: padding 0.18s ease;
+}
+
+.sidebar-toggle {
+  align-items: center;
+  background: #171a1d;
+  border: 1px solid #30343a;
+  border-radius: 8px;
+  color: #e9eef2;
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  min-height: 38px;
+  padding: 8px 10px;
+}
+
+.sidebar-toggle span {
+  display: inline-block;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.sidebar-toggle strong {
+  font-size: 12px;
+}
+
+.sidebar-toggle:hover {
+  background: #202328;
 }
 
 .brand {
@@ -339,6 +374,54 @@ textarea {
   border: 1px solid #313438;
   border-radius: 8px;
   background: var(--brand-panel);
+}
+
+.app-shell.sidebar-collapsed .sidebar {
+  gap: 18px;
+  padding: 18px 14px;
+}
+
+.app-shell.sidebar-collapsed .brand {
+  justify-content: center;
+}
+
+.app-shell.sidebar-collapsed .brand > div,
+.app-shell.sidebar-collapsed .tenant-card,
+.app-shell.sidebar-collapsed .admin-subnav {
+  display: none !important;
+}
+
+.app-shell.sidebar-collapsed .brand-mark,
+.app-shell.sidebar-collapsed .brand-logo-image {
+  height: 46px;
+  width: 46px;
+}
+
+.app-shell.sidebar-collapsed .sidebar-toggle {
+  padding: 8px;
+}
+
+.app-shell.sidebar-collapsed .sidebar-toggle span {
+  transform: rotate(180deg);
+}
+
+.app-shell.sidebar-collapsed .sidebar-toggle strong {
+  display: none;
+}
+
+.app-shell.sidebar-collapsed .nav-item {
+  align-items: center;
+  display: flex;
+  font-size: 0;
+  justify-content: center;
+  padding: 12px 8px;
+}
+
+.app-shell.sidebar-collapsed .nav-item span {
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  width: auto;
 }
 
 .main {
