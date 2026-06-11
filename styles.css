@@ -368,6 +368,63 @@ textarea {
   color: #ffffff;
 }
 
+.sidebar-flyout {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 18px 44px rgba(5, 5, 5, 0.22);
+  color: var(--ink);
+  display: none;
+  gap: 4px;
+  max-height: min(76vh, 620px);
+  min-width: 250px;
+  overflow: auto;
+  padding: 10px;
+  position: fixed;
+  width: max-content;
+  z-index: 80;
+}
+
+.sidebar-flyout.open {
+  display: grid;
+}
+
+.sidebar-flyout-title {
+  border-bottom: 1px solid var(--line);
+  color: var(--brand-red);
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 4px;
+  padding: 6px 8px 10px;
+  text-transform: uppercase;
+}
+
+.sidebar-flyout-group {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 10px 8px 4px;
+  text-transform: uppercase;
+}
+
+.sidebar-flyout-button {
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: var(--ink);
+  cursor: pointer;
+  min-height: 34px;
+  padding: 8px 10px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.sidebar-flyout-button:hover,
+.sidebar-flyout-button.active {
+  background: var(--brand-red-soft);
+  color: var(--brand-red);
+}
+
 .tenant-card {
   margin-top: auto;
   padding: 16px;

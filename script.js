@@ -3,6 +3,7 @@ const views = document.querySelectorAll(".view");
 const title = document.querySelector("#page-title");
 const appShell = document.querySelector("#app-shell");
 const sidebarToggle = document.querySelector("#sidebar-toggle");
+const sidebarFlyout = document.querySelector("#sidebar-flyout");
 const adminSubnav = document.querySelector("#admin-subnav");
 const dashboardSubnav = document.querySelector("#dashboard-subnav");
 const moduleSubnav = document.querySelector("#module-subnav");
@@ -14,6 +15,7 @@ const SESSION_LICENSE_STATUS_KEY = "docgestor.licenseStatus";
 const SIDEBAR_COLLAPSED_KEY = "docgestor.sidebarCollapsed";
 const APP_VERSION_MANIFEST_URL = "downloads/app-version.json";
 const APP_INSTALLER_URL = "downloads/DocGestor-by-Carminatti-1.0.2-x64.exe";
+let sidebarFlyoutTimer = null;
 
 const titles = {
   home: "Home",
@@ -39,6 +41,7 @@ function setSidebarCollapsed(collapsed) {
   sidebarToggle?.setAttribute("aria-expanded", String(!collapsed));
   sidebarToggle?.setAttribute("aria-label", collapsed ? "Expandir menu lateral" : "Minimizar menu lateral");
   localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? "true" : "false");
+  if (!collapsed) hideSidebarFlyout();
 }
 
 setSidebarCollapsed(localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true");
@@ -46,6 +49,96 @@ setSidebarCollapsed(localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true");
 sidebarToggle?.addEventListener("click", () => {
   setSidebarCollapsed(!appShell?.classList.contains("sidebar-collapsed"));
 });
+
+function subnavForNavItem(item) {
+  if (item.hasAttribute("data-admin-menu-toggle")) return adminSubnav;
+  if (item.hasAttribute("data-dashboard-menu-toggle")) return dashboardSubnav;
+  if (item.hasAttribute("data-module-menu-toggle")) return moduleSubnav;
+  if (item.hasAttribute("data-agenda-menu-toggle")) return agendaSubnav;
+  if (item.hasAttribute("data-settings-menu-toggle")) return settingsSubnav;
+  return null;
+}
+
+function visibleSidebarButtons(container) {
+  return [...container.querySelectorAll(".admin-link")].filter((button) => !button.hidden);
+}
+
+function sidebarItemLabel(element) {
+  return String(element.textContent || "").replace(/\s+/g, " ").trim();
+}
+
+function hideSidebarFlyout() {
+  if (sidebarFlyoutTimer) window.clearTimeout(sidebarFlyoutTimer);
+  sidebarFlyoutTimer = null;
+  sidebarFlyout?.classList.remove("open");
+  if (sidebarFlyout) sidebarFlyout.hidden = true;
+}
+
+function scheduleSidebarFlyoutHide() {
+  if (sidebarFlyoutTimer) window.clearTimeout(sidebarFlyoutTimer);
+  sidebarFlyoutTimer = window.setTimeout(hideSidebarFlyout, 140);
+}
+
+function keepSidebarFlyoutOpen() {
+  if (sidebarFlyoutTimer) window.clearTimeout(sidebarFlyoutTimer);
+  sidebarFlyoutTimer = null;
+}
+
+function addSidebarFlyoutButton(sourceButton) {
+  if (!sidebarFlyout) return;
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = `sidebar-flyout-button${sourceButton.classList.contains("active") ? " active" : ""}`;
+  button.textContent = sidebarItemLabel(sourceButton);
+  button.addEventListener("click", () => {
+    sourceButton.click();
+    hideSidebarFlyout();
+  });
+  sidebarFlyout.appendChild(button);
+}
+
+function renderSidebarFlyout(item) {
+  if (!sidebarFlyout || !appShell?.classList.contains("sidebar-collapsed")) return;
+  const subnav = subnavForNavItem(item);
+  const directButtons = subnav ? visibleSidebarButtons(subnav) : [];
+  if (!directButtons.length && item.dataset.view) {
+    sidebarFlyout.innerHTML = "";
+    addSidebarFlyoutButton(item);
+  } else if (subnav) {
+    sidebarFlyout.innerHTML = `<div class="sidebar-flyout-title">${sidebarItemLabel(item)}</div>`;
+    [...subnav.children].forEach((child) => {
+      if (child.hidden) return;
+      if (child.classList.contains("admin-link")) {
+        addSidebarFlyoutButton(child);
+        return;
+      }
+      if (child.classList.contains("side-tree-group")) {
+        const groupButtons = visibleSidebarButtons(child);
+        if (!groupButtons.length) return;
+        const groupTitle = child.querySelector("strong");
+        if (groupTitle) {
+          const heading = document.createElement("div");
+          heading.className = "sidebar-flyout-group";
+          heading.textContent = sidebarItemLabel(groupTitle);
+          sidebarFlyout.appendChild(heading);
+        }
+        groupButtons.forEach(addSidebarFlyoutButton);
+      }
+    });
+  } else {
+    return;
+  }
+
+  const rect = item.getBoundingClientRect();
+  sidebarFlyout.hidden = false;
+  sidebarFlyout.classList.add("open");
+  sidebarFlyout.style.left = `${Math.round(rect.right + 10)}px`;
+  sidebarFlyout.style.top = `${Math.max(12, Math.round(rect.top))}px`;
+  const flyoutRect = sidebarFlyout.getBoundingClientRect();
+  if (flyoutRect.bottom > window.innerHeight - 12) {
+    sidebarFlyout.style.top = `${Math.max(12, Math.round(window.innerHeight - flyoutRect.height - 12))}px`;
+  }
+}
 
 function sameId(left, right) {
   return String(left) === String(right);
@@ -190,6 +283,15 @@ function openView(viewName) {
 }
 
 navItems.forEach((item) => {
+  item.addEventListener("mouseenter", () => {
+    if (!appShell?.classList.contains("sidebar-collapsed")) return;
+    keepSidebarFlyoutOpen();
+    renderSidebarFlyout(item);
+  });
+  item.addEventListener("mouseleave", () => {
+    if (!appShell?.classList.contains("sidebar-collapsed")) return;
+    scheduleSidebarFlyoutHide();
+  });
   item.addEventListener("click", () => {
     const isAdminToggle = item.hasAttribute("data-admin-menu-toggle");
     const isAdminActive = item.classList.contains("active");
@@ -241,6 +343,9 @@ navItems.forEach((item) => {
 
   });
 });
+
+sidebarFlyout?.addEventListener("mouseenter", keepSidebarFlyoutOpen);
+sidebarFlyout?.addEventListener("mouseleave", scheduleSidebarFlyoutHide);
 
 document.querySelectorAll(".tab").forEach((tab) => {
   tab.addEventListener("click", () => {
