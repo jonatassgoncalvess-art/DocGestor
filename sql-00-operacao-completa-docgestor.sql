@@ -188,6 +188,29 @@ alter table properties add column if not exists car_number text;
 alter table properties add column if not exists ccir_incra_number text;
 alter table properties add column if not exists urban_property_registration text;
 
+create table if not exists cities (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid references organizations(id) on delete cascade,
+  name text not null,
+  state char(2) not null,
+  status text not null default 'Ativa',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint cities_state_check check (state in (
+    'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS',
+    'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC',
+    'SP', 'SE', 'TO'
+  )),
+  constraint cities_status_check check (status in ('Ativa', 'Inativa'))
+);
+
+create unique index if not exists cities_organization_name_state_key
+  on cities (organization_id, lower(name), state);
+
+alter table properties add column if not exists address text;
+alter table properties add column if not exists city_id uuid references cities(id) on delete set null;
+create index if not exists properties_city_id_idx on properties(city_id);
+
 create table if not exists enterprises (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid,
@@ -524,6 +547,7 @@ begin
     'companies',
     'company_partners',
     'properties',
+    'cities',
     'enterprises',
     'enterprise_modules',
     'enterprise_properties',
@@ -552,3 +576,5 @@ begin
   end loop;
 end;
 $$;
+
+notify pgrst, 'reload schema';

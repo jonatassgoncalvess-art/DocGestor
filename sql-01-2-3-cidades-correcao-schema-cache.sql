@@ -1,6 +1,7 @@
 -- DocGestor by Carminatti
--- Ambiente 01.2.3 Cidades e atualizacao do ambiente 01.2.4 Imoveis
--- Execute este SQL no Supabase antes de salvar cidades ou imoveis com endereco/cidade.
+-- Correção do ambiente 01.2.3 Cidades
+-- Use este SQL quando aparecer:
+-- "Could not find the table 'public.cities' in the schema cache"
 
 create extension if not exists pgcrypto;
 
@@ -33,7 +34,7 @@ create table if not exists cities (
 create unique index if not exists cities_organization_name_state_key
   on cities (organization_id, lower(name), state);
 
-alter table properties
+alter table if exists properties
   add column if not exists address text,
   add column if not exists city_id uuid references cities(id) on delete set null;
 
