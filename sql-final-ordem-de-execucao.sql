@@ -26,6 +26,10 @@
 -- Arquivo:
 -- sql-01-2-6-atividades-multiplos-cnpjs.sql
 
+-- SINCRONIZAÇÃO SEGURA - Execute quando precisar religar dados antigos sem apagar nada.
+-- Arquivo:
+-- sql-sincronizar-vinculos-sem-apagar.sql
+
 -- Observação:
 -- Os demais SQLs menores permanecem no repositório como histórico por módulo,
 -- mas os três arquivos principais acima são o conjunto recomendado para alinhar

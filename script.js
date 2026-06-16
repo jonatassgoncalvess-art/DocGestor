@@ -8918,6 +8918,20 @@ async function persistEnvironmentalDocument(documentItem, wasExisting) {
   }
 }
 
+async function createRelationIfMissing(table, record, uniqueFields) {
+  if (!window.DocGestorDB) return;
+  const query = [
+    "select=*",
+    ...uniqueFields.map((fieldName) => `${fieldName}=eq.${encodeURIComponent(record[fieldName])}`),
+    "limit=1",
+  ].join("&");
+  const existingRows = await window.DocGestorDB.list(table, query).catch(() => []);
+  if (existingRows.length) return;
+  await window.DocGestorDB.create(table, record).catch((error) => {
+    if (!String(error.message || "").toLowerCase().includes("duplicate")) throw error;
+  });
+}
+
 async function persistActivity(activity, wasExisting) {
   if (!window.DocGestorDB) return;
   const organizationId = await defaultOrganizationId();
@@ -8946,17 +8960,15 @@ async function persistActivity(activity, wasExisting) {
     if (saved?.id) {
       updateLocalId(activities, activity.id, saved.id);
       activity.id = saved.id;
-      await window.DocGestorDB.removeWhere("activity_companies", `activity_id=eq.${encodeURIComponent(saved.id)}`);
-      await Promise.all(companyIds.map((linkedCompanyId) => window.DocGestorDB.create("activity_companies", {
+      await Promise.all(companyIds.map((linkedCompanyId) => createRelationIfMissing("activity_companies", {
         activity_id: saved.id,
         company_id: linkedCompanyId,
-      })));
-      await window.DocGestorDB.removeWhere("activity_enterprises", `activity_id=eq.${encodeURIComponent(saved.id)}`);
+      }, ["activity_id", "company_id"])));
       const enterpriseIds = (activity.enterpriseIds || []).filter(looksLikeUuid);
-      await Promise.all(enterpriseIds.map((enterpriseId) => window.DocGestorDB.create("activity_enterprises", {
+      await Promise.all(enterpriseIds.map((enterpriseId) => createRelationIfMissing("activity_enterprises", {
         activity_id: saved.id,
         enterprise_id: enterpriseId,
-      })));
+      }, ["activity_id", "enterprise_id"])));
       recalcEnterprisePolluterStatus();
       await persistEnterprisePolluterStatus();
       renderActivities();
