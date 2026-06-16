@@ -1960,6 +1960,31 @@ button {
   border-color: #ead36a;
 }
 
+.selection-summary-box {
+  background: #f8f9fa;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+}
+
+.selection-summary-box span,
+.selection-summary-box strong {
+  display: block;
+}
+
+.selection-summary-box span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.selection-summary-box strong {
+  color: var(--ink);
+  font-size: 14px;
+}
+
 .alert-history-summary {
   border: 1px solid var(--line);
   border-radius: 8px;

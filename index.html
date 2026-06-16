@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
     <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=20260611-calendar-pro-1" />
+    <link rel="stylesheet" href="styles.css?v=20260616-activity-multi-cnpj-1" />
   </head>
   <body>
     <section class="login-screen" id="login-screen">
@@ -2039,7 +2039,11 @@
           <input type="hidden" id="activity-id" value="0" />
           <label>Nome da atividade<input id="activity-name" placeholder="Ex.: Avicultura de Postura" /></label>
           <label>CNAE<input id="activity-cnae" placeholder="Ex.: 0155-5/03" /></label>
-          <label>CNPJ vinculado<select id="activity-company-cnpj"></select></label>
+          <div class="wide-field selection-summary-box">
+            <span>CNPJs vinculados</span>
+            <strong id="activity-company-summary">Nenhum CNPJ selecionado</strong>
+          </div>
+          <button class="ghost" id="activity-companies-open" type="button">Selecionar CNPJs</button>
           <label class="wide-field checkbox-line">
             <input id="activity-ctf-app" type="checkbox" />
             CTF/APP
@@ -2055,6 +2059,23 @@
         <div class="modal-actions">
           <button class="ghost" data-close-modal="activity-modal">Cancelar</button>
           <button class="primary" id="activity-save">Salvar atividade</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="activity-companies-modal" aria-hidden="true">
+      <section class="modal-panel confirm-modal" role="dialog" aria-modal="true" aria-labelledby="activity-companies-title">
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">01.2.6 Atividades</p>
+            <h2 id="activity-companies-title">Selecionar CNPJs</h2>
+          </div>
+          <button class="ghost small" data-close-modal="activity-companies-modal">Fechar</button>
+        </div>
+        <div class="partner-checks module-checks" id="activity-company-checks"></div>
+        <div class="modal-actions">
+          <button class="ghost" data-close-modal="activity-companies-modal">Cancelar</button>
+          <button class="primary" id="activity-companies-apply" type="button">Aplicar CNPJs</button>
         </div>
       </section>
     </div>
@@ -2427,9 +2448,9 @@
       </section>
     </div>
 
-    <script src="supabase-config.js?v=20260611-calendar-pro-1"></script>
-    <script src="database.js?v=20260611-calendar-pro-1"></script>
-    <script src="script.js?v=20260611-calendar-pro-1"></script>
+    <script src="supabase-config.js?v=20260616-activity-multi-cnpj-1"></script>
+    <script src="database.js?v=20260616-activity-multi-cnpj-1"></script>
+    <script src="script.js?v=20260616-activity-multi-cnpj-1"></script>
   </body>
 </html>
 

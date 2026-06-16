@@ -22,6 +22,10 @@
 -- Arquivo:
 -- sql-01-2-3-cidades-correcao-schema-cache.sql
 
+-- ATUALIZAÇÃO MODULAR - Execute para habilitar mais de um CNPJ por atividade em 01.2.6
+-- Arquivo:
+-- sql-01-2-6-atividades-multiplos-cnpjs.sql
+
 -- Observação:
 -- Os demais SQLs menores permanecem no repositório como histórico por módulo,
 -- mas os três arquivos principais acima são o conjunto recomendado para alinhar

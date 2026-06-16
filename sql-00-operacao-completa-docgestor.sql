@@ -262,6 +262,13 @@ create table if not exists activity_enterprises (
   created_at timestamptz not null default now()
 );
 
+create table if not exists activity_companies (
+  id uuid primary key default gen_random_uuid(),
+  activity_id uuid not null,
+  company_id uuid not null,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists app_users (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid,
@@ -519,6 +526,9 @@ create index if not exists idx_enterprises_property on enterprises(property_id);
 create index if not exists idx_enterprise_properties_enterprise on enterprise_properties(enterprise_id);
 create index if not exists idx_enterprise_properties_property on enterprise_properties(property_id);
 create index if not exists idx_activities_company on activities(company_id);
+create index if not exists idx_activity_companies_activity on activity_companies(activity_id);
+create index if not exists idx_activity_companies_company on activity_companies(company_id);
+create unique index if not exists idx_activity_companies_activity_company on activity_companies(activity_id, company_id);
 
 insert into enterprise_properties (enterprise_id, property_id)
 select id, property_id
@@ -552,6 +562,7 @@ begin
     'enterprise_modules',
     'enterprise_properties',
     'activities',
+    'activity_companies',
     'activity_enterprises',
     'app_users',
     'environmental_license_types',

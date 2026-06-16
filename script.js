@@ -4787,6 +4787,7 @@ if (enterpriseList) {
 let activities = [];
 let selectedActivityId = 0;
 let activityEnterpriseSelection = [];
+let activityCompanySelection = [];
 const activityList = document.querySelector("#activity-list");
 const activityCount = document.querySelector("#activity-count");
 
@@ -4810,27 +4811,60 @@ function updateActivityEnterpriseSummary(ids = activityEnterpriseSelection) {
   if (summary) summary.textContent = activityEnterpriseLabels(ids);
 }
 
-function populateActivityCompanies(selectedCnpj = "") {
-  const select = field("activity-company-cnpj");
-  if (!select) return;
-  select.innerHTML = companies
-    .sort((a, b) => a.cnpj.localeCompare(b.cnpj))
-    .map((company) => `<option value="${company.cnpj}">${company.cnpj} - ${company.name}</option>`)
-    .join("");
-  if (selectedCnpj && companies.some((company) => company.cnpj === selectedCnpj)) select.value = selectedCnpj;
+function activityCompanyCnpjs(activity) {
+  return [...new Set([...(activity?.companyCnpjs || []), activity?.companyCnpj].filter(Boolean))];
 }
 
-function enterprisesForActivityCnpj(cnpj = field("activity-company-cnpj")?.value) {
-  const company = companyByCnpj(cnpj);
-  if (!company) return [];
-  return enterprises.filter((enterprise) => enterprise.company === company.name);
+function activityCompanyLabels(cnpjs = activityCompanySelection) {
+  const labels = cnpjs
+    .map((cnpj) => companyByCnpj(cnpj))
+    .filter(Boolean)
+    .map((company) => `${company.cnpj} - ${company.name}`);
+  return labels.length ? labels.join(", ") : "Nenhum CNPJ selecionado";
+}
+
+function updateActivityCompanySummary(cnpjs = activityCompanySelection) {
+  const summary = field("activity-company-summary");
+  if (summary) summary.textContent = activityCompanyLabels(cnpjs);
+}
+
+function renderActivityCompanyChecks(selectedCnpjs = activityCompanySelection) {
+  const wrapper = field("activity-company-checks");
+  if (!wrapper) return;
+  const options = companies.filter((company) => company.cnpj).sort((a, b) => a.cnpj.localeCompare(b.cnpj));
+  wrapper.innerHTML = `<span>CNPJs cadastrados</span>${
+    options.length
+      ? options
+          .map(
+            (company) => `
+              <label>
+                <input type="checkbox" name="activity-company" value="${company.cnpj}" ${selectedCnpjs.includes(company.cnpj) ? "checked" : ""} />
+                ${company.cnpj} - ${company.name}
+                <small>${company.kind === "branch" ? "Filial" : "Matriz"}</small>
+              </label>
+            `,
+          )
+          .join("")
+      : "<small>Nenhum CNPJ cadastrado em 01.2.2 Empresas e Filiais.</small>"
+  }`;
+}
+
+function openActivityCompanyPicker() {
+  renderActivityCompanyChecks(activityCompanySelection);
+  openModal("activity-companies-modal");
+}
+
+function enterprisesForActivityCompanies(cnpjs = activityCompanySelection) {
+  const selectedCompanies = companies.filter((company) => cnpjs.includes(company.cnpj));
+  const selectedNames = selectedCompanies.map((company) => company.name);
+  return enterprises.filter((enterprise) => selectedNames.includes(enterprise.company));
 }
 
 function renderActivityEnterpriseChecks() {
   const wrapper = field("activity-enterprise-checks");
   if (!wrapper) return;
-  const available = enterprisesForActivityCnpj();
-  wrapper.innerHTML = `<span>Empreendimentos do CNPJ selecionado</span>${
+  const available = enterprisesForActivityCompanies();
+  wrapper.innerHTML = `<span>Empreendimentos dos CNPJs selecionados</span>${
     available.length
       ? available
           .map(
@@ -4842,13 +4876,26 @@ function renderActivityEnterpriseChecks() {
             `,
           )
           .join("")
-      : "<small>Nenhum empreendimento vinculado a este CNPJ.</small>"
+      : "<small>Nenhum empreendimento vinculado aos CNPJs selecionados.</small>"
   }`;
 }
 
 function openActivityEnterprisePicker() {
+  if (!activityCompanySelection.length) {
+    alert("Selecione ao menos um CNPJ antes de vincular empreendimentos.");
+    return;
+  }
   renderActivityEnterpriseChecks();
   openModal("activity-enterprises-modal");
+}
+
+function applyActivityCompanies() {
+  activityCompanySelection = checkedValues('input[name="activity-company"]');
+  const availableIds = enterprisesForActivityCompanies().map((enterprise) => String(enterprise.id));
+  activityEnterpriseSelection = activityEnterpriseSelection.filter((id) => availableIds.includes(String(id)));
+  updateActivityCompanySummary();
+  updateActivityEnterpriseSummary();
+  closeModal("activity-companies-modal");
 }
 
 function applyActivityEnterprises() {
@@ -4884,7 +4931,7 @@ function renderActivities() {
       (activity) => `
         <article>
           <strong>${activity.name}</strong>
-          <span>CNAE ${activity.cnae || "Não informado"} - CNPJ ${activity.companyCnpj || "Não informado"} - ${activity.ctfApp ? "CTF/APP: potencialmente poluidora" : "Sem CTF/APP"} - empreendimentos: ${activityEnterpriseLabels(activity.enterpriseIds || [])}</span>
+          <span>CNAE ${activity.cnae || "Não informado"} - CNPJs ${activityCompanyLabels(activityCompanyCnpjs(activity))} - ${activity.ctfApp ? "CTF/APP: potencialmente poluidora" : "Sem CTF/APP"} - empreendimentos: ${activityEnterpriseLabels(activity.enterpriseIds || [])}</span>
           <div>
             <button type="button" data-activity-action="edit" data-activity-id="${activity.id}">Editar</button>
             <button type="button" data-activity-action="delete" data-activity-id="${activity.id}">Excluir</button>
@@ -4901,7 +4948,8 @@ function fillActivityForm(activity) {
   field("activity-id").value = activity.id;
   field("activity-name").value = activity.name;
   field("activity-cnae").value = activity.cnae || "";
-  populateActivityCompanies(activity.companyCnpj);
+  activityCompanySelection = activityCompanyCnpjs(activity);
+  updateActivityCompanySummary();
   field("activity-ctf-app").checked = Boolean(activity.ctfApp);
   activityEnterpriseSelection = [...(activity.enterpriseIds || [])];
   updateActivityEnterpriseSummary();
@@ -4913,7 +4961,8 @@ function newActivity() {
   field("activity-id").value = id;
   field("activity-name").value = "";
   field("activity-cnae").value = "";
-  populateActivityCompanies();
+  activityCompanySelection = [];
+  updateActivityCompanySummary();
   field("activity-ctf-app").checked = false;
   activityEnterpriseSelection = [];
   updateActivityEnterpriseSummary();
@@ -4929,10 +4978,15 @@ async function saveActivity() {
     id: id || Date.now(),
     name: field("activity-name").value,
     cnae: field("activity-cnae").value,
-    companyCnpj: field("activity-company-cnpj").value,
+    companyCnpj: activityCompanySelection[0] || "",
+    companyCnpjs: [...activityCompanySelection],
     ctfApp: field("activity-ctf-app").checked,
     enterpriseIds: [...activityEnterpriseSelection],
   };
+  if (!payload.companyCnpjs.length) {
+    alert("Selecione ao menos um CNPJ para a atividade.");
+    return;
+  }
   if (existing) Object.assign(existing, payload);
   else activities.push(payload);
   renderActivities();
@@ -4942,13 +4996,10 @@ async function saveActivity() {
 
 document.querySelector("#activity-new")?.addEventListener("click", newActivity);
 document.querySelector("#activity-save")?.addEventListener("click", saveActivity);
+document.querySelector("#activity-companies-open")?.addEventListener("click", openActivityCompanyPicker);
+document.querySelector("#activity-companies-apply")?.addEventListener("click", applyActivityCompanies);
 document.querySelector("#activity-enterprises-open")?.addEventListener("click", openActivityEnterprisePicker);
 document.querySelector("#activity-enterprises-apply")?.addEventListener("click", applyActivityEnterprises);
-field("activity-company-cnpj")?.addEventListener("change", () => {
-  const availableIds = enterprisesForActivityCnpj().map((enterprise) => String(enterprise.id));
-  activityEnterpriseSelection = activityEnterpriseSelection.filter((id) => availableIds.includes(String(id)));
-  updateActivityEnterpriseSummary();
-});
 activityList?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-activity-action]");
   if (!button) return;
@@ -8561,6 +8612,7 @@ async function cleanupBeforeDelete(table, id) {
       ["activity_enterprises", `enterprise_id=eq.${encodedId}`],
     ],
     activities: [
+      ["activity_companies", `activity_id=eq.${encodedId}`],
       ["activity_enterprises", `activity_id=eq.${encodedId}`],
     ],
     environmental_license_types: [
@@ -8870,9 +8922,10 @@ async function persistActivity(activity, wasExisting) {
   if (!window.DocGestorDB) return;
   const organizationId = await defaultOrganizationId();
   if (!organizationId) return;
-  const companyId = companyIdByCnpj(activity.companyCnpj);
+  const companyIds = activityCompanyCnpjs(activity).map(companyIdByCnpj).filter(looksLikeUuid);
+  const companyId = companyIds[0];
   if (!looksLikeUuid(companyId)) {
-    alert("Não foi possível salvar a atividade no banco porque o CNPJ selecionado ainda não possui ID válido no Supabase.");
+    alert("Não foi possível salvar a atividade no banco porque nenhum CNPJ selecionado possui ID válido no Supabase.");
     return;
   }
   const payload = {
@@ -8893,6 +8946,11 @@ async function persistActivity(activity, wasExisting) {
     if (saved?.id) {
       updateLocalId(activities, activity.id, saved.id);
       activity.id = saved.id;
+      await window.DocGestorDB.removeWhere("activity_companies", `activity_id=eq.${encodeURIComponent(saved.id)}`);
+      await Promise.all(companyIds.map((linkedCompanyId) => window.DocGestorDB.create("activity_companies", {
+        activity_id: saved.id,
+        company_id: linkedCompanyId,
+      })));
       await window.DocGestorDB.removeWhere("activity_enterprises", `activity_id=eq.${encodeURIComponent(saved.id)}`);
       const enterpriseIds = (activity.enterpriseIds || []).filter(looksLikeUuid);
       await Promise.all(enterpriseIds.map((enterpriseId) => window.DocGestorDB.create("activity_enterprises", {
@@ -9177,6 +9235,7 @@ async function loadSupabaseData() {
     enterpriseModuleRows,
     enterprisePropertyRows,
     activityRows,
+    activityCompanyRows,
     activityEnterpriseRows,
     licenseTypeRows,
     phaseRows,
@@ -9205,6 +9264,7 @@ async function loadSupabaseData() {
     dbList("enterprise_modules"),
     dbList("enterprise_properties"),
     dbList("activities"),
+    dbList("activity_companies"),
     dbList("activity_enterprises"),
     dbList("environmental_license_types"),
     dbList("environmental_license_type_phases"),
@@ -9337,6 +9397,10 @@ async function loadSupabaseData() {
     name: row.name,
     cnae: row.cnae || "",
     companyCnpj: companyById[row.company_id]?.cnpj || "",
+    companyCnpjs: activityCompanyRows
+      .filter((link) => sameId(link.activity_id, row.id))
+      .map((link) => companyById[link.company_id]?.cnpj)
+      .filter(Boolean),
     ctfApp: Boolean(row.ctf_app),
     status: row.status || "Ativo",
     enterpriseIds: activityEnterpriseRows.filter((link) => sameId(link.activity_id, row.id)).map((link) => link.enterprise_id),
