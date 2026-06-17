@@ -67,7 +67,8 @@ insert into app_modules (code, name, parent_code, display_order, is_admin_area, 
 values
   ('environmental', '03.1 Licenças Ambientais', '03', 3.1, false, true, 'active'),
   ('iptu', '03.2 IPTU', '03', 3.2, false, true, 'development'),
-  ('diverse-documents', '03.3 Lembretes Diversos', '03', 3.3, false, true, 'active')
+  ('diverse-documents', '03.3 Lembretes Diversos', '03', 3.3, false, true, 'active'),
+  ('forms', '03.4 Formulários', '03', 3.4, false, true, 'active')
 on conflict (code) do update set
   name = excluded.name,
   parent_code = excluded.parent_code,

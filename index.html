@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
     <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=20260617-alert-subviews-1" />
+    <link rel="stylesheet" href="styles.css?v=20260617-forms-module-1" />
   </head>
   <body>
     <section class="login-screen" id="login-screen">
@@ -124,6 +124,7 @@
             </div>
             <button class="admin-link" data-view-target="iptu" data-permission-view="iptu">03.2 IPTU</button>
             <button class="admin-link" data-view-target="documentos-diversos" data-permission-view="diverseDocuments">03.3 Lembretes Diversos</button>
+            <button class="admin-link" data-view-target="formularios" data-permission-view="forms">03.4 Formulários</button>
           </div>
           <button class="nav-item" data-view="agenda" data-agenda-menu-toggle="true" data-permission-view="agenda" aria-expanded="false">
             <span>04</span> Agenda
@@ -892,6 +893,12 @@
               <p>Lembretes avulsos, alertas por data, repetição e estabelecimento vinculado.</p>
               <button class="ghost small" data-view-target="documentos-diversos" data-permission-view="diverseDocuments">Abrir 03.3</button>
             </article>
+            <article class="module-card">
+              <span>03.4 Módulo</span>
+              <h3>Formulários</h3>
+              <p>Modelos, preenchimento e organização de formulários operacionais do sistema.</p>
+              <button class="ghost small" data-view-target="formularios" data-permission-view="forms">Abrir 03.4</button>
+            </article>
           </div>
         </section>
 
@@ -959,6 +966,29 @@
           </section>
         </section>
 
+        <section class="view" id="formularios">
+          <div class="module-context">
+            <p class="eyebrow">03.4 Módulo operacional</p>
+            <h2>Formulários</h2>
+          </div>
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Formulários cadastrados</h2>
+                <span class="muted">Ambiente inicial para modelos e preenchimentos de formulários.</span>
+              </div>
+              <span class="pill green" id="forms-count">0 itens</span>
+            </div>
+            <div class="crud-list">
+              <article>
+                <strong>Nenhum formulário cadastrado</strong>
+                <span>Os modelos e preenchimentos serão listados aqui quando o fluxo do módulo for definido.</span>
+                <div></div>
+              </article>
+            </div>
+          </section>
+        </section>
+
         <section class="view" id="agenda">
           <div class="section-title">
             <div>
@@ -1012,6 +1042,7 @@
                     <option value="Reunião">Reunião</option>
                     <option value="IPTU">IPTU</option>
                     <option value="Lembretes Diversos">Lembretes Diversos</option>
+                    <option value="Formulários">Formulários</option>
                     <option value="Administrativo">Administrativo</option>
                     <option value="Outro">Outro</option>
                   </select>
@@ -1182,6 +1213,7 @@
                   <option>Reunião</option>
                   <option>IPTU</option>
                   <option>Lembretes Diversos</option>
+                  <option>Formulários</option>
                   <option>Administrativo</option>
                   <option>Outro</option>
                 </select>
@@ -1203,6 +1235,7 @@
                     <option value="environmental">03.1 Licenças Ambientais</option>
                     <option value="iptu">03.2 IPTU</option>
                     <option value="diverse-documents">03.3 Lembretes Diversos</option>
+                    <option value="forms">03.4 Formulários</option>
                   </select>
                 </label>
                 <button class="ghost" type="button" id="agenda-note-link-select">Selecionar</button>
@@ -1366,6 +1399,7 @@
           <label><input type="checkbox" data-permission-key="environmental" /> 03.1 Licenças Ambientais</label>
           <label><input type="checkbox" data-permission-key="iptu" /> 03.2 IPTU</label>
           <label><input type="checkbox" data-permission-key="diverseDocuments" /> 03.3 Lembretes Diversos</label>
+          <label><input type="checkbox" data-permission-key="forms" /> 03.4 Formulários</label>
           <label><input type="checkbox" data-permission-key="agenda" /> 04 Agenda</label>
           <label><input type="checkbox" data-permission-key="users" /> 01.1 Usuários</label>
           <label><input type="checkbox" data-permission-key="registries" /> 01.2 Cadastros</label>
@@ -2450,9 +2484,9 @@
       </section>
     </div>
 
-    <script src="supabase-config.js?v=20260617-alert-subviews-1"></script>
-    <script src="database.js?v=20260617-alert-subviews-1"></script>
-    <script src="script.js?v=20260617-alert-subviews-1"></script>
+    <script src="supabase-config.js?v=20260617-forms-module-1"></script>
+    <script src="database.js?v=20260617-forms-module-1"></script>
+    <script src="script.js?v=20260617-forms-module-1"></script>
   </body>
 </html>
 

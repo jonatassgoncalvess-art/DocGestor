@@ -29,6 +29,7 @@ const titles = {
   licencas: "03.1 Licenças Ambientais",
   iptu: "03.2 IPTU",
   "documentos-diversos": "03.3 Lembretes Diversos",
+  formularios: "03.4 Formulários",
   usuarios: "Usuários e permissões",
   agenda: "04.1 Calendário",
   "agenda-notes": "04.2 Anotações",
@@ -207,7 +208,7 @@ function openView(viewName) {
     ? "admin"
     : ["dashboard-ambiental", "dashboard-iptu", "dashboard-agendamentos"].includes(viewName)
       ? "dashboard"
-    : ["licencas", "iptu", "documentos-diversos"].includes(viewName)
+    : ["licencas", "iptu", "documentos-diversos", "formularios"].includes(viewName)
       ? "modulos"
       : viewName === "agenda-notes"
         ? "agenda"
@@ -472,6 +473,7 @@ const searchableEnvironments = [
   { code: "03.1.5", title: "Licenças", detail: "Licenças ambientais geradas", permission: "environmental", action: () => openLicenseStatus("licenses") },
   { code: "03.2", title: "IPTU", detail: "Guias, vencimentos e comprovantes", permission: "iptu", action: () => openView("iptu") },
   { code: "03.3", title: "Lembretes Diversos", detail: "Lembretes avulsos, prazos e alertas", permission: "diverseDocuments", action: () => openView("documentos-diversos") },
+  { code: "03.4", title: "Formulários", detail: "Modelos e preenchimento de formulários operacionais", permission: "forms", action: () => openView("formularios") },
   { code: "04.1", title: "Calendário", detail: "Agenda em formato calendário", permission: "agenda", action: () => openView("agenda") },
   { code: "04.2", title: "Anotações", detail: "Agendamentos e alertas pendentes", permission: "agenda", action: () => openView("agenda-notes") },
   { code: "05.1", title: "Perfil", detail: "Dados cadastrais e senha do usuário", permission: "profile", action: () => openView("profile-settings") },
@@ -2086,7 +2088,7 @@ const MASTER_USER = {
   email: "Admin",
   profile: "Administrador Maximo",
   status: "Ativo",
-  permissions: ["admin", "dashboard", "modules", "environmental", "iptu", "diverseDocuments", "agenda", "users", "registries", "adminEnvironmental"],
+  permissions: ["admin", "dashboard", "modules", "environmental", "iptu", "diverseDocuments", "forms", "agenda", "users", "registries", "adminEnvironmental"],
   isMaster: true,
 };
 
@@ -2116,7 +2118,7 @@ function selectedUser() {
 
 function defaultPermissionsForProfile(profile) {
   if (profile === "Administrador Geral" || profile === "Administrador do Grupo") {
-    return ["admin", "dashboard", "modules", "environmental", "iptu", "diverseDocuments", "agenda", "users", "registries", "adminEnvironmental"];
+    return ["admin", "dashboard", "modules", "environmental", "iptu", "diverseDocuments", "forms", "agenda", "users", "registries", "adminEnvironmental"];
   }
   if (profile === "Gestor Ambiental" || profile === "Operador Ambiental") {
     return ["dashboard", "modules", "environmental", "agenda"];
@@ -2135,7 +2137,7 @@ function canAccess(permissionKey) {
   if (!currentUser) return false;
   const permissions = userPermissions(currentUser);
   if (permissionKey === "modules") {
-    return permissions.some((permission) => ["modules", "environmental", "iptu", "diverseDocuments"].includes(permission));
+    return permissions.some((permission) => ["modules", "environmental", "iptu", "diverseDocuments", "forms"].includes(permission));
   }
   return permissions.includes(permissionKey);
 }
@@ -2149,6 +2151,7 @@ function viewPermission(viewName) {
   if (viewName === "modulos") return "modules";
   if (viewName === "iptu") return "iptu";
   if (viewName === "documentos-diversos") return "diverseDocuments";
+  if (viewName === "formularios") return "forms";
   if (viewName === "licencas") return "environmental";
   if (viewName === "agenda" || viewName === "agenda-notes") return "agenda";
   if (viewName === "settings" || viewName === "profile-settings") return "profile";
@@ -2160,6 +2163,7 @@ function firstAccessibleView() {
   if (canAccess("environmental")) return "licencas";
   if (canAccess("iptu")) return "iptu";
   if (canAccess("diverseDocuments")) return "documentos-diversos";
+  if (canAccess("forms")) return "formularios";
   if (canAccess("agenda")) return "agenda";
   if (canAccess("admin")) return "admin";
   if (canAccess("modules")) return "modulos";
@@ -3205,6 +3209,7 @@ const defaultSystemModules = [
   { id: "environmental", name: "03.1 Licenças Ambientais" },
   { id: "iptu", name: "03.2 IPTU" },
   { id: "diverse-documents", name: "03.3 Lembretes Diversos" },
+  { id: "forms", name: "03.4 Formulários" },
 ];
 
 const availableAlertModules = [...defaultSystemModules];
@@ -3217,6 +3222,7 @@ const alertModulePermissionMap = {
   environmental: "environmental",
   iptu: "iptu",
   "diverse-documents": "diverseDocuments",
+  forms: "forms",
 };
 
 function userHasModuleAccess(user, moduleId) {
