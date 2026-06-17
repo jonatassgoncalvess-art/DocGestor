@@ -4828,6 +4828,11 @@ function updateActivityCompanySummary(cnpjs = activityCompanySelection) {
   if (summary) summary.textContent = activityCompanyLabels(cnpjs);
 }
 
+function populateActivityCompanies() {
+  updateActivityCompanySummary(activityCompanySelection);
+  renderActivityCompanyChecks(activityCompanySelection);
+}
+
 function renderActivityCompanyChecks(selectedCnpjs = activityCompanySelection) {
   const wrapper = field("activity-company-checks");
   if (!wrapper) return;
