@@ -10,7 +10,7 @@ const supabaseKey =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
   "sb_publishable_xSppe3iQC7YAcA2moLMrgw_yvS54coJ";
 const resend = new Resend(process.env.RESEND_API_KEY);
-const SENT_HISTORY_RETENTION_DAYS = 90;
+const SENT_HISTORY_RETENTION_DAYS = 120;
 
 function headers() {
   return {

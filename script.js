@@ -368,12 +368,20 @@ document.querySelectorAll("[data-view-target]").forEach((button) => {
 });
 
 function openAdminPanel(panelName) {
+  const panelAlias = {
+    "historico-alertas-fila": "historico-alertas",
+    "historico-alertas-enviados": "historico-alertas",
+  };
+  const targetPanelName = panelAlias[panelName] || panelName;
   document.querySelectorAll(".admin-link, .admin-tab").forEach((tab) => {
     tab.classList.toggle("active", tab.dataset.adminTarget === panelName);
   });
   document.querySelectorAll(".admin-panel").forEach((panel) => {
-    panel.classList.toggle("active", panel.id === `admin-${panelName}`);
+    panel.classList.toggle("active", panel.id === `admin-${targetPanelName}`);
   });
+  if (targetPanelName === "historico-alertas") {
+    setAlertHistoryView(panelName);
+  }
 }
 
 function openAdminSearchPanel(panelName) {
@@ -448,6 +456,8 @@ const searchableEnvironments = [
   { code: "01.4.1", title: "E-mail do Sistema", detail: "Remetente oficial e domínio", permission: "admin", action: () => openAdminSearchPanel("email-sistema") },
   { code: "01.4.2", title: "E-mails por Módulo", detail: "Destinatários dos alertas", permission: "admin", action: () => openAdminSearchPanel("envios-admin") },
   { code: "01.4.3", title: "Histórico de Alertas", detail: "Status dos envios no Resend", permission: "admin", action: () => openAdminSearchPanel("historico-alertas") },
+  { code: "01.4.3.1", title: "Na Fila", detail: "Alertas aguardando data e hora de disparo", permission: "admin", action: () => openAdminSearchPanel("historico-alertas-fila") },
+  { code: "01.4.3.2", title: "Enviados", detail: "Alertas disparados mantidos por 120 dias", permission: "admin", action: () => openAdminSearchPanel("historico-alertas-enviados") },
   { code: "01.5.1", title: "Backup", detail: "Frequencia, horario e armazenamento", permission: "admin", action: () => openAdminSearchPanel("backup-sistema") },
   { code: "02", title: "Painel Geral", detail: "Indicadores e prazos reais", permission: "dashboard", action: () => openView("dashboard") },
   { code: "02.1", title: "Painel Ambiental", detail: "Indicadores exclusivos ambientais", permission: "environmental", action: () => openView("dashboard-ambiental") },
@@ -2169,7 +2179,7 @@ function applyAccessControl() {
   document.querySelectorAll('[data-admin-target="tipos-licencas"], [data-admin-target="documentos-ambientais"], [data-admin-target="modelos-checklist"]').forEach((element) => {
     element.hidden = !canAccess("adminEnvironmental");
   });
-  document.querySelectorAll('[data-admin-target="email-sistema"], [data-admin-target="envios-admin"], [data-admin-target="historico-alertas"], [data-admin-target="backup-sistema"]').forEach((element) => {
+  document.querySelectorAll('[data-admin-target="email-sistema"], [data-admin-target="envios-admin"], [data-admin-target="historico-alertas"], [data-admin-target="historico-alertas-fila"], [data-admin-target="historico-alertas-enviados"], [data-admin-target="backup-sistema"]').forEach((element) => {
     element.hidden = !canAccess("admin");
   });
   const label = field("current-user-label");
@@ -3530,11 +3540,15 @@ field("send-recipient-modal")?.addEventListener("click", (event) => {
 renderSendRecipients();
 
 let alertHistoryItems = [];
-const ALERT_HISTORY_RETENTION_DAYS = 90;
+let currentAlertHistoryView = "all";
+const ALERT_HISTORY_RETENTION_DAYS = 120;
 
 const alertHistoryStatusLabels = {
   waiting: "Aguardando",
   pending: "Aguardando",
+  scheduled: "Aguardando",
+  aguardando: "Aguardando",
+  enviado: "Enviado",
   sent: "Enviado",
   delivered: "Entregue",
   delivery_delayed: "Entrega atrasada",
@@ -3556,7 +3570,7 @@ function escapeHtml(value) {
 function alertHistoryStatusClass(status) {
   if (["delivered", "opened", "clicked"].includes(status)) return "green";
   if (["bounced", "complained"].includes(status)) return "red";
-  if (["waiting", "pending", "delivery_delayed"].includes(status)) return "yellow";
+  if (["waiting", "pending", "scheduled", "aguardando", "delivery_delayed"].includes(status)) return "yellow";
   return "";
 }
 
@@ -3589,6 +3603,53 @@ function normalizeAlertHistoryItem(item) {
   };
 }
 
+function normalizedAlertHistoryStatus(item) {
+  return String(item.last_event || item.status || "").toLowerCase();
+}
+
+function isQueuedAlertHistoryItem(item) {
+  return ["waiting", "pending", "scheduled", "aguardando"].includes(normalizedAlertHistoryStatus(item));
+}
+
+function isSentAlertHistoryItem(item) {
+  return ["sent", "enviado", "delivered", "opened", "clicked", "bounced", "complained", "delivery_delayed"].includes(normalizedAlertHistoryStatus(item));
+}
+
+function alertHistoryItemsForCurrentView(items = alertHistoryItems) {
+  if (currentAlertHistoryView === "queue") return items.filter(isQueuedAlertHistoryItem);
+  if (currentAlertHistoryView === "sent") return items.filter(isSentAlertHistoryItem);
+  return items;
+}
+
+function setAlertHistoryView(panelName = "historico-alertas") {
+  if (panelName === "historico-alertas-fila") currentAlertHistoryView = "queue";
+  else if (panelName === "historico-alertas-enviados") currentAlertHistoryView = "sent";
+  else currentAlertHistoryView = "all";
+
+  const config = {
+    all: {
+      eyebrow: "01.4.3 Histórico de Alertas",
+      title: "Status dos alertas do sistema",
+      listTitle: "Todos os alertas",
+    },
+    queue: {
+      eyebrow: "01.4.3.1 Na Fila",
+      title: "Alertas aguardando data e hora de disparo",
+      listTitle: "Alertas na fila",
+    },
+    sent: {
+      eyebrow: "01.4.3.2 Enviados",
+      title: "Alertas disparados pelo sistema",
+      listTitle: `Alertas enviados nos últimos ${ALERT_HISTORY_RETENTION_DAYS} dias`,
+    },
+  }[currentAlertHistoryView];
+
+  if (field("alert-history-eyebrow")) field("alert-history-eyebrow").textContent = config.eyebrow;
+  if (field("alert-history-title")) field("alert-history-title").textContent = config.title;
+  if (field("alert-history-list-title")) field("alert-history-list-title").textContent = config.listTitle;
+  renderAlertHistory(alertHistoryItems);
+}
+
 function alertHistoryRetentionCutoff() {
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - ALERT_HISTORY_RETENTION_DAYS);
@@ -3600,8 +3661,8 @@ function alertHistoryDateForRetention(item) {
 }
 
 function alertHistoryWithinRetention(item) {
-  const status = String(item.status || item.last_event || "").toLowerCase();
-  if (status !== "sent" && status !== "enviado") return true;
+  if (isQueuedAlertHistoryItem(item)) return true;
+  if (!isSentAlertHistoryItem(item)) return true;
   const eventDate = alertHistoryDateForRetention(item);
   return !Number.isNaN(eventDate.getTime()) && eventDate >= alertHistoryRetentionCutoff();
 }
@@ -3645,14 +3706,20 @@ function renderAlertHistory(items = alertHistoryItems) {
   const summary = field("alert-history-summary");
   if (!list || !count || !summary) return;
 
-  count.textContent = `${items.length} itens`;
-  if (!items.length) {
-    summary.innerHTML = "<span>Nenhum envio encontrado no Resend para a chave configurada.</span>";
+  const visibleItems = alertHistoryItemsForCurrentView(items);
+  count.textContent = `${visibleItems.length} itens`;
+  if (!visibleItems.length) {
+    const emptyMessages = {
+      all: "Nenhum alerta encontrado no sistema.",
+      queue: "Nenhum alerta aguardando disparo na fila.",
+      sent: `Nenhum alerta enviado nos últimos ${ALERT_HISTORY_RETENTION_DAYS} dias.`,
+    };
+    summary.innerHTML = `<span>${emptyMessages[currentAlertHistoryView] || emptyMessages.all}</span>`;
     list.innerHTML = "";
     return;
   }
 
-  const normalizedItems = items.map(normalizeAlertHistoryItem);
+  const normalizedItems = visibleItems.map(normalizeAlertHistoryItem);
   const totals = normalizedItems.reduce((acc, item) => {
     const status = item.last_event || "sent";
     acc[status] = (acc[status] || 0) + 1;

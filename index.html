@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
     <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=20260617-db-load-fix-1" />
+    <link rel="stylesheet" href="styles.css?v=20260617-alert-subviews-1" />
   </head>
   <body>
     <section class="login-screen" id="login-screen">
@@ -94,6 +94,8 @@
               <button class="admin-link" data-admin-target="email-sistema">01.4.1 E-mail do Sistema</button>
               <button class="admin-link" data-admin-target="envios-admin">01.4.2 E-mails por Módulo</button>
               <button class="admin-link" data-admin-target="historico-alertas">01.4.3 Histórico de Alertas</button>
+              <button class="admin-link subitem" data-admin-target="historico-alertas-fila">01.4.3.1 Na Fila</button>
+              <button class="admin-link subitem" data-admin-target="historico-alertas-enviados">01.4.3.2 Enviados</button>
             </div>
             <div class="side-tree-group">
               <strong>01.5 Configurações do Sistema</strong>
@@ -501,14 +503,14 @@
               <section class="admin-panel" id="admin-historico-alertas">
                 <div class="section-title">
                   <div>
-                    <p class="eyebrow">01.4.3 Histórico de Alertas</p>
-                    <h2>Status dos e-mails enviados pelo Resend</h2>
+                    <p class="eyebrow" id="alert-history-eyebrow">01.4.3 Histórico de Alertas</p>
+                    <h2 id="alert-history-title">Status dos alertas do sistema</h2>
                   </div>
                   <button class="primary" id="alert-history-refresh" type="button">Atualizar histórico</button>
                 </div>
                 <section class="panel">
                   <div class="list-head">
-                    <h3>Alertas enviados</h3>
+                    <h3 id="alert-history-list-title">Todos os alertas</h3>
                     <span id="alert-history-count">0 itens</span>
                   </div>
                   <div class="alert-history-summary" id="alert-history-summary">
@@ -2448,9 +2450,9 @@
       </section>
     </div>
 
-    <script src="supabase-config.js?v=20260617-db-load-fix-1"></script>
-    <script src="database.js?v=20260617-db-load-fix-1"></script>
-    <script src="script.js?v=20260617-db-load-fix-1"></script>
+    <script src="supabase-config.js?v=20260617-alert-subviews-1"></script>
+    <script src="database.js?v=20260617-alert-subviews-1"></script>
+    <script src="script.js?v=20260617-alert-subviews-1"></script>
   </body>
 </html>
 

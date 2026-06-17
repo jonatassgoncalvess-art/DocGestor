@@ -362,6 +362,15 @@ textarea {
   padding: 8px 9px;
 }
 
+.admin-subnav .admin-link.subitem {
+  border-left: 1px solid #313438;
+  font-size: 12px;
+  margin-left: 12px;
+  min-height: 30px;
+  padding-left: 14px;
+  width: calc(100% - 12px);
+}
+
 .admin-subnav .admin-link.active,
 .admin-subnav .admin-link:hover {
   background: rgba(237, 16, 31, 0.11);
