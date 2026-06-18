@@ -7698,17 +7698,21 @@ function buildLicenseTypesReport() {
   };
 }
 
-function buildEnvironmentalDocumentsReport() {
+function buildEnvironmentalDocumentsReport(filters = {}) {
+  const rows = filterEnvironmentalDocumentsForPdf(filters);
   return {
     title: "Relatório de Documentos Ambientais",
     module: "01.3.2 Documentos",
-    subtitle: "Documentos vinculados aos tipos de licença ambiental.",
+    subtitle: filters.summary || "Documentos vinculados aos tipos de licença ambiental selecionados.",
     orientation: "landscape",
     sections: [
       pdfTableSection(
         "Documentos cadastrados",
-        ["Documento", "Licenças vinculadas", "Exige vencimento", "Obrigatorio", "Parâmetros"],
-        environmentalDocuments.map((item) => [item.name, item.licenses.join(", "), item.expiration, item.required, item.parameters || "Não informado"]),
+        ["Documento", "Exige vencimento", "Obrigatório", "Parâmetros"],
+        fallbackPdfRows(
+          rows.map((item) => [item.name, item.expiration, item.required, item.parameters || "Não informado"]),
+          ["Documento", "Exige vencimento", "Obrigatório", "Parâmetros"],
+        ),
         { rowEstimate: 38 },
       ),
     ],
@@ -7959,6 +7963,7 @@ const pdfFilterState = {
   companyBranchIds: [],
   propertyOwners: [],
   propertyIds: [],
+  environmentalDocumentLicenses: [],
   activePicker: null,
 };
 
@@ -8114,6 +8119,65 @@ function generatePropertyFilteredPdf() {
   openPdfReport(buildPropertiesReport(filters));
 }
 
+function populateEnvironmentalDocumentPdfFilters() {
+  pdfFilterState.environmentalDocumentLicenses = environmentalLicenseTypes.map((license) => license.name);
+  updateEnvironmentalDocumentPdfSummaries();
+}
+
+function filterEnvironmentalDocumentsForPdf(filters = {}) {
+  const selectedLicenses = filters.licenseNames || [];
+  if (!Object.prototype.hasOwnProperty.call(filters, "licenseNames")) return environmentalDocuments;
+  if (!selectedLicenses.length) return [];
+  return environmentalDocuments.filter((documentItem) =>
+    selectedLicenses.some((license) => documentItem.licenses.includes(license)),
+  );
+}
+
+function environmentalDocumentPdfSummary() {
+  const selectedCount = pdfFilterState.environmentalDocumentLicenses.length;
+  const totalCount = environmentalLicenseTypes.length;
+  const selectedText = summarizeSelection(selectedCount, totalCount, "todas as licenças", "licença(s)");
+  const documentCount = filterEnvironmentalDocumentsForPdf({ licenseNames: pdfFilterState.environmentalDocumentLicenses }).length;
+  return `${documentCount} documento(s) relacionado(s) a ${selectedText}`;
+}
+
+function updateEnvironmentalDocumentPdfSummaries() {
+  const availableLicenses = environmentalLicenseTypes.map((license) => license.name);
+  pdfFilterState.environmentalDocumentLicenses = pdfFilterState.environmentalDocumentLicenses.filter((license) => availableLicenses.includes(license));
+  if (!pdfFilterState.environmentalDocumentLicenses.length && availableLicenses.length) {
+    pdfFilterState.environmentalDocumentLicenses = [...availableLicenses];
+  }
+  const summary = field("environmental-document-pdf-license-summary");
+  const preview = field("environmental-document-pdf-preview");
+  if (summary) {
+    summary.textContent = summarizeSelection(
+      pdfFilterState.environmentalDocumentLicenses.length,
+      environmentalLicenseTypes.length,
+      "Todas as licenças",
+      "licença(s)",
+    );
+  }
+  if (preview) preview.textContent = environmentalDocumentPdfSummary();
+}
+
+function selectedEnvironmentalDocumentPdfFilters() {
+  return {
+    licenseNames: pdfFilterState.environmentalDocumentLicenses,
+    summary: environmentalDocumentPdfSummary(),
+  };
+}
+
+function openEnvironmentalDocumentPdfFilters() {
+  populateEnvironmentalDocumentPdfFilters();
+  openModal("environmental-document-pdf-modal");
+}
+
+function generateEnvironmentalDocumentFilteredPdf() {
+  const filters = selectedEnvironmentalDocumentPdfFilters();
+  closeModal("environmental-document-pdf-modal");
+  openPdfReport(buildEnvironmentalDocumentsReport(filters));
+}
+
 function pickerConfig(kind) {
   if (kind === "company-matrices") {
     return {
@@ -8168,6 +8232,22 @@ function pickerConfig(kind) {
       apply(values) {
         pdfFilterState.propertyIds = values;
         updatePropertyPdfSummaries();
+      },
+    };
+  }
+  if (kind === "environmental-document-licenses") {
+    return {
+      title: "Selecionar tipos de licença",
+      context: "01.3.2 Documentos",
+      options: environmentalLicenseTypes.map((license) => ({
+        value: license.name,
+        label: license.name,
+        detail: license.code || "",
+      })),
+      selected: pdfFilterState.environmentalDocumentLicenses,
+      apply(values) {
+        pdfFilterState.environmentalDocumentLicenses = values;
+        updateEnvironmentalDocumentPdfSummaries();
       },
     };
   }
@@ -8243,6 +8323,10 @@ function addPdfButton(container, label, reportKey) {
       openPropertyPdfFilters();
       return;
     }
+    if (reportKey === "environmentalDocuments") {
+      openEnvironmentalDocumentPdfFilters();
+      return;
+    }
     const builder = pdfReports[reportKey];
     if (builder) openPdfReport(builder());
   });
@@ -8263,6 +8347,7 @@ field("property-pdf-report-type")?.addEventListener("change", () => {
   updatePropertyPdfFilters();
 });
 field("property-pdf-generate")?.addEventListener("click", generatePropertyFilteredPdf);
+field("environmental-document-pdf-generate")?.addEventListener("click", generateEnvironmentalDocumentFilteredPdf);
 document.querySelectorAll("[data-pdf-picker]").forEach((button) => {
   button.addEventListener("click", () => openPdfPicker(button.dataset.pdfPicker));
 });
