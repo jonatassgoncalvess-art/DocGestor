@@ -7212,6 +7212,26 @@ function pdfDocumentHtml(report) {
   const orientation = report.orientation || "portrait";
   const generatedAt = formatPdfDate();
   const pageSize = orientation === "landscape" ? "A4 landscape" : "A4 portrait";
+  const pages = paginatePdfSections(report.sections || [], orientation);
+  const renderFirstPageHeader = () => `
+    <header class="pdf-header">
+      <div class="pdf-brand">
+        <span class="pdf-wordmark">
+          <strong><span class="pdf-doc">Doc</span><span class="pdf-gestor">Gestor</span></strong>
+          <small><span class="pdf-by">by</span> <span class="pdf-carminatti">Carminatti</span></small>
+        </span>
+      </div>
+      <div class="pdf-meta">
+        <strong>${escapePdfText(report.module || "Relatório")}</strong>
+        <span>Formato ${PDF_STANDARD.page} - ${orientation === "landscape" ? "Paisagem" : "Retrato"}</span>
+        <span>Gerado em ${escapePdfText(generatedAt)}</span>
+      </div>
+    </header>
+    <section class="pdf-title">
+      <h1>${escapePdfText(report.title)}</h1>
+      <p>${escapePdfText(report.subtitle || "Documento gerado automaticamente pelo DocGestor by Carminatti.")}</p>
+    </section>
+  `;
 
   return `
     <!doctype html>
@@ -7232,13 +7252,19 @@ function pdfDocumentHtml(report) {
           }
           .pdf-page {
             background: #fff;
+            break-after: page;
             display: flex;
             flex-direction: column;
             margin: 0 auto;
-            min-height: auto;
+            min-height: ${orientation === "landscape" ? "210mm" : "297mm"};
             overflow: visible;
+            page-break-after: always;
             padding: ${PDF_STANDARD.margin};
             width: ${orientation === "landscape" ? "297mm" : "210mm"};
+          }
+          .pdf-page:last-child {
+            break-after: auto;
+            page-break-after: auto;
           }
           .pdf-header {
             background: #ffffff;
@@ -7336,6 +7362,11 @@ function pdfDocumentHtml(report) {
             overflow: hidden;
             page-break-inside: avoid;
           }
+          .pdf-table-section {
+            break-inside: auto;
+            overflow: visible;
+            page-break-inside: auto;
+          }
           .pdf-section h2 {
             background: #f7f9fa;
             border-bottom: 1px solid #dfe5ea;
@@ -7415,6 +7446,7 @@ function pdfDocumentHtml(report) {
             body { background: #fff; }
             .pdf-page {
               margin: 0;
+              min-height: auto;
               padding: ${PDF_STANDARD.margin};
               width: auto;
             }
@@ -7425,31 +7457,27 @@ function pdfDocumentHtml(report) {
         </style>
       </head>
       <body>
-        <main class="pdf-page pdf-page-first">
-          <header class="pdf-header">
-            <div class="pdf-brand">
-              <span class="pdf-wordmark">
-                <strong><span class="pdf-doc">Doc</span><span class="pdf-gestor">Gestor</span></strong>
-                <small><span class="pdf-by">by</span> <span class="pdf-carminatti">Carminatti</span></small>
-              </span>
-            </div>
-            <div class="pdf-meta">
-              <strong>${escapePdfText(report.module || "Relatório")}</strong>
-              <span>Formato ${PDF_STANDARD.page} - ${orientation === "landscape" ? "Paisagem" : "Retrato"}</span>
-              <span>Gerado em ${escapePdfText(generatedAt)}</span>
-            </div>
-          </header>
-          <section class="pdf-title">
-            <h1>${escapePdfText(report.title)}</h1>
-            <p>${escapePdfText(report.subtitle || "Documento gerado automaticamente pelo DocGestor by Carminatti.")}</p>
-          </section>
-          <div class="pdf-body">
-            ${report.sections.map(renderPdfSection).join("")}
-          </div>
-          <footer class="pdf-footer">
-            <span>Documento gerado automaticamente pelo DocGestor by Carminatti. Conferir dados antes de protocolo externo.</span>
-          </footer>
-        </main>
+        ${pages
+          .map(
+            (pageSections, index) => `
+              <main class="pdf-page ${index === 0 ? "pdf-page-first" : "pdf-page-continuation"}">
+                ${index === 0 ? renderFirstPageHeader() : ""}
+                <div class="pdf-body">
+                  ${pageSections.map(renderPdfSection).join("")}
+                </div>
+                ${
+                  index === pages.length - 1
+                    ? `
+                      <footer class="pdf-footer">
+                        <span>Documento gerado automaticamente pelo DocGestor by Carminatti. Conferir dados antes de protocolo externo.</span>
+                      </footer>
+                    `
+                    : ""
+                }
+              </main>
+            `,
+          )
+          .join("")}
       </body>
     </html>
   `;
