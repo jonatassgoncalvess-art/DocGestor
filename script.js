@@ -7777,10 +7777,10 @@ function buildEnvironmentalDocumentsReport(filters = {}) {
     sections: [
       pdfTableSection(
         "Documentos cadastrados",
-        ["Documento", "Exige vencimento", "Obrigatório", "Parâmetros"],
+        ["Documento", "Parâmetros"],
         fallbackPdfRows(
-          rows.map((item) => [item.name, item.expiration, item.required, item.parameters || "Não informado"]),
-          ["Documento", "Exige vencimento", "Obrigatório", "Parâmetros"],
+          rows.map((item) => [item.name, item.parameters || "Não informado"]),
+          ["Documento", "Parâmetros"],
         ),
         { headerEstimate: 58, continuationHeaderEstimate: 28, rowEstimate: 24 },
       ),
