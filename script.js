@@ -7641,7 +7641,6 @@ function buildCompaniesReport(filters = {}) {
     title: "Relatório de Empresas e Filiais",
     module: "01.2.2 Empresas e Filiais",
     subtitle: filters.summary || "Matrizes e filiais ordenadas por CNPJ, com vinculo de sócios.",
-    orientation: "landscape",
     sections: [pdfTableSection("Empresas cadastradas", ["CNPJ", "Razão social / filial", "Tipo", "Nome fantasia", "Sócios", "Status"], rows, { rowEstimate: 32 })],
   };
 }
@@ -7708,7 +7707,6 @@ function buildPropertiesEnvironmentalReport(filteredProperties, filters = {}) {
     title: "Relatório Ambiental de Imóveis",
     module: "01.2.4 Imóveis",
     subtitle: filters.summary || "Análise consolidada de área rural, reserva legal e APP.",
-    orientation: "landscape",
     sections: [
       pdfTableSection(
         "Imóveis rurais analisados",
@@ -7752,7 +7750,6 @@ function buildEnterprisesReport() {
         { rowEstimate: 38 },
       ),
     ],
-    orientation: "landscape",
   };
 }
 
@@ -7777,7 +7774,6 @@ function buildEnvironmentalDocumentsReport(filters = {}) {
     title: "Relatório de Documentos Ambientais",
     module: "01.3.2 Documentos",
     subtitle: filters.summary || "Documentos vinculados aos tipos de licença ambiental selecionados.",
-    orientation: "landscape",
     sections: [
       pdfTableSection(
         "Documentos cadastrados",
@@ -7797,7 +7793,6 @@ function buildChecklistModelsReport() {
     title: "Relatório de Modelos de Check-list",
     module: "01.3.3 Modelos de Check-list",
     subtitle: "Modelos que alimentam a criação de novas licenças ambientais.",
-    orientation: "landscape",
     sections: [
       pdfTableSection(
         "Modelos cadastrados",
@@ -7862,7 +7857,6 @@ function buildEnvironmentalModuleReport() {
     title: "Relatório do Módulo Ambiental",
     module: "03.1 Módulo operacional",
     subtitle: "Processos ambientais em aberto, pendentes, vencidos e licenças ativas.",
-    orientation: "landscape",
     sections: [
       pdfFieldsSection("Resumo operacional", [
         ["Processos relacionados", openRows.length + pendingRows.length + expiredRows.length],
@@ -7900,7 +7894,6 @@ function buildEnvironmentalStatusReport(status = currentLicenseStatus) {
       title: "Relatório de Licenças",
       module: "03.1.5 Licenças",
       subtitle: "Licenças ambientais ativas geradas pelos processos ambientais.",
-      orientation: "landscape",
       sections: [
         pdfFieldsSection("Resumo", [
           ["Licenças listadas", licenseRows.length],
@@ -7916,7 +7909,6 @@ function buildEnvironmentalStatusReport(status = currentLicenseStatus) {
     title: `Relatório - ${meta.title}`,
     module: meta.title,
     subtitle: meta.subtitle,
-    orientation: "landscape",
     sections: [
       pdfFieldsSection("Resumo", [
         ["Processos listados", processRows.length],
