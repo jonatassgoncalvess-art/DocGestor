@@ -7264,8 +7264,8 @@ function pdfDocumentHtml(report) {
           * { box-sizing: border-box; }
           body {
             margin: 0;
-            background: #d8dde1;
-            color: #172026;
+            background: #eef1f4;
+            color: #101820;
             font-family: Arial, Helvetica, sans-serif;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
@@ -7273,9 +7273,10 @@ function pdfDocumentHtml(report) {
           .pdf-page {
             background: #fff;
             break-after: page;
+            box-shadow: 0 12px 34px rgba(16, 24, 32, 0.16);
             display: flex;
             flex-direction: column;
-            margin: 0 auto 10mm;
+            margin: 10mm auto 12mm;
             min-height: ${orientation === "landscape" ? "210mm" : "297mm"};
             overflow: visible;
             page-break-after: always;
@@ -7289,13 +7290,13 @@ function pdfDocumentHtml(report) {
           }
           .pdf-header {
             background: #ffffff;
-            border-bottom: 1px solid #dfe5ea;
+            border-bottom: 2px solid #ed101f;
             border-radius: 0;
             display: grid;
             grid-template-columns: 1fr auto;
             gap: 14px;
-            min-height: 16mm;
-            padding: 0 0 5mm;
+            min-height: 15mm;
+            padding: 0 0 4mm;
           }
           .pdf-brand {
             align-items: center;
@@ -7349,7 +7350,7 @@ function pdfDocumentHtml(report) {
             text-align: right;
           }
           .pdf-meta strong {
-            color: #172026;
+            color: #101820;
             display: block;
             font-size: 11px;
             margin-bottom: 2px;
@@ -7358,15 +7359,20 @@ function pdfDocumentHtml(report) {
             color: #63717d;
           }
           .pdf-title {
-            margin: 5mm 0 5mm;
+            border-bottom: 1px solid #b9c4cc;
+            margin: 5mm 0 4mm;
+            padding-bottom: 4mm;
           }
           .pdf-title h1 {
-            font-size: 20px;
+            color: #101820;
+            font-size: 19px;
+            line-height: 1.15;
             margin: 0 0 3px;
           }
           .pdf-title p {
-            color: #63717d;
-            font-size: 11px;
+            color: #435260;
+            font-size: 10.5px;
+            line-height: 1.45;
             margin: 0;
           }
           .pdf-body {
@@ -7374,12 +7380,12 @@ function pdfDocumentHtml(report) {
             overflow: visible;
           }
           .pdf-section {
-            border: 1px solid #dfe5ea;
-            border-radius: 4px;
+            border: 1px solid #aeb9c2;
+            border-radius: 2px;
             break-inside: avoid;
             break-before: auto;
             break-after: auto;
-            margin-bottom: 5mm;
+            margin-bottom: 4mm;
             overflow: hidden;
             page-break-inside: avoid;
           }
@@ -7389,26 +7395,26 @@ function pdfDocumentHtml(report) {
             page-break-inside: auto;
           }
           .pdf-table-continuation {
-            border-top: 0;
-            margin-top: -5mm;
+            border-top-color: #d4dbe1;
+            margin-top: -4mm;
           }
           .pdf-table-continuation table {
             border-top: 0;
           }
           .pdf-section h2 {
-            background: #f7f9fa;
-            border-bottom: 1px solid #dfe5ea;
-            color: #172026;
+            background: #e9edf1;
+            border-bottom: 1px solid #aeb9c2;
+            color: #101820;
             font-size: 12px;
             margin: 0;
-            padding: 7px 9px;
+            padding: 7px 9px 6px;
           }
           .pdf-fields {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
           }
           .pdf-fields div {
-            border-bottom: 1px solid #eef2f4;
+            border-bottom: 1px solid #cfd7dd;
             min-height: 30px;
             padding: 7px 9px;
           }
@@ -7430,8 +7436,10 @@ function pdfDocumentHtml(report) {
           }
           table {
             border-collapse: collapse;
-            font-size: 10px;
+            color: #101820;
+            font-size: 9.5px;
             page-break-inside: auto;
+            table-layout: fixed;
             width: 100%;
           }
           thead {
@@ -7447,25 +7455,33 @@ function pdfDocumentHtml(report) {
           }
           th,
           td {
-            border-bottom: 1px solid #eef2f4;
-            padding: 7px 8px;
+            border-bottom: 1px solid #cbd4db;
+            padding: 6px 8px;
             text-align: left;
             vertical-align: top;
+            word-break: normal;
+            overflow-wrap: anywhere;
           }
           th {
-            background: #f7f9fa;
-            color: #63717d;
+            background: #eef2f5;
+            border-bottom: 1px solid #aeb9c2;
+            color: #2f3e4b;
             font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0;
             text-transform: uppercase;
           }
+          tbody tr:nth-child(even) td {
+            background: #fbfcfd;
+          }
           .pdf-note {
-            color: #63717d;
+            color: #435260;
             font-size: 10px;
             line-height: 1.5;
             padding: 8px 9px;
           }
           .pdf-footer {
-            border-top: 1px solid #dfe5ea;
+            border-top: 1px solid #aeb9c2;
             display: grid;
             grid-template-columns: 1fr;
             padding-top: 4mm;
@@ -7473,6 +7489,7 @@ function pdfDocumentHtml(report) {
           @media print {
             body { background: #fff; }
             .pdf-page {
+              box-shadow: none;
               margin: 0;
               min-height: auto;
               padding: ${PDF_STANDARD.margin};
