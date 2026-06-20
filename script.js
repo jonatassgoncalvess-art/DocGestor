@@ -8183,6 +8183,15 @@ function environmentalDocumentPdfSummary() {
   return `${documentCount} documento(s) relacionado(s) a ${selectedText}`;
 }
 
+function environmentalDocumentPdfSubtitle(filters = {}) {
+  const licenseNames = filters.licenseNames || [];
+  const documentCount = filterEnvironmentalDocumentsForPdf(filters).length;
+  if (!licenseNames.length) return `${documentCount} documento(s). Licenças selecionadas: nenhuma licença selecionada.`;
+  const selectedAll = licenseNames.length === environmentalLicenseTypes.length;
+  const selectedLabel = selectedAll ? "todas as licenças" : licenseNames.join(", ");
+  return `${documentCount} documento(s). Licenças selecionadas: ${selectedLabel}.`;
+}
+
 function updateEnvironmentalDocumentPdfSummaries() {
   const availableLicenses = environmentalLicenseTypes.map((license) => license.name);
   pdfFilterState.environmentalDocumentLicenses = pdfFilterState.environmentalDocumentLicenses.filter((license) => availableLicenses.includes(license));
@@ -8205,7 +8214,7 @@ function updateEnvironmentalDocumentPdfSummaries() {
 function selectedEnvironmentalDocumentPdfFilters() {
   return {
     licenseNames: pdfFilterState.environmentalDocumentLicenses,
-    summary: environmentalDocumentPdfSummary(),
+    summary: environmentalDocumentPdfSubtitle({ licenseNames: pdfFilterState.environmentalDocumentLicenses }),
   };
 }
 
