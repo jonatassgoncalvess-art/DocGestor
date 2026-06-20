@@ -7129,13 +7129,20 @@ function estimatePdfTableRow(section, row, orientation = "portrait") {
 
 function renderPdfTable(section, rows, options = {}) {
   const showTitle = options.showTitle !== false;
+  const showColumns = options.showColumns !== false;
   return `
-    <section class="pdf-section pdf-table-section">
+    <section class="pdf-section pdf-table-section ${showColumns ? "" : "pdf-table-continuation"}">
       ${showTitle ? `<h2>${escapePdfText(section.title)}</h2>` : ""}
       <table>
-        <thead>
-          <tr>${section.columns.map((column) => `<th>${escapePdfText(column)}</th>`).join("")}</tr>
-        </thead>
+        ${
+          showColumns
+            ? `
+              <thead>
+                <tr>${section.columns.map((column) => `<th>${escapePdfText(column)}</th>`).join("")}</tr>
+              </thead>
+            `
+            : ""
+        }
         <tbody>
           ${rows
             .map(
@@ -7187,7 +7194,7 @@ function paginatePdfSections(sections, orientation = "portrait") {
       if (chunk.length > 0 && used + nextEstimate > pageLimit()) {
         pushBlock({
           type: "html",
-          html: renderPdfTable(section, chunk, { showTitle: isFirstChunk }),
+          html: renderPdfTable(section, chunk, { showTitle: isFirstChunk, showColumns: isFirstChunk }),
           estimate: chunkEstimate,
         });
         isFirstChunk = false;
@@ -7201,7 +7208,7 @@ function paginatePdfSections(sections, orientation = "portrait") {
     if (chunk.length) {
       pushBlock({
         type: "html",
-        html: renderPdfTable(section, chunk, { showTitle: isFirstChunk }),
+        html: renderPdfTable(section, chunk, { showTitle: isFirstChunk, showColumns: isFirstChunk }),
         estimate: chunkEstimate,
       });
     }
@@ -7380,6 +7387,13 @@ function pdfDocumentHtml(report) {
             break-inside: auto;
             overflow: visible;
             page-break-inside: auto;
+          }
+          .pdf-table-continuation {
+            border-top: 0;
+            margin-top: -5mm;
+          }
+          .pdf-table-continuation table {
+            border-top: 0;
           }
           .pdf-section h2 {
             background: #f7f9fa;
