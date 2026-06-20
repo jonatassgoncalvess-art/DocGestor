@@ -7115,13 +7115,23 @@ function pdfTableSection(titleText, columns, rows, options = {}) {
     rows,
     rowEstimate: options.rowEstimate || 34,
     headerEstimate: options.headerEstimate || 76,
+    continuationHeaderEstimate: options.continuationHeaderEstimate || 32,
   };
 }
 
-function renderPdfTable(section, rows) {
+function estimatePdfTableRow(section, row, orientation = "portrait") {
+  const base = section.rowEstimate || 34;
+  const averageCharsPerLine = orientation === "landscape" ? 74 : 48;
+  const longestCell = Math.max(...row.map((cell) => String(cell || "").length), 0);
+  const extraLines = Math.max(Math.ceil(longestCell / averageCharsPerLine) - 1, 0);
+  return base + extraLines * 13;
+}
+
+function renderPdfTable(section, rows, options = {}) {
+  const showTitle = options.showTitle !== false;
   return `
     <section class="pdf-section pdf-table-section">
-      <h2>${escapePdfText(section.title)}</h2>
+      ${showTitle ? `<h2>${escapePdfText(section.title)}</h2>` : ""}
       <table>
         <thead>
           <tr>${section.columns.map((column) => `<th>${escapePdfText(column)}</th>`).join("")}</tr>
@@ -7169,26 +7179,29 @@ function paginatePdfSections(sections, orientation = "portrait") {
     }
 
     let chunk = [];
+    let isFirstChunk = true;
     let chunkEstimate = section.headerEstimate;
     section.rows.forEach((row) => {
-      const nextEstimate = chunkEstimate + section.rowEstimate;
+      const rowEstimate = estimatePdfTableRow(section, row, orientation);
+      const nextEstimate = chunkEstimate + rowEstimate;
       if (chunk.length > 0 && used + nextEstimate > pageLimit()) {
         pushBlock({
           type: "html",
-          html: renderPdfTable(section, chunk),
+          html: renderPdfTable(section, chunk, { showTitle: isFirstChunk }),
           estimate: chunkEstimate,
         });
+        isFirstChunk = false;
         chunk = [];
-        chunkEstimate = section.headerEstimate;
+        chunkEstimate = section.continuationHeaderEstimate;
       }
       chunk.push(row);
-      chunkEstimate += section.rowEstimate;
+      chunkEstimate += rowEstimate;
     });
 
     if (chunk.length) {
       pushBlock({
         type: "html",
-        html: renderPdfTable(section, chunk),
+        html: renderPdfTable(section, chunk, { showTitle: isFirstChunk }),
         estimate: chunkEstimate,
       });
     }
@@ -7255,7 +7268,7 @@ function pdfDocumentHtml(report) {
             break-after: page;
             display: flex;
             flex-direction: column;
-            margin: 0 auto;
+            margin: 0 auto 10mm;
             min-height: ${orientation === "landscape" ? "210mm" : "297mm"};
             overflow: visible;
             page-break-after: always;
@@ -7264,6 +7277,7 @@ function pdfDocumentHtml(report) {
           }
           .pdf-page:last-child {
             break-after: auto;
+            margin-bottom: 0;
             page-break-after: auto;
           }
           .pdf-header {
@@ -7741,7 +7755,7 @@ function buildEnvironmentalDocumentsReport(filters = {}) {
           rows.map((item) => [item.name, item.expiration, item.required, item.parameters || "Não informado"]),
           ["Documento", "Exige vencimento", "Obrigatório", "Parâmetros"],
         ),
-        { rowEstimate: 38 },
+        { headerEstimate: 58, continuationHeaderEstimate: 28, rowEstimate: 24 },
       ),
     ],
   };
