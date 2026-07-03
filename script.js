@@ -4333,7 +4333,8 @@ function propertyListSummary(property) {
   const locationFields = property.type === "urban"
     ? `Lote ${property.lot || "não informado"} - Quadra ${property.block || "não informada"}`
     : `Lote ${property.lot || "não informado"} - Gleba ${property.glebe || "não informada"}`;
-  return `Proprietário: ${owner} - ${locationFields} - Referência: ${property.reference || "Não informada"}`;
+  const ruralDocument = property.type === "rural" && property.cibItr ? ` - CIB/ITR: ${property.cibItr}` : "";
+  return `Proprietário: ${owner} - ${locationFields}${ruralDocument} - Referência: ${property.reference || "Não informada"}`;
 }
 
 function propertySearchText(property) {
@@ -4344,6 +4345,7 @@ function propertySearchText(property) {
     property.lot,
     property.block,
     property.glebe,
+    property.cibItr,
     property.reference,
     property.city,
   ].filter(Boolean).join(" "));
@@ -4405,6 +4407,7 @@ function fillPropertyForm(property) {
   field("property-glebe").value = property.glebe;
   field("property-car-number").value = property.carNumber || "";
   field("property-ccir-incra").value = property.ccirIncra || "";
+  field("property-cib-itr").value = property.cibItr || "";
   field("property-urban-area").value = property.urbanArea;
   field("property-rural-area").value = property.ruralArea;
   field("property-hectares").value = property.ruralArea ? (property.ruralArea / 10000).toFixed(4) : "";
@@ -4436,6 +4439,7 @@ function newProperty() {
   field("property-glebe").value = "";
   field("property-car-number").value = "";
   field("property-ccir-incra").value = "";
+  field("property-cib-itr").value = "";
   field("property-urban-area").value = "";
   field("property-rural-area").value = "";
   field("property-hectares").value = "";
@@ -4477,6 +4481,7 @@ async function saveProperty() {
     glebe: type === "rural" ? field("property-glebe").value : "",
     carNumber: type === "rural" ? field("property-car-number").value : "",
     ccirIncra: type === "rural" ? field("property-ccir-incra").value : "",
+    cibItr: type === "rural" ? field("property-cib-itr").value.replace(/\D/g, "") : "",
     urbanArea: type === "urban" ? nonNegativeFieldValue("property-urban-area") : 0,
     ruralArea: type === "rural" ? nonNegativeFieldValue("property-rural-area") : 0,
     legalReserve: type === "rural" ? nonNegativeFieldValue("property-legal-reserve") : 0,
@@ -7665,6 +7670,7 @@ function buildPropertiesRelationReport(filteredProperties, filters = {}) {
         [isRural ? "Gleba" : "Quadra", isRural ? property.glebe : property.block],
         [isRural ? "Número do CAR" : "Inscrição imobiliária", isRural ? property.carNumber : property.municipalRegistration],
         ...(isRural ? [["Número CCIR/INCRA", property.ccirIncra]] : []),
+        ...(isRural ? [["CIB/ITR", property.cibItr]] : []),
         ["Área total", isRural ? `${formatAreaM2(property.ruralArea)} / ${formatAreaHa(property.ruralArea)}` : formatAreaM2(property.urbanArea)],
         ["Reserva legal", isRural ? `${formatAreaM2(property.legalReserve)} / ${formatAreaHa(property.legalReserve)}` : "Não aplicável"],
         ["APP", isRural ? `${formatAreaM2(property.appArea)} / ${formatAreaHa(property.appArea)}` : "Não aplicável"],
@@ -9004,6 +9010,7 @@ async function persistProperty(property, wasExisting) {
     glebe: property.type === "rural" ? property.glebe : null,
     car_number: property.type === "rural" ? property.carNumber : null,
     ccir_incra_number: property.type === "rural" ? property.ccirIncra : null,
+    cib_itr_number: property.type === "rural" ? property.cibItr : null,
     urban_property_registration: property.type === "urban" ? property.municipalRegistration : null,
     urban_area_m2: property.type === "urban" ? Number(property.urbanArea || 0) : null,
     rural_area_m2: property.type === "rural" ? Number(property.ruralArea || 0) : null,
@@ -9610,6 +9617,7 @@ async function loadSupabaseData() {
       municipalRegistration: row.urban_property_registration || "",
       carNumber: row.car_number || "",
       ccirIncra: row.ccir_incra_number || "",
+      cibItr: row.cib_itr_number || "",
       urbanArea: Number(row.urban_area_m2 || 0),
       ruralArea: Number(row.rural_area_m2 || 0),
       legalReserve: Number(row.legal_reserve_m2 || 0),
