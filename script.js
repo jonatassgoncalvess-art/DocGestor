@@ -30,6 +30,7 @@ const titles = {
   iptu: "03.2 IPTU",
   "documentos-diversos": "03.3 Lembretes Diversos",
   formularios: "03.4 Formulários",
+  autorizacoes: "03.4.1 Autorizações",
   usuarios: "Usuários e permissões",
   agenda: "04.1 Calendário",
   "agenda-notes": "04.2 Anotações",
@@ -208,7 +209,7 @@ function openView(viewName) {
     ? "admin"
     : ["dashboard-ambiental", "dashboard-iptu", "dashboard-agendamentos"].includes(viewName)
       ? "dashboard"
-    : ["licencas", "iptu", "documentos-diversos", "formularios"].includes(viewName)
+    : ["licencas", "iptu", "documentos-diversos", "formularios", "autorizacoes"].includes(viewName)
       ? "modulos"
       : viewName === "agenda-notes"
         ? "agenda"
@@ -279,6 +280,7 @@ function openView(viewName) {
 
   if (viewName === "profile-settings") fillProfileForm();
   if (viewName === "documentos-diversos") renderDiverseReminders();
+  if (viewName === "autorizacoes") renderAuthorizations();
   if (currentUser) sessionStorage.setItem(SESSION_VIEW_KEY, viewName);
 }
 
@@ -474,6 +476,7 @@ const searchableEnvironments = [
   { code: "03.2", title: "IPTU", detail: "Guias, vencimentos e comprovantes", permission: "iptu", action: () => openView("iptu") },
   { code: "03.3", title: "Lembretes Diversos", detail: "Lembretes avulsos, prazos e alertas", permission: "diverseDocuments", action: () => openView("documentos-diversos") },
   { code: "03.4", title: "Formulários", detail: "Modelos e preenchimento de formulários operacionais", permission: "forms", action: () => openView("formularios") },
+  { code: "03.4.1", title: "Autorizações", detail: "Emissão e controle de autorizações internas", permission: "forms", action: () => openView("autorizacoes") },
   { code: "04.1", title: "Calendário", detail: "Agenda em formato calendário", permission: "agenda", action: () => openView("agenda") },
   { code: "04.2", title: "Anotações", detail: "Agendamentos e alertas pendentes", permission: "agenda", action: () => openView("agenda-notes") },
   { code: "05.1", title: "Perfil", detail: "Dados cadastrais e senha do usuário", permission: "profile", action: () => openView("profile-settings") },
@@ -1647,6 +1650,225 @@ async function saveDiverseReminder() {
   renderAgendaNotes();
 }
 
+let authorizations = [];
+
+function authorizationPartnerOptions(selectedId = "") {
+  const options = partners.length
+    ? partners
+        .map((partner) => `<option value="${escapeHtml(partner.id)}" ${sameId(partner.id, selectedId) ? "selected" : ""}>${escapeHtml(partner.name)}</option>`)
+        .join("")
+    : `<option value="">Cadastre sócios em 01.2.1</option>`;
+  return options;
+}
+
+function authorizationPartnerName(partnerId) {
+  return partners.find((partner) => sameId(partner.id, partnerId))?.name || "";
+}
+
+function nextAuthorizationNumber() {
+  const year = new Date().getFullYear();
+  const numbers = authorizations
+    .map((item) => String(item.number || ""))
+    .map((number) => {
+      const match = number.match(/^AUT-(\d+)\/(\d{4})$/);
+      return match && Number(match[2]) === year ? Number(match[1]) : 0;
+    });
+  const next = Math.max(0, ...numbers) + 1;
+  return `AUT-${String(next).padStart(4, "0")}/${year}`;
+}
+
+function renderAuthorizations() {
+  const list = field("authorization-list");
+  const count = field("authorization-count");
+  if (!list || !count) return;
+  const ordered = [...authorizations].sort((a, b) => String(b.createdAt || b.issuedDate).localeCompare(String(a.createdAt || a.issuedDate)));
+  count.textContent = `${ordered.length} ${ordered.length === 1 ? "item" : "itens"}`;
+  list.innerHTML = ordered.length
+    ? ordered
+        .map(
+          (item) => `
+            <article>
+              <div>
+                <strong>${escapeHtml(item.number)}</strong>
+                <span>${escapeHtml(item.subject || "Sem assunto")}</span>
+              </div>
+              <div>
+                <span>Autorizado por: ${escapeHtml(item.partnerName || authorizationPartnerName(item.partnerId) || "Não informado")}</span>
+                <span>Emitida em ${escapeHtml(formatAgendaDate(item.issuedDate))}</span>
+              </div>
+              <div>
+                <button type="button" data-authorization-action="preview" data-authorization-id="${escapeHtml(item.id)}">Pré-visualizar</button>
+                <button type="button" data-authorization-action="download" data-authorization-id="${escapeHtml(item.id)}">Baixar PDF</button>
+                <button type="button" data-authorization-action="delete" data-authorization-id="${escapeHtml(item.id)}">Excluir</button>
+              </div>
+            </article>
+          `,
+        )
+        .join("")
+    : `<article><strong>Nenhuma autorização emitida</strong><span>Use Nova autorização para gerar o primeiro documento.</span><div></div></article>`;
+}
+
+function openAuthorizationModal() {
+  const partnerSelect = field("authorization-partner");
+  if (partnerSelect) partnerSelect.innerHTML = authorizationPartnerOptions();
+  field("authorization-id").value = "";
+  field("authorization-granted-to").value = "";
+  field("authorization-subject").value = "";
+  field("authorization-issued-date").value = dateKey(new Date());
+  field("authorization-has-validity").checked = false;
+  field("authorization-validity-fields").hidden = true;
+  field("authorization-validity-start").value = "";
+  field("authorization-validity-end").value = "";
+  field("authorization-body").value = "";
+  openModal("authorization-modal");
+}
+
+function validateAuthorizationPayload(payload) {
+  if (!payload.partnerId) {
+    alert("Selecione o sócio em Autorizado Por.");
+    return false;
+  }
+  if (!payload.grantedTo) {
+    alert("Informe o nome no campo Concedida a.");
+    return false;
+  }
+  if (!payload.subject) {
+    alert("Informe o assunto/título da autorização.");
+    return false;
+  }
+  if (!payload.issuedDate) {
+    alert("Informe a data de emissão.");
+    return false;
+  }
+  if (payload.hasValidity && (!payload.validityStart || !payload.validityEnd)) {
+    alert("Informe o início e o fim da vigência.");
+    return false;
+  }
+  if (payload.hasValidity && payload.validityEnd < payload.validityStart) {
+    alert("O fim da vigência não pode ser anterior ao início.");
+    return false;
+  }
+  if (!payload.body) {
+    alert("Informe o texto da autorização.");
+    return false;
+  }
+  return true;
+}
+
+function authorizationTextHtml(item) {
+  return `
+    <div class="pdf-authorization-text">
+      <p>
+        Eu, <strong>${escapePdfText(item.partnerName)}</strong>, autorizo
+        <strong>${escapePdfText(item.grantedTo)}</strong> proceder com o descrito abaixo e tudo fazer para que seja feito da melhor maneira possível respeitando as políticas internas e a hierarquia do Grupo Carminatti, ficando vedada qualquer ação não esclarecida aqui:
+      </p>
+      <p>${escapePdfText(item.body).replace(/\n/g, "<br />")}</p>
+      <div class="pdf-signature-block">
+        <span></span>
+        <strong>${escapePdfText(item.partnerName)}</strong>
+      </div>
+    </div>
+  `;
+}
+
+function buildAuthorizationReport(item) {
+  const validity = item.hasValidity
+    ? `${formatAgendaDate(item.validityStart)} a ${formatAgendaDate(item.validityEnd)}`
+    : "Sem prazo de vigência definido";
+  return {
+    title: `Autorização ${item.number}`,
+    module: "03.4.1 Autorizações",
+    subtitle: item.subject,
+    footer: "Grupo Carminatti - Documento interno gerado pelo DocGestor by Carminatti.",
+    sections: [
+      pdfFieldsSection("Dados da autorização", [
+        ["Número", item.number],
+        ["Autorizado por", item.partnerName],
+        ["Concedida a", item.grantedTo],
+        ["Emissão", formatAgendaDate(item.issuedDate)],
+        ["Assunto", item.subject],
+        ["Vigência", validity],
+      ], { estimate: 150 }),
+      pdfSection("Termo de autorização", authorizationTextHtml(item), 390, { className: "pdf-authorization-section" }),
+    ],
+  };
+}
+
+async function persistAuthorization(item, wasExisting) {
+  if (!window.DocGestorDB) return true;
+  try {
+    const organizationId = await defaultOrganizationId();
+    const payload = {
+      organization_id: organizationId,
+      authorization_number: item.number,
+      authorized_by_partner_id: looksLikeUuid(item.partnerId) ? item.partnerId : null,
+      authorized_by_name: item.partnerName,
+      granted_to: item.grantedTo,
+      subject: item.subject,
+      issued_date: item.issuedDate,
+      has_validity: Boolean(item.hasValidity),
+      validity_start: item.hasValidity ? item.validityStart : null,
+      validity_end: item.hasValidity ? item.validityEnd : null,
+      body_text: item.body,
+      updated_at: new Date().toISOString(),
+    };
+    let saved = null;
+    if (wasExisting && looksLikeUuid(item.id)) {
+      [saved] = await window.DocGestorDB.update("form_authorizations", item.id, payload);
+    } else {
+      [saved] = await window.DocGestorDB.create("form_authorizations", payload);
+    }
+    if (saved?.id) item.id = saved.id;
+    if (saved?.created_at) item.createdAt = saved.created_at;
+    return true;
+  } catch (error) {
+    console.warn("Não foi possível salvar a autorização no Supabase.", error.message);
+    alert(`Não foi possível salvar a autorização no banco: ${error.message}`);
+    return false;
+  }
+}
+
+async function saveAuthorization() {
+  const id = field("authorization-id").value || createUuid();
+  const existing = authorizations.find((item) => sameId(item.id, id));
+  const partnerId = field("authorization-partner").value;
+  const payload = {
+    id,
+    number: existing?.number || nextAuthorizationNumber(),
+    partnerId,
+    partnerName: authorizationPartnerName(partnerId),
+    grantedTo: field("authorization-granted-to").value.trim(),
+    subject: field("authorization-subject").value.trim(),
+    issuedDate: field("authorization-issued-date").value,
+    hasValidity: field("authorization-has-validity").checked,
+    validityStart: field("authorization-validity-start").value,
+    validityEnd: field("authorization-validity-end").value,
+    body: field("authorization-body").value.trim(),
+    createdAt: existing?.createdAt || new Date().toISOString(),
+  };
+  if (!validateAuthorizationPayload(payload)) return;
+  if (existing) Object.assign(existing, payload);
+  else authorizations.push(payload);
+  const saved = await persistAuthorization(payload, Boolean(existing));
+  if (!saved) {
+    if (!existing) authorizations = authorizations.filter((item) => !sameId(item.id, payload.id));
+    renderAuthorizations();
+    return;
+  }
+  closeModal("authorization-modal");
+  renderAuthorizations();
+  openPdfReport(buildAuthorizationReport(payload));
+}
+
+function deleteAuthorization(item) {
+  confirmDelete(`Deseja realmente excluir a autorização ${item.number}?`, async () => {
+    const index = authorizations.findIndex((entry) => sameId(entry.id, item.id));
+    if (index >= 0) authorizations.splice(index, 1);
+    renderAuthorizations();
+    await persistDelete("form_authorizations", item.id, "autorização");
+  });
+}
+
 function renewDiverseReminder(reminder) {
   const renewed = {
     ...reminder,
@@ -2080,6 +2302,26 @@ field("diverse-reminders-list")?.addEventListener("click", async (event) => {
 renderDiverseReminderAlertFields();
 renderDiverseReminders();
 
+field("authorization-new")?.addEventListener("click", openAuthorizationModal);
+field("authorization-save")?.addEventListener("click", saveAuthorization);
+field("authorization-has-validity")?.addEventListener("change", () => {
+  const fields = field("authorization-validity-fields");
+  if (fields) fields.hidden = !field("authorization-has-validity").checked;
+});
+field("authorization-list")?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-authorization-action]");
+  if (!button) return;
+  const item = authorizations.find((entry) => sameId(entry.id, button.dataset.authorizationId));
+  if (!item) return;
+  if (button.dataset.authorizationAction === "preview" || button.dataset.authorizationAction === "download") {
+    openPdfReport(buildAuthorizationReport(item));
+  }
+  if (button.dataset.authorizationAction === "delete") {
+    deleteAuthorization(item);
+  }
+});
+renderAuthorizations();
+
 let users = [];
 
 const MASTER_USER = {
@@ -2151,7 +2393,7 @@ function viewPermission(viewName) {
   if (viewName === "modulos") return "modules";
   if (viewName === "iptu") return "iptu";
   if (viewName === "documentos-diversos") return "diverseDocuments";
-  if (viewName === "formularios") return "forms";
+  if (viewName === "formularios" || viewName === "autorizacoes") return "forms";
   if (viewName === "licencas") return "environmental";
   if (viewName === "agenda" || viewName === "agenda-notes") return "agenda";
   if (viewName === "settings" || viewName === "profile-settings") return "profile";
@@ -7485,6 +7727,30 @@ function pdfDocumentHtml(report) {
             line-height: 1.5;
             padding: 8px 9px;
           }
+          .pdf-authorization-text {
+            color: #101820;
+            font-size: 12px;
+            line-height: 1.75;
+            padding: 12mm 11mm 10mm;
+            text-align: justify;
+          }
+          .pdf-authorization-text p {
+            margin: 0 0 8mm;
+          }
+          .pdf-signature-block {
+            margin: 24mm auto 0;
+            max-width: 95mm;
+            text-align: center;
+          }
+          .pdf-signature-block span {
+            border-top: 1.5px solid #101820;
+            display: block;
+            margin-bottom: 3mm;
+          }
+          .pdf-signature-block strong {
+            display: block;
+            font-size: 11px;
+          }
           .pdf-footer {
             border-top: 1px solid #aeb9c2;
             display: grid;
@@ -7519,7 +7785,7 @@ function pdfDocumentHtml(report) {
                   index === pages.length - 1
                     ? `
                       <footer class="pdf-footer">
-                        <span>Documento gerado automaticamente pelo DocGestor by Carminatti. Conferir dados antes de protocolo externo.</span>
+                        <span>${escapePdfText(report.footer || "Documento gerado automaticamente pelo DocGestor by Carminatti. Conferir dados antes de protocolo externo.")}</span>
                       </footer>
                     `
                     : ""
@@ -9510,6 +9776,7 @@ async function loadSupabaseData() {
     userRows,
     backupRows,
     systemEmailRows,
+    authorizationRows,
   ] = await Promise.all([
     dbList("partners"),
     dbList("companies"),
@@ -9539,6 +9806,7 @@ async function loadSupabaseData() {
     dbList("app_users"),
     dbList("system_backup_configs", "select=*&order=updated_at.desc&limit=1"),
     dbList("system_email_configs", "select=*&order=updated_at.desc&limit=1"),
+    dbList("form_authorizations", "select=*&order=created_at.desc"),
   ]);
 
   const partnerById = Object.fromEntries(partnerRows.map((row) => [row.id, row]));
@@ -9830,6 +10098,21 @@ async function loadSupabaseData() {
   }));
   renderAlertHistory(alertHistoryItems);
 
+  authorizations = authorizationRows.map((row) => ({
+    id: row.id,
+    number: row.authorization_number,
+    partnerId: row.authorized_by_partner_id || "",
+    partnerName: row.authorized_by_name || partnerById[row.authorized_by_partner_id]?.name || "",
+    grantedTo: row.granted_to || "",
+    subject: row.subject || "",
+    issuedDate: row.issued_date || dateKey(new Date()),
+    hasValidity: Boolean(row.has_validity),
+    validityStart: row.validity_start || "",
+    validityEnd: row.validity_end || "",
+    body: row.body_text || "",
+    createdAt: row.created_at || "",
+  }));
+
   users = userRows.map((row) => ({
     id: row.id,
     name: row.name,
@@ -9902,6 +10185,7 @@ async function loadSupabaseData() {
   renderAgendaNotes();
   renderBackupConfig();
   renderDiverseReminders();
+  renderAuthorizations();
   updateNextProcessNumber();
   renderLicenseStatus(currentLicenseStatus || "general");
   renderDashboard();

@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
     <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
-    <link rel="stylesheet" href="styles.css?v=20260703-property-cib-itr-1" />
+    <link rel="stylesheet" href="styles.css?v=20260711-authorizations-1" />
   </head>
   <body>
     <section class="login-screen" id="login-screen">
@@ -125,6 +125,9 @@
             <button class="admin-link" data-view-target="iptu" data-permission-view="iptu">03.2 IPTU</button>
             <button class="admin-link" data-view-target="documentos-diversos" data-permission-view="diverseDocuments">03.3 Lembretes Diversos</button>
             <button class="admin-link" data-view-target="formularios" data-permission-view="forms">03.4 Formulários</button>
+            <div class="side-tree-group module-child-group">
+              <button class="admin-link" data-view-target="autorizacoes" data-permission-view="forms">03.4.1 Autorizações</button>
+            </div>
           </div>
           <button class="nav-item" data-view="agenda" data-agenda-menu-toggle="true" data-permission-view="agenda" aria-expanded="false">
             <span>04</span> Agenda
@@ -981,8 +984,36 @@
             </div>
             <div class="crud-list">
               <article>
-                <strong>Nenhum formulário cadastrado</strong>
-                <span>Os modelos e preenchimentos serão listados aqui quando o fluxo do módulo for definido.</span>
+                <strong>03.4.1 Autorizações</strong>
+                <span>Emissão, pré-visualização e controle de autorizações internas do Grupo Carminatti.</span>
+                <div>
+                  <button class="ghost" data-view-target="autorizacoes" data-permission-view="forms">Abrir</button>
+                </div>
+              </article>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="autorizacoes">
+          <div class="module-context">
+            <p class="eyebrow">03.4.1 Formulários</p>
+            <h2>Autorizações</h2>
+          </div>
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Autorizações emitidas</h2>
+                <span class="muted">Listagem de documentos de autorização gerados pelo sistema.</span>
+              </div>
+              <div class="list-head-actions">
+                <span class="pill green" id="authorization-count">0 itens</span>
+                <button class="primary" id="authorization-new">Nova autorização</button>
+              </div>
+            </div>
+            <div class="crud-list" id="authorization-list">
+              <article>
+                <strong>Nenhuma autorização emitida</strong>
+                <span>As autorizações aparecerão aqui após a emissão.</span>
                 <div></div>
               </article>
             </div>
@@ -1378,6 +1409,52 @@
         <div class="modal-actions">
           <button class="ghost" data-close-modal="user-modal">Cancelar</button>
           <button class="primary" id="user-save">Salvar usuário</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="authorization-modal" aria-hidden="true">
+      <section class="modal-panel wide-modal" role="dialog" aria-modal="true" aria-labelledby="authorization-modal-title">
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">03.4.1 Autorizações</p>
+            <h2 id="authorization-modal-title">Nova autorização</h2>
+          </div>
+          <button class="ghost small" data-close-modal="authorization-modal">Fechar</button>
+        </div>
+        <form class="user-form" id="authorization-form">
+          <input type="hidden" id="authorization-id" value="" />
+          <label>Autorizado Por:
+            <select id="authorization-partner"></select>
+          </label>
+          <label>Concedida a:
+            <input id="authorization-granted-to" />
+          </label>
+          <label class="wide-field">Assunto/Título
+            <input id="authorization-subject" />
+          </label>
+          <label>Data de emissão
+            <input id="authorization-issued-date" type="date" />
+          </label>
+          <label class="checkbox-line">
+            <input id="authorization-has-validity" type="checkbox" />
+            Terá Validade?
+          </label>
+          <div class="wide-field linked-process-box" id="authorization-validity-fields" hidden>
+            <label>Início da vigência
+              <input id="authorization-validity-start" type="date" />
+            </label>
+            <label>Fim da vigência
+              <input id="authorization-validity-end" type="date" />
+            </label>
+          </div>
+          <label class="wide-field">Texto da autorização
+            <textarea id="authorization-body" rows="8" placeholder="Descreva de forma clara o assunto e os limites da autorização."></textarea>
+          </label>
+        </form>
+        <div class="modal-actions">
+          <button class="ghost" type="button" data-close-modal="authorization-modal">Cancelar</button>
+          <button class="primary" type="button" id="authorization-save">Finalizar autorização</button>
         </div>
       </section>
     </div>
@@ -2513,9 +2590,9 @@
       </section>
     </div>
 
-    <script src="supabase-config.js?v=20260703-property-cib-itr-1"></script>
-    <script src="database.js?v=20260703-property-cib-itr-1"></script>
-    <script src="script.js?v=20260703-property-cib-itr-1"></script>
+    <script src="supabase-config.js?v=20260711-authorizations-1"></script>
+    <script src="database.js?v=20260711-authorizations-1"></script>
+    <script src="script.js?v=20260711-authorizations-1"></script>
   </body>
 </html>
 
