@@ -1762,10 +1762,10 @@ function authorizationTextHtml(item) {
         Eu, <strong>${escapePdfText(item.partnerName)}</strong>, autorizo
         <strong>${escapePdfText(item.grantedTo)}</strong> a realizar todas as providências necessárias para a execução do descrito abaixo, adotando as medidas que entender pertinentes para sua adequada condução, sempre em conformidade com as políticas internas, normas e a hierarquia do Grupo Carminatti.
       </p>
-      <p>
-        Esta autorização limita-se exclusivamente às atividades expressamente descritas neste documento, ficando vedada a prática de quaisquer atos ou decisões que extrapolem seu objeto sem prévia autorização:
+      <p class="pdf-authorization-user-text"><strong>${escapePdfText(item.body).replace(/\n/g, "<br />")}</strong></p>
+      <p class="pdf-authorization-limiter">
+        Esta autorização limita-se exclusivamente às atividades expressamente descritas neste documento, ficando vedada a prática de quaisquer atos ou decisões que extrapolem seu objeto sem prévia autorização.
       </p>
-      <p>${escapePdfText(item.body).replace(/\n/g, "<br />")}</p>
       <div class="pdf-signature-block">
         <span></span>
         <strong>${escapePdfText(item.partnerName)}</strong>
@@ -7736,13 +7736,19 @@ function pdfDocumentHtml(report) {
           }
           .pdf-authorization-text {
             color: #101820;
-            font-size: 12px;
-            line-height: 1.75;
+            font-size: 13.5px;
+            line-height: 1.82;
             padding: 12mm 11mm 10mm;
             text-align: justify;
           }
           .pdf-authorization-text p {
             margin: 0 0 8mm;
+          }
+          .pdf-authorization-user-text strong {
+            font-weight: 800;
+          }
+          .pdf-authorization-limiter {
+            margin-top: 11mm;
           }
           .pdf-signature-block {
             margin: 24mm auto 0;
