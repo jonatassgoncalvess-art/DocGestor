@@ -1760,7 +1760,10 @@ function authorizationTextHtml(item) {
     <div class="pdf-authorization-text">
       <p>
         Eu, <strong>${escapePdfText(item.partnerName)}</strong>, autorizo
-        <strong>${escapePdfText(item.grantedTo)}</strong> proceder com o descrito abaixo e tudo fazer para que seja feito da melhor maneira possível respeitando as políticas internas e a hierarquia do Grupo Carminatti, ficando vedada qualquer ação não esclarecida aqui:
+        <strong>${escapePdfText(item.grantedTo)}</strong> a realizar todas as providências necessárias para a execução do descrito abaixo, adotando as medidas que entender pertinentes para sua adequada condução, sempre em conformidade com as políticas internas, normas e a hierarquia do Grupo Carminatti.
+      </p>
+      <p>
+        Esta autorização limita-se exclusivamente às atividades expressamente descritas neste documento, ficando vedada a prática de quaisquer atos ou decisões que extrapolem seu objeto sem prévia autorização:
       </p>
       <p>${escapePdfText(item.body).replace(/\n/g, "<br />")}</p>
       <div class="pdf-signature-block">
