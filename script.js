@@ -1776,17 +1776,18 @@ function buildAuthorizationReport(item) {
     ? `${formatAgendaDate(item.validityStart)} a ${formatAgendaDate(item.validityEnd)}`
     : "Sem prazo de vigência definido";
   return {
-    title: `Autorização ${item.number}`,
+    title: "Autorização",
     module: "03.4.1 Autorizações",
-    subtitle: item.subject,
+    subtitle: false,
+    titleCentered: true,
     footer: "Grupo Carminatti - Documento interno gerado pelo DocGestor by Carminatti.",
     sections: [
       pdfFieldsSection("Dados da autorização", [
         ["Número", item.number],
+        ["Assunto", item.subject],
         ["Autorizado por", item.partnerName],
         ["Concedida a", item.grantedTo],
         ["Emissão", formatAgendaDate(item.issuedDate)],
-        ["Assunto", item.subject],
         ["Vigência", validity],
       ], { estimate: 150 }),
       pdfSection("Termo de autorização", authorizationTextHtml(item), 390, { className: "pdf-authorization-section" }),
@@ -7494,9 +7495,9 @@ function pdfDocumentHtml(report) {
         <span>Gerado em ${escapePdfText(generatedAt)}</span>
       </div>
     </header>
-    <section class="pdf-title">
+    <section class="pdf-title ${report.titleCentered ? "pdf-title-centered" : ""}">
       <h1>${escapePdfText(report.title)}</h1>
-      <p>${escapePdfText(report.subtitle || "Documento gerado automaticamente pelo DocGestor by Carminatti.")}</p>
+      ${report.subtitle === false ? "" : `<p>${escapePdfText(report.subtitle || "Documento gerado automaticamente pelo DocGestor by Carminatti.")}</p>`}
     </section>
   `;
 
@@ -7621,6 +7622,9 @@ function pdfDocumentHtml(report) {
             font-size: 10.5px;
             line-height: 1.45;
             margin: 0;
+          }
+          .pdf-title-centered {
+            text-align: center;
           }
           .pdf-body {
             flex: 1;
