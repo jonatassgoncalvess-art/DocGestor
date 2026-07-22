@@ -279,6 +279,10 @@ function openView(viewName) {
   });
 
   if (viewName === "profile-settings") fillProfileForm();
+  if (viewName === "agenda") {
+    syncAgendaToCurrentMonth();
+    renderAgenda();
+  }
   if (viewName === "documentos-diversos") renderDiverseReminders();
   if (viewName === "autorizacoes") renderAuthorizations();
   if (currentUser) sessionStorage.setItem(SESSION_VIEW_KEY, viewName);
@@ -573,8 +577,9 @@ let nextAgendaEventId = 100;
 let diverseReminders = [];
 let selectedDiverseReminderCompany = null;
 
-let agendaCursor = new Date(2026, 4, 30);
-let selectedAgendaDate = "2026-05-30";
+const initialAgendaDate = new Date();
+let agendaCursor = new Date(initialAgendaDate.getFullYear(), initialAgendaDate.getMonth(), initialAgendaDate.getDate());
+let selectedAgendaDate = `${initialAgendaDate.getFullYear()}-${String(initialAgendaDate.getMonth() + 1).padStart(2, "0")}-${String(initialAgendaDate.getDate()).padStart(2, "0")}`;
 let agendaLinkSelection = null;
 
 function padDatePart(value) {
@@ -583,6 +588,12 @@ function padDatePart(value) {
 
 function dateKey(date) {
   return `${date.getFullYear()}-${padDatePart(date.getMonth() + 1)}-${padDatePart(date.getDate())}`;
+}
+
+function syncAgendaToCurrentMonth() {
+  const today = new Date();
+  agendaCursor = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  selectedAgendaDate = dateKey(today);
 }
 
 function parseDateKey(key) {
