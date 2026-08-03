@@ -4749,12 +4749,13 @@ async function saveProperty() {
     status: "Ativo",
   };
 
+  const saved = await persistProperty(payload, wasExisting);
+  if (!saved) return;
   if (existing) Object.assign(existing, payload);
   else properties.push(payload);
-
+  selectedPropertyId = payload.id;
   renderProperties();
   closeModal("property-modal");
-  await persistProperty(payload, wasExisting);
   populateEnterpriseSelects();
 }
 
@@ -9313,15 +9314,15 @@ async function persistCity(city, wasExisting) {
 }
 
 async function persistProperty(property, wasExisting) {
-  if (!window.DocGestorDB) return;
+  if (!window.DocGestorDB) return false;
   const organizationId = await defaultOrganizationId();
-  if (!organizationId) return;
+  if (!organizationId) return false;
   const ownerPartnerId = property.ownerType === "pf" ? partnerIdByName(property.owner) : null;
   const ownerCompanyId = property.ownerType === "pj" ? companyIdByName(property.owner) : null;
   const cityId = property.cityId || cityIdByLabel(property.city);
   if ((property.ownerType === "pf" && !looksLikeUuid(ownerPartnerId)) || (property.ownerType === "pj" && !looksLikeUuid(ownerCompanyId))) {
     alert("Não foi possível salvar o imóvel no banco porque o proprietário ainda não possui ID válido no Supabase.");
-    return;
+    return false;
   }
   const payload = {
     organization_id: organizationId,
@@ -9360,11 +9361,12 @@ async function persistProperty(property, wasExisting) {
       updateLocalId(properties, property.id, saved.id);
       property.id = saved.id;
       selectedPropertyId = saved.id;
-      renderProperties();
     }
+    return Boolean(saved?.id);
   } catch (error) {
     console.warn("Não foi possível salvar o imóvel no Supabase.", error.message);
     alert(`Não foi possível salvar o imóvel no banco: ${error.message}`);
+    return false;
   }
 }
 
