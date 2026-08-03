@@ -4901,12 +4901,24 @@ function updateEnterprisePropertySummary(ids = enterprisePropertySelection) {
   if (enterpriseProperty) enterpriseProperty.value = labels[0] || "";
 }
 
-function selectedEnterpriseOwnerCompanyName() {
-  return enterprisePropertyOwnerCompany?.value || enterpriseCompany?.value || "";
+function selectedEnterpriseOwnerCompanyId() {
+  return companyIdByName(enterprisePropertyOwnerCompany?.value || enterpriseCompany?.value || "");
 }
 
-function companyProperties(companyName = selectedEnterpriseOwnerCompanyName()) {
-  return properties.filter((property) => property.ownerType === "pj" && propertyCompanyOwnerName(property) === companyName);
+function selectedEnterpriseOwnerCompanyName() {
+  const companyId = selectedEnterpriseOwnerCompanyId();
+  return companyId ? companyNameById(companyId) : "";
+}
+
+function companyProperties(companyId = selectedEnterpriseOwnerCompanyId()) {
+  const companyName = companyNameById(companyId);
+  return properties.filter((property) => (
+    property.ownerType === "pj"
+    && (
+      sameId(property.ownerCompanyId, companyId)
+      || propertyCompanyOwnerName(property) === companyName
+    )
+  ));
 }
 
 function enterprisePropertySearchText(property) {
@@ -4956,17 +4968,17 @@ function openEnterprisePropertyPicker() {
 }
 
 function populateEnterpriseSelects(selectedCompany = "", selectedProperty = "") {
+  const companyOptions = companies.map((company) => `<option value="${escapeHtml(company.id)}">${escapeHtml(company.name)}${company.cnpj ? ` - ${escapeHtml(company.cnpj)}` : ""}</option>`).join("");
+  const selectedCompanyId = companyIdByName(selectedCompany) || companies[0]?.id || "";
   if (enterpriseCompany) {
-    const companyNames = companies.map((company) => company.name);
-    enterpriseCompany.innerHTML = companyNames.map((name) => `<option>${name}</option>`).join("");
-    if (selectedCompany && companyNames.includes(selectedCompany)) enterpriseCompany.value = selectedCompany;
+    enterpriseCompany.innerHTML = companyOptions;
+    if (selectedCompanyId) enterpriseCompany.value = selectedCompanyId;
   }
 
   if (enterprisePropertyOwnerCompany) {
-    const companyNames = companies.map((company) => company.name);
-    enterprisePropertyOwnerCompany.innerHTML = companyNames.map((name) => `<option>${name}</option>`).join("");
-    const selectedOwner = selectedEnterpriseOwnerCompanyName() || selectedCompany;
-    if (selectedOwner && companyNames.includes(selectedOwner)) enterprisePropertyOwnerCompany.value = selectedOwner;
+    enterprisePropertyOwnerCompany.innerHTML = companyOptions;
+    const selectedOwnerId = companyIdByName(enterprisePropertyOwnerCompany.value) || selectedCompanyId;
+    if (selectedOwnerId) enterprisePropertyOwnerCompany.value = selectedOwnerId;
     else if (enterpriseCompany?.value) enterprisePropertyOwnerCompany.value = enterpriseCompany.value;
   }
 
@@ -5006,7 +5018,8 @@ function fillEnterpriseForm(enterprise) {
   field("enterprise-id").value = enterprise.id;
   enterprisePropertySelection = [...(enterprise.propertyIds || [])];
   populateEnterpriseSelects(enterprise.company, enterprise.property);
-  if (field("enterprise-property-owner-company")) field("enterprise-property-owner-company").value = enterprise.propertyOwnerCompany || enterprise.company;
+  const ownerCompanyId = companyIdByName(enterprise.propertyOwnerCompany || enterprise.company);
+  if (field("enterprise-property-owner-company") && ownerCompanyId) field("enterprise-property-owner-company").value = ownerCompanyId;
   updateEnterprisePropertySummary();
   field("enterprise-name").value = enterprise.name;
   field("enterprise-type").value = enterprise.type;
@@ -5036,11 +5049,25 @@ async function saveEnterprise() {
   const id = field("enterprise-id").value;
   const existing = enterprises.find((enterprise) => sameId(enterprise.id, id));
   const wasExisting = Boolean(existing);
+  const companyId = companyIdByName(field("enterprise-company").value);
+  const propertyOwnerCompanyId = companyIdByName(field("enterprise-property-owner-company")?.value || field("enterprise-company").value);
+  const selectedPropertyIds = enterprisePropertySelection.filter(looksLikeUuid);
+  const propertyId = selectedPropertyIds[0] || propertyIdByLabel(field("enterprise-property").value);
+  if (!looksLikeUuid(companyId)) {
+    alert("Selecione uma empresa válida cadastrada no Supabase para salvar o empreendimento.");
+    return;
+  }
+  if (!looksLikeUuid(propertyId)) {
+    alert("Selecione ao menos um imóvel válido cadastrado no Supabase para salvar o empreendimento.");
+    return;
+  }
   const payload = {
     id: id || Date.now(),
     name: field("enterprise-name").value,
-    company: field("enterprise-company").value,
-    propertyOwnerCompany: field("enterprise-property-owner-company")?.value || field("enterprise-company").value,
+    company: companyNameById(companyId),
+    companyId,
+    propertyOwnerCompany: companyNameById(propertyOwnerCompanyId || companyId),
+    propertyOwnerCompanyId: propertyOwnerCompanyId || companyId,
     property: field("enterprise-property").value,
     propertyIds: [...enterprisePropertySelection],
     type: field("enterprise-type").value,
@@ -7868,7 +7895,9 @@ function printPdfPreview() {
 field("pdf-preview-print")?.addEventListener("click", printPdfPreview);
 
 function companyNameById(id) {
-  return companies.find((company) => sameId(company.id, id))?.name || "Não informado";
+  if (!id) return "Não informado";
+  const company = companies.find((item) => sameId(item.id, id) || item.name === id || item.cnpj === id);
+  return company?.name || String(id);
 }
 
 function partnerNameById(id) {
@@ -9074,7 +9103,16 @@ function partnerIdByName(name) {
 }
 
 function companyIdByName(name) {
-  return companies.find((company) => company.name === name)?.id || null;
+  if (!name) return null;
+  if (looksLikeUuid(name) && companies.some((company) => sameId(company.id, name))) return name;
+  const normalized = normalizeSearchText(name);
+  return companies.find((company) => (
+    sameId(company.id, name)
+    || company.name === name
+    || company.cnpj === name
+    || normalizeSearchText(company.name) === normalized
+    || normalizeSearchText(company.cnpj) === normalized
+  ))?.id || null;
 }
 
 function companyIdByCnpj(cnpj) {
