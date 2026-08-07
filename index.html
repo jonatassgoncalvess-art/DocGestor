@@ -46,16 +46,19 @@
 
     <div class="app-shell" id="app-shell" hidden>
       <aside class="sidebar">
-        <div class="brand">
-          <span class="brand-mark" aria-hidden="true">
-            <img class="brand-logo-image" src="assets/logo-docgestor.png" alt="" />
-          </span>
-          <div>
+        <div class="sidebar-head">
+          <div class="brand">
+            <span class="brand-mark" aria-hidden="true">
+              <img class="brand-logo-image" src="assets/logo-docgestor.png" alt="" />
+            </span>
+            <div>
             <strong class="brand-wordmark">
               <span class="brand-doc-text">Doc</span><span class="brand-gestor-text">Gestor</span>
             </strong>
-            <small class="brand-submark"><span>by</span> Carminatti</small>
+              <small class="brand-submark"><span>by</span> Carminatti</small>
+            </div>
           </div>
+          <span class="sidebar-status-pill">Online</span>
         </div>
         <button class="sidebar-toggle" id="sidebar-toggle" type="button" aria-label="Minimizar menu lateral" aria-expanded="true">
           <span aria-hidden="true">‹</span>
@@ -64,10 +67,10 @@
 
         <nav class="nav" aria-label="Navegacao principal">
             <button class="nav-item active" data-view="home">
-              <span>00</span> Home
+              <span class="nav-code">00</span><strong>Home</strong>
             </button>
           <button class="nav-item" data-view="admin" data-admin-menu-toggle="true" data-permission-view="admin" aria-expanded="false">
-            <span>01</span> Painel Admin
+            <span class="nav-code">01</span><strong>Painel Admin</strong>
           </button>
           <div class="admin-subnav" id="admin-subnav" data-permission-view="admin">
             <button class="admin-link active" data-admin-target="usuarios-admin">01.1 Usuários</button>
@@ -103,7 +106,7 @@
             </div>
           </div>
           <button class="nav-item" data-view="dashboard" data-dashboard-menu-toggle="true" data-permission-view="dashboard" aria-expanded="false">
-            <span>02</span> Painel geral
+            <span class="nav-code">02</span><strong>Painel geral</strong>
           </button>
           <div class="admin-subnav dashboard-subnav" id="dashboard-subnav" data-permission-view="dashboard">
             <button class="admin-link" data-dashboard-target="dashboard-ambiental" data-permission-view="environmental">02.1 Painel Ambiental</button>
@@ -111,7 +114,7 @@
             <button class="admin-link" data-dashboard-target="dashboard-agendamentos" data-permission-view="agenda">02.3 Painel Agendamentos</button>
           </div>
           <button class="nav-item" data-view="modulos" data-module-menu-toggle="true" data-permission-view="modules" aria-expanded="false">
-            <span>03</span> Módulos
+            <span class="nav-code">03</span><strong>Módulos</strong>
           </button>
           <div class="admin-subnav module-subnav" id="module-subnav" data-permission-view="modules">
             <button class="admin-link module-parent-link" data-view-target="licencas" data-module-root="licencas" data-permission-view="environmental">03.1 Licenças Ambientais</button>
@@ -130,14 +133,14 @@
             </div>
           </div>
           <button class="nav-item" data-view="agenda" data-agenda-menu-toggle="true" data-permission-view="agenda" aria-expanded="false">
-            <span>04</span> Agenda
+            <span class="nav-code">04</span><strong>Agenda</strong>
           </button>
           <div class="admin-subnav agenda-subnav" id="agenda-subnav" data-permission-view="agenda">
             <button class="admin-link active" data-agenda-target="agenda">04.1 Calendário</button>
             <button class="admin-link" data-agenda-target="agenda-notes">04.2 Anotações</button>
           </div>
           <button class="nav-item" data-view="settings" data-settings-menu-toggle="true" aria-expanded="false">
-            <span>05</span> Configurações
+            <span class="nav-code">05</span><strong>Configurações</strong>
           </button>
           <div class="admin-subnav settings-subnav" id="settings-subnav">
             <button class="admin-link" data-settings-target="profile-settings">05.1 Perfil</button>
@@ -155,8 +158,10 @@
 
       <main class="main">
         <header class="topbar">
-          <div>
+          <div class="page-heading">
+            <span class="page-breadcrumb" id="page-breadcrumb">00 Home</span>
             <h1 id="page-title">Home</h1>
+            <p id="page-subtitle">Entrada principal do sistema.</p>
           </div>
           <div class="top-actions">
             <div class="global-search">

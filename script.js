@@ -9,6 +9,8 @@ const dashboardSubnav = document.querySelector("#dashboard-subnav");
 const moduleSubnav = document.querySelector("#module-subnav");
 const agendaSubnav = document.querySelector("#agenda-subnav");
 const settingsSubnav = document.querySelector("#settings-subnav");
+const pageBreadcrumb = document.querySelector("#page-breadcrumb");
+const pageSubtitle = document.querySelector("#page-subtitle");
 const SESSION_USER_KEY = "docgestor.sessionUser";
 const SESSION_VIEW_KEY = "docgestor.sessionView";
 const SESSION_LICENSE_STATUS_KEY = "docgestor.licenseStatus";
@@ -38,6 +40,57 @@ const titles = {
   "profile-settings": "05.1 Perfil",
 };
 
+const pageMeta = {
+  home: { breadcrumb: "00 Home", title: "Home", subtitle: "Entrada principal do DocGestor." },
+  admin: { breadcrumb: "01 Painel Admin", title: "Painel Admin", subtitle: "Ambiente administrativo, cadastros mestres, envios e configurações do sistema." },
+  dashboard: { breadcrumb: "02 Painel Geral", title: "Painel geral", subtitle: "Visão consolidada dos indicadores, prazos e pendências do sistema." },
+  "dashboard-ambiental": { breadcrumb: "02.1 Painel Ambiental", title: "Painel Ambiental", subtitle: "Indicadores exclusivos do módulo ambiental." },
+  "dashboard-iptu": { breadcrumb: "02.2 Painel IPTU", title: "Painel IPTU", subtitle: "Indicadores exclusivos do módulo de IPTU." },
+  "dashboard-agendamentos": { breadcrumb: "02.3 Painel Agendamentos", title: "Painel Agendamentos", subtitle: "Resumo dos compromissos, alertas e anotações cadastradas." },
+  modulos: { breadcrumb: "03 Módulos", title: "Módulos", subtitle: "Entrada dos módulos operacionais disponíveis no DocGestor." },
+  licencas: { breadcrumb: "03.1 Módulos > Licenças Ambientais", title: "03.1 Licenças Ambientais", subtitle: "Processos, etapas, licenças, vencimentos e dossiês ambientais." },
+  iptu: { breadcrumb: "03.2 Módulos > IPTU", title: "03.2 IPTU", subtitle: "Módulo em desenvolvimento para controle de guias, prazos e comprovantes." },
+  "documentos-diversos": { breadcrumb: "03.3 Módulos > Lembretes Diversos", title: "03.3 Lembretes Diversos", subtitle: "Lembretes avulsos com alertas e repetição programada." },
+  formularios: { breadcrumb: "03.4 Módulos > Formulários", title: "03.4 Formulários", subtitle: "Modelos, registros e documentos operacionais." },
+  autorizacoes: { breadcrumb: "03.4.1 Formulários > Autorizações", title: "03.4.1 Autorizações", subtitle: "Emissão e controle de autorizações internas." },
+  agenda: { breadcrumb: "04.1 Agenda > Calendário", title: "04.1 Calendário", subtitle: "Calendário operacional com feriados, prazos e alertas." },
+  "agenda-notes": { breadcrumb: "04.2 Agenda > Anotações", title: "04.2 Anotações", subtitle: "Listagem e cadastro de agendamentos vinculados aos módulos." },
+  settings: { breadcrumb: "05 Configurações", title: "Configurações", subtitle: "Preferências e ajustes do usuário." },
+  "profile-settings": { breadcrumb: "05.1 Configurações > Perfil", title: "05.1 Perfil", subtitle: "Dados cadastrais, senha e identificação do usuário logado." },
+};
+
+const adminPanelMeta = {
+  "usuarios-admin": { breadcrumb: "01.1 Painel Admin > Usuários", title: "01.1 Usuários", subtitle: "Cadastro de usuários, permissões, redefinição de senha e status de acesso." },
+  "socios-admin": { breadcrumb: "01.2.1 Cadastros > Sócios", title: "01.2.1 Sócios", subtitle: "Sócios e responsáveis legais usados nos módulos do sistema." },
+  "empresas-filiais": { breadcrumb: "01.2.2 Cadastros > Empresas e Filiais", title: "01.2.2 Empresas e Filiais", subtitle: "Matrizes, filiais e vínculos societários." },
+  "cidades-admin": { breadcrumb: "01.2.3 Cadastros > Cidades", title: "01.2.3 Cidades", subtitle: "Cidades e estados usados no cadastro de imóveis." },
+  "imoveis-admin": { breadcrumb: "01.2.4 Cadastros > Imóveis", title: "01.2.4 Imóveis", subtitle: "Imóveis urbanos e rurais vinculados a proprietários." },
+  "imoveis-urbanos-admin": { breadcrumb: "01.2.4.1 Imóveis > Urbanos", title: "01.2.4.1 Urbanos", subtitle: "Listagem automática dos imóveis urbanos cadastrados." },
+  "imoveis-rurais-admin": { breadcrumb: "01.2.4.2 Imóveis > Rurais", title: "01.2.4.2 Rurais", subtitle: "Listagem automática dos imóveis rurais cadastrados." },
+  "painel-imoveis-admin": { breadcrumb: "01.2.4.3 Imóveis > Painel Imóveis", title: "01.2.4.3 Painel Imóveis", subtitle: "Indicadores de área, reserva legal e APP dos imóveis rurais." },
+  "empreendimentos-admin": { breadcrumb: "01.2.5 Cadastros > Empreendimento", title: "01.2.5 Empreendimento", subtitle: "Empreendimentos vinculados a empresas, imóveis e módulos operacionais." },
+  "atividades-admin": { breadcrumb: "01.2.6 Cadastros > Atividades", title: "01.2.6 Atividades", subtitle: "Atividades, CNAE, CNPJ, empreendimentos e classificação CTF/APP." },
+  "tipos-licencas": { breadcrumb: "01.3.1 Ambiental > Tipos de Licenças", title: "01.3.1 Tipos de Licenças", subtitle: "Classificação dos tipos de licenças por formato de licenciamento." },
+  "documentos-ambientais": { breadcrumb: "01.3.2 Ambiental > Documentos", title: "01.3.2 Documentos", subtitle: "Documentos e parâmetros vinculados aos tipos de licença ambiental." },
+  "modelos-checklist": { breadcrumb: "01.3.3 Ambiental > Modelos de Check-list", title: "01.3.3 Modelos de Check-list", subtitle: "Modelos usados para alimentar as etapas de check-list dos processos." },
+  "email-sistema": { breadcrumb: "01.4.1 Envios > E-mail do Sistema", title: "01.4.1 E-mail do Sistema", subtitle: "Configuração do remetente oficial e teste de envio." },
+  "envios-admin": { breadcrumb: "01.4.2 Envios > E-mails por Módulo", title: "01.4.2 E-mails por Módulo", subtitle: "Destinatários automáticos e externos que recebem alertas por módulo." },
+  "historico-alertas": { breadcrumb: "01.4.3 Envios > Histórico de Alertas", title: "01.4.3 Histórico de Alertas", subtitle: "Consulta dos alertas aguardando envio e enviados pelo sistema." },
+  "historico-alertas-fila": { breadcrumb: "01.4.3.1 Histórico de Alertas > Na Fila", title: "01.4.3.1 Na Fila", subtitle: "Alertas programados que ainda não chegaram na data e hora de disparo." },
+  "historico-alertas-enviados": { breadcrumb: "01.4.3.2 Histórico de Alertas > Enviados", title: "01.4.3.2 Enviados", subtitle: "Alertas disparados e mantidos no histórico conforme regra de retenção." },
+  "backup-sistema": { breadcrumb: "01.5.1 Configurações do Sistema > Backup", title: "01.5.1 Backup", subtitle: "Frequência, horário, retenção e destino planejado dos backups." },
+};
+
+function setPageChrome(viewName, override = null) {
+  const meta = override || pageMeta[viewName] || { breadcrumb: titles[viewName] || "DocGestor", title: titles[viewName] || "DocGestor", subtitle: "" };
+  if (title) title.textContent = meta.title;
+  if (pageBreadcrumb) pageBreadcrumb.textContent = meta.breadcrumb || meta.title;
+  if (pageSubtitle) {
+    pageSubtitle.textContent = meta.subtitle || "";
+    pageSubtitle.hidden = !meta.subtitle;
+  }
+}
+
 function setSidebarCollapsed(collapsed) {
   appShell?.classList.toggle("sidebar-collapsed", collapsed);
   sidebarToggle?.setAttribute("aria-expanded", String(!collapsed));
@@ -66,6 +119,9 @@ function visibleSidebarButtons(container) {
 }
 
 function sidebarItemLabel(element) {
+  const code = element.querySelector?.(".nav-code")?.textContent?.trim();
+  const strong = element.querySelector?.("strong")?.textContent?.trim();
+  if (code && strong) return `${code} ${strong}`;
   return String(element.textContent || "").replace(/\s+/g, " ").trim();
 }
 
@@ -218,7 +274,7 @@ function openView(viewName) {
           : viewName;
   navItems.forEach((nav) => nav.classList.toggle("active", nav.dataset.view === parentView));
   views.forEach((view) => view.classList.toggle("active", view.id === viewName));
-  title.textContent = titles[viewName];
+  setPageChrome(viewName);
 
   if (adminSubnav && parentView !== "admin") {
     adminSubnav.classList.remove("open");
@@ -386,6 +442,7 @@ function openAdminPanel(panelName) {
   document.querySelectorAll(".admin-panel").forEach((panel) => {
     panel.classList.toggle("active", panel.id === `admin-${targetPanelName}`);
   });
+  setPageChrome("admin", adminPanelMeta[panelName] || adminPanelMeta[targetPanelName] || pageMeta.admin);
   if (targetPanelName === "historico-alertas") {
     setAlertHistoryView(panelName);
   }
@@ -6991,6 +7048,11 @@ function renderLicenseStatus(status = "open") {
   if (!list) return;
   currentLicenseStatus = status;
   const meta = licenseStatusMeta[status] || licenseStatusMeta.open;
+  setPageChrome("licencas", {
+    breadcrumb: status === "general" ? "03.1 Módulos > Licenças Ambientais" : `${meta.title} Licenças Ambientais`,
+    title: meta.title,
+    subtitle: status === "general" ? pageMeta.licencas.subtitle : meta.subtitle,
+  });
   environmentalProcesses.forEach((process) => {
     ensureProcessStages(process);
     updateProcessProgress(process);
