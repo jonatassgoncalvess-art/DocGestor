@@ -142,11 +142,21 @@ function keepSidebarFlyoutOpen() {
   sidebarFlyoutTimer = null;
 }
 
+function sidebarDepthClass(sourceButton) {
+  if (sourceButton.classList?.contains("nav-depth-3")) return " nav-depth-3";
+  if (sourceButton.classList?.contains("nav-depth-2")) return " nav-depth-2";
+  if (sourceButton.classList?.contains("nav-depth-1")) return " nav-depth-1";
+  const label = sidebarItemLabel(sourceButton);
+  const code = label.match(/^\d+(?:\.\d+)*/)?.[0] || "";
+  const depth = code ? code.split(".").length - 1 : 0;
+  return depth >= 3 ? " nav-depth-3" : depth === 2 ? " nav-depth-2" : depth === 1 ? " nav-depth-1" : "";
+}
+
 function addSidebarFlyoutButton(sourceButton) {
   if (!sidebarFlyout) return;
   const button = document.createElement("button");
   button.type = "button";
-  button.className = `sidebar-flyout-button${sourceButton.classList.contains("active") ? " active" : ""}`;
+  button.className = `sidebar-flyout-button${sidebarDepthClass(sourceButton)}${sourceButton.classList.contains("active") ? " active" : ""}`;
   button.textContent = sidebarItemLabel(sourceButton);
   button.addEventListener("click", () => {
     sourceButton.click();

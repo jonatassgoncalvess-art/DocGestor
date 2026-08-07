@@ -398,14 +398,30 @@ textarea {
 .side-tree-group {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   margin-top: 8px;
-  padding-top: 9px;
+  padding: 9px 0 0 9px;
+  position: relative;
+}
+
+.side-tree-group::before {
+  background: linear-gradient(180deg, rgba(237, 16, 31, 0.42), rgba(255, 255, 255, 0.08));
+  border-radius: 999px;
+  bottom: 5px;
+  content: "";
+  left: 0;
+  position: absolute;
+  top: 33px;
+  width: 1px;
 }
 
 .module-child-group {
   border-left: 1px solid rgba(255, 255, 255, 0.12);
   border-top: 0;
-  margin: 4px 0 8px 14px;
-  padding: 4px 0 4px 10px;
+  margin: 3px 0 8px 18px;
+  padding: 3px 0 3px 11px;
+}
+
+.module-child-group::before {
+  display: none;
 }
 
 .module-child-group .admin-link {
@@ -424,7 +440,8 @@ textarea {
   display: block;
   font-size: 11px;
   letter-spacing: 0;
-  margin: 0 0 6px;
+  margin: 0 0 7px;
+  padding-left: 2px;
   text-transform: uppercase;
 }
 
@@ -437,8 +454,55 @@ textarea {
   font-size: 13px;
   min-height: 34px;
   padding: 8px 9px;
+  position: relative;
   text-align: left;
   width: 100%;
+}
+
+.admin-subnav .admin-link.nav-depth-1 {
+  color: #ffffff;
+  font-weight: 800;
+  padding-left: 10px;
+}
+
+.admin-subnav .admin-link.nav-depth-2 {
+  color: #d8e1e5;
+  font-size: 12.5px;
+  margin-left: 8px;
+  padding-left: 16px;
+  width: calc(100% - 8px);
+}
+
+.admin-subnav .admin-link.nav-depth-2::before {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  content: "";
+  height: 1px;
+  left: 4px;
+  position: absolute;
+  top: 50%;
+  width: 7px;
+}
+
+.admin-subnav .admin-link.nav-depth-3 {
+  color: #bfc9ce;
+  font-size: 12px;
+  margin-left: 22px;
+  min-height: 30px;
+  padding-left: 19px;
+  width: calc(100% - 22px);
+}
+
+.admin-subnav .admin-link.nav-depth-3::before {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0 0 0 6px;
+  content: "";
+  height: 12px;
+  left: 4px;
+  position: absolute;
+  top: 4px;
+  width: 9px;
 }
 
 .admin-subnav .admin-link.subitem {
@@ -505,6 +569,44 @@ textarea {
   padding: 8px 10px;
   text-align: left;
   white-space: nowrap;
+}
+
+.sidebar-flyout-button.nav-depth-1 {
+  font-weight: 800;
+}
+
+.sidebar-flyout-button.nav-depth-2 {
+  padding-left: 22px;
+  position: relative;
+}
+
+.sidebar-flyout-button.nav-depth-2::before {
+  background: #cbd5dc;
+  content: "";
+  height: 1px;
+  left: 10px;
+  position: absolute;
+  top: 50%;
+  width: 7px;
+}
+
+.sidebar-flyout-button.nav-depth-3 {
+  color: var(--muted);
+  font-size: 12px;
+  padding-left: 34px;
+  position: relative;
+}
+
+.sidebar-flyout-button.nav-depth-3::before {
+  border-bottom: 1px solid #cbd5dc;
+  border-left: 1px solid #cbd5dc;
+  border-radius: 0 0 0 6px;
+  content: "";
+  height: 12px;
+  left: 17px;
+  position: absolute;
+  top: 8px;
+  width: 9px;
 }
 
 .sidebar-flyout-button:hover,
