@@ -2474,7 +2474,7 @@ button {
   justify-content: center;
   padding: 22px;
   position: fixed;
-  z-index: 20;
+  z-index: 5000;
 }
 
 .modal-backdrop.open {

@@ -3028,10 +3028,12 @@ document.querySelector("#password-ok")?.addEventListener("click", () => closeMod
 document.querySelectorAll("[data-close-modal]").forEach((button) => {
   button.addEventListener("click", () => closeModal(button.dataset.closeModal));
 });
-document.querySelectorAll(".modal-backdrop").forEach((modal) => {
-  modal.addEventListener("click", (event) => {
-    if (event.target === modal) closeModal(modal.id);
-  });
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+  const openModals = [...document.querySelectorAll(".modal-backdrop.open:not([hidden])")];
+  const activeModal = openModals[openModals.length - 1];
+  if (!activeModal?.id) return;
+  closeModal(activeModal.id);
 });
 document.querySelector("#system-message-ok")?.addEventListener("click", () => closeModal("system-message-modal"));
 document.querySelector("#generic-delete-confirm")?.addEventListener("click", async () => {
