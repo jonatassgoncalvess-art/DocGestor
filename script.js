@@ -9051,12 +9051,11 @@ function groupedHomeDeadlineItems(items) {
 
 function setHomeDeadlineCollapsed(collapsed) {
   const panel = document.querySelector(".home-deadline-panel");
-  const layout = document.querySelector(".home-layout");
   const button = document.querySelector("#home-deadline-toggle");
   panel?.classList.toggle("is-collapsed", collapsed);
-  layout?.classList.toggle("deadline-panel-collapsed", collapsed);
+  panel?.classList.toggle("is-open", !collapsed);
   if (button) {
-    button.textContent = collapsed ? "Abrir" : "Minimizar";
+    button.textContent = collapsed ? "Vencimentos" : "Fechar";
     button.setAttribute("aria-expanded", String(!collapsed));
   }
   localStorage.setItem("docgestor.home.deadlineCollapsed", collapsed ? "1" : "0");
@@ -9102,7 +9101,7 @@ function renderHomeDeadlines() {
         <span>Assim que houver documentos vencidos ou próximos do vencimento, eles aparecerão aqui.</span>
       </article>
     `;
-  setHomeDeadlineCollapsed(localStorage.getItem("docgestor.home.deadlineCollapsed") === "1");
+  setHomeDeadlineCollapsed(localStorage.getItem("docgestor.home.deadlineCollapsed") !== "0");
 }
 
 document.querySelector("#home-deadline-toggle")?.addEventListener("click", () => {
