@@ -525,7 +525,7 @@ textarea {
   background: #ffffff;
   border: 1px solid var(--line);
   border-radius: 8px;
-  box-shadow: 0 20px 52px rgba(5, 5, 5, 0.24);
+  box-shadow: 0 24px 64px rgba(5, 5, 5, 0.36);
   color: var(--ink);
   display: none;
   gap: 4px;
@@ -535,7 +535,7 @@ textarea {
   padding: 12px;
   position: fixed;
   width: max-content;
-  z-index: 80;
+  z-index: 1000;
 }
 
 .sidebar-flyout.open {
