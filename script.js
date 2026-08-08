@@ -107,12 +107,29 @@ function setPageChrome(viewName, override = null) {
                     ? "modules"
                     : "home";
     pageIcon.className = `page-icon page-icon-${iconType}`;
+    pageIcon.innerHTML = renderPageIcon(iconType);
   }
   if (pageBreadcrumb) pageBreadcrumb.textContent = meta.breadcrumb || meta.title;
   if (pageSubtitle) {
     pageSubtitle.textContent = meta.subtitle || "";
     pageSubtitle.hidden = !meta.subtitle;
   }
+}
+
+function renderPageIcon(type) {
+  const icons = {
+    home: `<svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path class="accent-red" d="M9 25 24 12l15 13" /><path d="M14 23v15h20V23" /><path class="accent-green" d="M21 38V27h6v11" /></svg>`,
+    dashboard: `<svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M10 34c4-8 10-12 17-10 5 1 8-1 11-6" /><path class="accent-red" d="M10 38h28" /><path class="accent-green" d="M16 31v7M25 26v12M34 22v16" /></svg>`,
+    admin: `<svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M15 12h18v26H15z" /><path class="accent-red" d="M20 18h8M20 24h12M20 30h9" /><path class="accent-green" d="M33 10v7h7" /></svg>`,
+    modules: `<svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M12 12h10v10H12zM26 12h10v10H26zM12 26h10v10H12zM26 26h10v10H26z" /><path class="accent-red" d="M17 22v4M26 17h-4" /><path class="accent-green" d="M31 22v4M26 31h-4" /></svg>`,
+    environmental: `<svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path class="accent-green" d="M13 31c11 2 22-5 24-19-14 1-24 8-24 19Z" /><path d="M14 35c6-9 13-14 23-18" /><path class="accent-red" d="M12 38h24" /></svg>`,
+    calendar: `<svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M12 15h24c2 0 4 2 4 4v17c0 2-2 4-4 4H12c-2 0-4-2-4-4V19c0-2 2-4 4-4Z" /><path class="accent-red" d="M16 10v8M32 10v8M8 23h32" /><circle class="accent-green" cx="31" cy="32" r="4" /></svg>`,
+    profile: `<svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><circle class="accent-red" cx="24" cy="17" r="7" /><path d="M12 39c2-8 7-12 12-12s10 4 12 12" /><path class="accent-green" d="M16 39h16" /></svg>`,
+    mail: `<svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M10 16h28v20H10z" /><path class="accent-red" d="m10 18 14 11 14-11" /><path class="accent-green" d="M32 12c4 0 7 3 7 7" /></svg>`,
+    registry: `<svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M15 9h18v30H15z" /><path class="accent-red" d="M20 17h8M20 23h10M20 29h7" /><path class="accent-green" d="M12 39h24" /></svg>`,
+    forms: `<svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M15 9h16l6 6v24H15z" /><path class="accent-red" d="M31 9v7h7" /><path d="M20 23h12M20 29h10" /><path class="accent-green" d="m20 35 3 3 7-8" /></svg>`,
+  };
+  return icons[type] || icons.home;
 }
 
 function setSidebarCollapsed(collapsed) {
@@ -376,7 +393,6 @@ function openView(viewName) {
   if (viewName === "documentos-diversos") renderDiverseReminders();
   if (viewName === "home") {
     renderHomeDeadlines();
-    renderHomeSummary();
   }
   if (viewName === "autorizacoes") renderAuthorizations();
   if (currentUser) sessionStorage.setItem(SESSION_VIEW_KEY, viewName);
@@ -8954,7 +8970,6 @@ function renderDashboard() {
   renderIptuDashboard();
   renderScheduleDashboard();
   renderHomeDeadlines();
-  renderHomeSummary();
 }
 
 function renderDashboardTable(targetId, columns, rows, emptyMessage) {
@@ -9138,25 +9153,12 @@ function renderHomeDeadlines() {
   setHomeDeadlineCollapsed(homeDeadlineCollapsed);
 }
 
-function renderHomeSummary() {
-  const deadlineItems = collectHomeDeadlineItems();
-  const dueToday = deadlineItems.filter((item) => item.remaining === 0).length;
-  const waitingAlerts = alertHistoryItems.filter((item) => alertHistoryIsWaiting(item)).length;
-  const activeProcesses = environmentalProcesses.filter((process) => process.status !== "done").length;
-  const registeredDocuments = environmentalDocuments.length;
-  if (field("home-summary-due-today")) field("home-summary-due-today").textContent = dueToday;
-  if (field("home-summary-unread-alerts")) field("home-summary-unread-alerts").textContent = waitingAlerts;
-  if (field("home-summary-active-processes")) field("home-summary-active-processes").textContent = activeProcesses;
-  if (field("home-summary-recent-documents")) field("home-summary-recent-documents").textContent = registeredDocuments;
-}
-
 document.querySelector("#home-deadline-toggle")?.addEventListener("click", () => {
   const panel = document.querySelector(".home-deadline-panel");
   setHomeDeadlineCollapsed(!panel?.classList.contains("is-collapsed"));
 });
 
 document.querySelector("#home-open-deadlines")?.addEventListener("click", () => setHomeDeadlineCollapsed(false));
-document.querySelector("#home-summary-due-row")?.addEventListener("click", () => setHomeDeadlineCollapsed(false));
 
 function renderEnvironmentalDashboard() {
   environmentalProcesses.forEach(applyProcessDeadlineRules);

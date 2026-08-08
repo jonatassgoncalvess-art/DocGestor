@@ -204,7 +204,14 @@
               <div class="home-content-grid">
                 <div class="home-intro-grid">
                   <article class="home-info-card">
-                    <span class="home-card-icon home-card-icon-control"></span>
+                    <span class="home-card-icon home-card-icon-control" aria-hidden="true">
+                      <svg viewBox="0 0 48 48" focusable="false">
+                        <path d="M14 18c0-4 3-7 7-7h6c4 0 7 3 7 7v15H14V18Z" />
+                        <path d="M18 33v4h12v-4" />
+                        <path d="M18 22h12M18 27h8" />
+                        <path class="accent" d="M24 7v6M15 14l-4-4M33 14l4-4" />
+                      </svg>
+                    </span>
                     <div>
                       <small>Base de controle</small>
                       <h3>Informações mestres bem organizadas</h3>
@@ -217,7 +224,15 @@
                     </div>
                   </article>
                   <article class="home-info-card">
-                    <span class="home-card-icon home-card-icon-operation"></span>
+                    <span class="home-card-icon home-card-icon-operation" aria-hidden="true">
+                      <svg viewBox="0 0 48 48" focusable="false">
+                        <path d="M24 8v9" />
+                        <path d="M14 23h20v14H14V23Z" />
+                        <path d="M10 37h28" />
+                        <path class="accent" d="M17 17h14l-7-9-7 9Z" />
+                        <path class="accent" d="M19 29h10M19 33h7" />
+                      </svg>
+                    </span>
                     <div>
                       <small>Operação</small>
                       <h3>Processos conduzidos por etapas</h3>
@@ -230,7 +245,14 @@
                     </div>
                   </article>
                   <article class="home-info-card">
-                    <span class="home-card-icon home-card-icon-deadline"></span>
+                    <span class="home-card-icon home-card-icon-deadline" aria-hidden="true">
+                      <svg viewBox="0 0 48 48" focusable="false">
+                        <path d="M13 15h22c2 0 4 2 4 4v16c0 2-2 4-4 4H13c-2 0-4-2-4-4V19c0-2 2-4 4-4Z" />
+                        <path d="M15 10v8M33 10v8M9 22h30" />
+                        <path class="accent" d="M24 27v6l5 3" />
+                        <path class="accent" d="M19 32a5 5 0 1 0 10 0 5 5 0 0 0-10 0Z" />
+                      </svg>
+                    </span>
                     <div>
                       <small>Prazos</small>
                       <h3>Alertas e agenda integrados</h3>
@@ -242,7 +264,13 @@
                     </div>
                   </article>
                   <article class="home-info-card">
-                    <span class="home-card-icon home-card-icon-governance"></span>
+                    <span class="home-card-icon home-card-icon-governance" aria-hidden="true">
+                      <svg viewBox="0 0 48 48" focusable="false">
+                        <path d="M24 8l15 7v8c0 9-6 15-15 18C15 38 9 32 9 23v-8l15-7Z" />
+                        <path class="accent" d="M18 25l4 4 8-9" />
+                        <path d="M16 17h16" />
+                      </svg>
+                    </span>
                     <div>
                       <small>Governança</small>
                       <h3>Histórico e padronização</h3>
@@ -255,33 +283,6 @@
                   </article>
                 </div>
 
-                <aside class="home-quick-panel">
-                  <h3>Resumo rápido</h3>
-                  <button class="home-quick-row" type="button" id="home-summary-due-row">
-                    <span class="home-quick-icon red"></span>
-                    <strong id="home-summary-due-today">0</strong>
-                    <span>Vencimentos hoje</span>
-                    <em>›</em>
-                  </button>
-                  <button class="home-quick-row" type="button" data-view-target="admin" data-admin-target="historico-alertas-fila">
-                    <span class="home-quick-icon yellow"></span>
-                    <strong id="home-summary-unread-alerts">0</strong>
-                    <span>Alertas na fila</span>
-                    <em>›</em>
-                  </button>
-                  <button class="home-quick-row" type="button" data-module-license-status="open">
-                    <span class="home-quick-icon green"></span>
-                    <strong id="home-summary-active-processes">0</strong>
-                    <span>Processos em andamento</span>
-                    <em>›</em>
-                  </button>
-                  <button class="home-quick-row" type="button" data-view-target="admin" data-admin-target="documentos-ambientais">
-                    <span class="home-quick-icon blue"></span>
-                    <strong id="home-summary-recent-documents">0</strong>
-                    <span>Documentos cadastrados</span>
-                    <em>›</em>
-                  </button>
-                </aside>
               </div>
             </div>
 
