@@ -2904,33 +2904,6 @@ button {
   stroke: #2563eb;
 }
 
-.home-card-link {
-  background: transparent;
-  border: 0;
-  color: var(--brand-red);
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 800;
-  margin-top: 10px;
-  padding: 0;
-}
-
-.home-card-link::after {
-  content: " →";
-}
-
-.home-card-link.green {
-  color: var(--brand-green);
-}
-
-.home-card-link.yellow {
-  color: #d97706;
-}
-
-.home-card-link.blue {
-  color: #2563eb;
-}
-
 .home-deadline-panel {
   background: var(--surface);
   border: 1px solid var(--line);

@@ -9158,8 +9158,6 @@ document.querySelector("#home-deadline-toggle")?.addEventListener("click", () =>
   setHomeDeadlineCollapsed(!panel?.classList.contains("is-collapsed"));
 });
 
-document.querySelector("#home-open-deadlines")?.addEventListener("click", () => setHomeDeadlineCollapsed(false));
-
 function renderEnvironmentalDashboard() {
   environmentalProcesses.forEach(applyProcessDeadlineRules);
   const open = environmentalProcesses.filter((process) => process.status === "open");
