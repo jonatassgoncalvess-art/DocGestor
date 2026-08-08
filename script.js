@@ -350,6 +350,7 @@ function openView(viewName) {
     renderAgenda();
   }
   if (viewName === "documentos-diversos") renderDiverseReminders();
+  if (viewName === "home") renderHomeDeadlines();
   if (viewName === "autorizacoes") renderAuthorizations();
   if (currentUser) sessionStorage.setItem(SESSION_VIEW_KEY, viewName);
 }
@@ -8921,6 +8922,7 @@ function renderDashboard() {
   renderEnvironmentalDashboard();
   renderIptuDashboard();
   renderScheduleDashboard();
+  renderHomeDeadlines();
 }
 
 function renderDashboardTable(targetId, columns, rows, emptyMessage) {
@@ -8933,6 +8935,180 @@ function renderDashboardTable(targetId, columns, rows, emptyMessage) {
       : `<div class="table-row"><span>${emptyMessage}</span><span>-</span><span>-</span><span class="pill green">Em dia</span></div>`
   }`;
 }
+
+function deadlinePanelItemStatus(days) {
+  if (days < 0) return { label: "Vencido", className: "red" };
+  if (days === 0) return { label: "Vence hoje", className: "red" };
+  if (days <= 30) return { label: `${days} dia${days === 1 ? "" : "s"}`, className: "yellow" };
+  return { label: `${days} dias`, className: "green" };
+}
+
+function scheduledDateParts(value) {
+  if (!value) return { date: "", time: "" };
+  const text = String(value);
+  return {
+    date: text.slice(0, 10),
+    time: text.length >= 16 ? text.slice(11, 16) : "",
+  };
+}
+
+function collectHomeDeadlineItems() {
+  const items = new Map();
+  const addItem = ({ title, detail = "", module = "", date = "", time = "", source = "" }) => {
+    const remaining = daysUntil(date);
+    if (remaining === null || remaining > 120) return;
+    const key = `${title}|${detail}|${module}|${date}|${time}`;
+    if (items.has(key)) return;
+    items.set(key, {
+      title,
+      detail,
+      module,
+      date,
+      time,
+      source,
+      remaining,
+      status: deadlinePanelItemStatus(remaining),
+    });
+  };
+
+  activeLicenses().forEach((license) => {
+    addItem({
+      title: `Licença ${license.number || license.type || "ambiental"}`,
+      detail: [license.title, license.company].filter(Boolean).join(" - "),
+      module: "03.1.5 Licenças",
+      date: license.expiryDate,
+      source: "Licença ambiental",
+    });
+  });
+
+  environmentalProcesses.forEach((process) => {
+    if (process.status !== "done") {
+      addItem({
+        title: `Aquisição da licença ${process.internalNumber || process.number || ""}`.trim(),
+        detail: [process.title || process.enterprise, process.company].filter(Boolean).join(" - "),
+        module: "03.1 Licenças Ambientais",
+        date: process.acquisitionDueDate,
+        time: process.acquisitionAlertTime || "09:00",
+        source: "Processo ambiental",
+      });
+    }
+
+    ensureProcessStages(process).forEach((stage) => {
+      if (stage.status === "Concluída") return;
+      addItem({
+        title: `${stage.name || "Etapa"} - ${process.internalNumber || process.number || "Processo"}`,
+        detail: [process.title || process.enterprise, `Bloco ${stage.blockNumber || 1}`].filter(Boolean).join(" - "),
+        module: "03.1 Licenças Ambientais",
+        date: stage.validityDate,
+        time: stage.deadlineTime || "09:00",
+        source: "Etapa do processo",
+      });
+    });
+  });
+
+  diverseReminders.forEach((reminder) => {
+    if (reminder.status === "resolved") return;
+    (reminder.alerts || []).forEach((alert) => {
+      addItem({
+        title: `${alert.label || "Lembrete"} - ${reminder.name || "Documento"}`,
+        detail: reminder.companyLabel || reminder.description || "",
+        module: "03.3 Lembretes Diversos",
+        date: alert.date,
+        time: alert.time || "09:00",
+        source: "Lembrete",
+      });
+    });
+  });
+
+  alertHistoryItems
+    .filter((item) => alertHistoryIsWaiting(item))
+    .forEach((item) => {
+      const schedule = scheduledDateParts(item.raw_payload?.scheduled_for);
+      addItem({
+        title: item.subject || "Alerta programado",
+        detail: item.related_label || "",
+        module: item.raw_payload?.module_id ? sendModuleLabel(item.raw_payload.module_id) : "Alertas",
+        date: schedule.date,
+        time: schedule.time,
+        source: "Fila de alertas",
+      });
+    });
+
+  return [...items.values()].sort((a, b) => {
+    if (a.remaining !== b.remaining) return a.remaining - b.remaining;
+    return `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`);
+  });
+}
+
+function groupedHomeDeadlineItems(items) {
+  return items.reduce((groups, item) => {
+    const moduleName = item.module || "Sem módulo definido";
+    if (!groups.has(moduleName)) groups.set(moduleName, []);
+    groups.get(moduleName).push(item);
+    return groups;
+  }, new Map());
+}
+
+function setHomeDeadlineCollapsed(collapsed) {
+  const panel = document.querySelector(".home-deadline-panel");
+  const layout = document.querySelector(".home-layout");
+  const button = document.querySelector("#home-deadline-toggle");
+  panel?.classList.toggle("is-collapsed", collapsed);
+  layout?.classList.toggle("deadline-panel-collapsed", collapsed);
+  if (button) {
+    button.textContent = collapsed ? "Abrir" : "Minimizar";
+    button.setAttribute("aria-expanded", String(!collapsed));
+  }
+  localStorage.setItem("docgestor.home.deadlineCollapsed", collapsed ? "1" : "0");
+}
+
+function renderHomeDeadlines() {
+  const list = document.querySelector("#home-deadline-list");
+  const count = document.querySelector("#home-deadline-count");
+  if (!list) return;
+  const items = collectHomeDeadlineItems();
+  if (count) count.textContent = items.length;
+  const groups = groupedHomeDeadlineItems(items);
+  list.innerHTML = groups.size
+    ? [...groups.entries()]
+        .map(([moduleName, groupItems]) => `
+          <section class="home-deadline-group">
+            <div class="home-deadline-group-head">
+              <strong>${escapeHtml(moduleName)}</strong>
+              <span>${groupItems.length} ${groupItems.length === 1 ? "documento" : "documentos"}</span>
+            </div>
+            ${groupItems
+              .slice(0, 8)
+              .map((item) => `
+                <article class="home-deadline-item">
+                  <div>
+                    <strong>${escapeHtml(item.title)}</strong>
+                    <span>${escapeHtml(item.detail || item.source || "Sem detalhe complementar")}</span>
+                    <small>${item.time ? `Horário: ${escapeHtml(item.time)}` : "Horário não informado"}</small>
+                  </div>
+                  <div class="home-deadline-date">
+                    <span class="pill ${item.status.className}">${escapeHtml(item.status.label)}</span>
+                    <strong>${escapeHtml(formatAgendaDate(item.date))}</strong>
+                  </div>
+                </article>
+              `)
+              .join("")}
+          </section>
+        `)
+        .join("")
+    : `
+      <article class="home-deadline-empty">
+        <strong>Nenhum vencimento crítico</strong>
+        <span>Assim que houver documentos vencidos ou próximos do vencimento, eles aparecerão aqui.</span>
+      </article>
+    `;
+  setHomeDeadlineCollapsed(localStorage.getItem("docgestor.home.deadlineCollapsed") === "1");
+}
+
+document.querySelector("#home-deadline-toggle")?.addEventListener("click", () => {
+  const panel = document.querySelector(".home-deadline-panel");
+  setHomeDeadlineCollapsed(!panel?.classList.contains("is-collapsed"));
+});
 
 function renderEnvironmentalDashboard() {
   environmentalProcesses.forEach(applyProcessDeadlineRules);
@@ -10353,6 +10529,7 @@ async function processPendingAlertsOnServer() {
         raw_payload: row.raw_payload || {},
       }));
       renderAlertHistory(alertHistoryItems);
+      renderHomeDeadlines();
     }
   } catch (error) {
     console.warn("Não foi possível processar alertas pendentes agora.", error.message);

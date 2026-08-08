@@ -174,71 +174,93 @@
         </header>
 
         <section class="view active" id="home">
-          <div class="home-hero">
-            <div>
-              <p class="eyebrow">00 Home</p>
-              <h2>Bem-vindo ao DocGestor by Carminatti</h2>
-              <p>
-                Um sistema criado para centralizar cadastros, documentos, processos,
-                vencimentos e alertas em uma rotina de gestão mais clara, rastreável e segura.
-              </p>
-            </div>
-            <div class="home-hero-mark">
-              <span>DG</span>
-            </div>
-          </div>
+          <div class="home-layout">
+            <div class="home-main">
+              <div class="home-hero">
+                <div>
+                  <p class="eyebrow">00 Home</p>
+                  <h2>Bem-vindo ao DocGestor by Carminatti</h2>
+                  <p>
+                    Um sistema criado para centralizar cadastros, documentos, processos,
+                    vencimentos e alertas em uma rotina de gestão mais clara, rastreável e segura.
+                  </p>
+                </div>
+                <img class="home-official-logo" src="assets/home-logo-docgestor.png" alt="DocGestor by Carminatti" />
+              </div>
 
-          <div class="home-intro-grid">
-            <article class="home-info-card">
-              <span>Base de controle</span>
-              <h3>Informações mestres bem organizadas</h3>
-              <p>
-                O Painel Admin concentra usuários, permissões, empresas, sócios,
-                cidades, imóveis, empreendimentos, atividades, modelos de documentos
-                e configurações do sistema.
-              </p>
-            </article>
-            <article class="home-info-card">
-              <span>Operação</span>
-              <h3>Processos conduzidos por etapas</h3>
-              <p>
-                Os módulos usam os cadastros para acompanhar processos, check-lists,
-                protocolos, licenças, lembretes e documentos com continuidade entre
-                uma etapa e outra.
-              </p>
-            </article>
-            <article class="home-info-card">
-              <span>Prazos</span>
-              <h3>Alertas e agenda integrados</h3>
-              <p>
-                Datas de vencimento, avisos antecipados e agendamentos ficam
-                registrados para apoiar o cumprimento dos prazos e reduzir riscos
-                de perda de validade ou atraso.
-              </p>
-            </article>
-            <article class="home-info-card">
-              <span>Governança</span>
-              <h3>Histórico e padronização</h3>
-              <p>
-                O sistema prioriza registros claros, relatórios em PDF, controle de
-                acesso por usuário e uma estrutura preparada para receber novos
-                módulos sem bagunçar a operação.
-              </p>
-            </article>
-          </div>
+              <div class="home-intro-grid">
+                <article class="home-info-card">
+                  <span>Base de controle</span>
+                  <h3>Informações mestres bem organizadas</h3>
+                  <p>
+                    O Painel Admin concentra usuários, permissões, empresas, sócios,
+                    cidades, imóveis, empreendimentos, atividades, modelos de documentos
+                    e configurações do sistema.
+                  </p>
+                </article>
+                <article class="home-info-card">
+                  <span>Operação</span>
+                  <h3>Processos conduzidos por etapas</h3>
+                  <p>
+                    Os módulos usam os cadastros para acompanhar processos, check-lists,
+                    protocolos, licenças, lembretes e documentos com continuidade entre
+                    uma etapa e outra.
+                  </p>
+                </article>
+                <article class="home-info-card">
+                  <span>Prazos</span>
+                  <h3>Alertas e agenda integrados</h3>
+                  <p>
+                    Datas de vencimento, avisos antecipados e agendamentos ficam
+                    registrados para apoiar o cumprimento dos prazos e reduzir riscos
+                    de perda de validade ou atraso.
+                  </p>
+                </article>
+                <article class="home-info-card">
+                  <span>Governança</span>
+                  <h3>Histórico e padronização</h3>
+                  <p>
+                    O sistema prioriza registros claros, relatórios em PDF, controle de
+                    acesso por usuário e uma estrutura preparada para receber novos
+                    módulos sem bagunçar a operação.
+                  </p>
+                </article>
+              </div>
 
-          <div class="home-statement">
-            <p>
-              O DocGestor foi pensado para substituir controles soltos por um fluxo
-              único: os dados são cadastrados uma vez, alimentam os módulos
-              operacionais e retornam em forma de acompanhamento, agenda, relatórios
-              e histórico.
-            </p>
-            <p>
-              A proposta é que cada obrigação tenha dono, prazo, documentação,
-              situação atual e trilha de acompanhamento, mantendo a rotina do Grupo
-              Carminatti mais previsível e profissional.
-            </p>
+              <div class="home-statement">
+                <p>
+                  O DocGestor foi pensado para substituir controles soltos por um fluxo
+                  único: os dados são cadastrados uma vez, alimentam os módulos
+                  operacionais e retornam em forma de acompanhamento, agenda, relatórios
+                  e histórico.
+                </p>
+                <p>
+                  A proposta é que cada obrigação tenha dono, prazo, documentação,
+                  situação atual e trilha de acompanhamento, mantendo a rotina do Grupo
+                  Carminatti mais previsível e profissional.
+                </p>
+              </div>
+            </div>
+
+            <aside class="home-deadline-panel">
+              <div class="home-deadline-head">
+                <div>
+                  <p class="eyebrow">Vencimentos</p>
+                  <h3>Documentos em atenção</h3>
+                </div>
+                <div class="home-deadline-controls">
+                  <span id="home-deadline-count">0</span>
+                  <button class="ghost small" id="home-deadline-toggle" type="button" aria-expanded="true">Minimizar</button>
+                </div>
+              </div>
+              <p class="home-deadline-note">Vencidos ou com prazo de 120 dias ou menos.</p>
+              <div class="home-deadline-list" id="home-deadline-list">
+                <article class="home-deadline-empty">
+                  <strong>Nenhum vencimento crítico</strong>
+                  <span>Assim que houver documentos vencidos ou próximos do vencimento, eles aparecerão aqui.</span>
+                </article>
+              </div>
+            </aside>
           </div>
         </section>
 
