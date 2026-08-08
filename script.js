@@ -374,7 +374,10 @@ function openView(viewName) {
     renderAgenda();
   }
   if (viewName === "documentos-diversos") renderDiverseReminders();
-  if (viewName === "home") renderHomeDeadlines();
+  if (viewName === "home") {
+    renderHomeDeadlines();
+    renderHomeSummary();
+  }
   if (viewName === "autorizacoes") renderAuthorizations();
   if (currentUser) sessionStorage.setItem(SESSION_VIEW_KEY, viewName);
 }
@@ -8951,6 +8954,7 @@ function renderDashboard() {
   renderIptuDashboard();
   renderScheduleDashboard();
   renderHomeDeadlines();
+  renderHomeSummary();
 }
 
 function renderDashboardTable(targetId, columns, rows, emptyMessage) {
@@ -9134,10 +9138,25 @@ function renderHomeDeadlines() {
   setHomeDeadlineCollapsed(homeDeadlineCollapsed);
 }
 
+function renderHomeSummary() {
+  const deadlineItems = collectHomeDeadlineItems();
+  const dueToday = deadlineItems.filter((item) => item.remaining === 0).length;
+  const waitingAlerts = alertHistoryItems.filter((item) => alertHistoryIsWaiting(item)).length;
+  const activeProcesses = environmentalProcesses.filter((process) => process.status !== "done").length;
+  const registeredDocuments = environmentalDocuments.length;
+  if (field("home-summary-due-today")) field("home-summary-due-today").textContent = dueToday;
+  if (field("home-summary-unread-alerts")) field("home-summary-unread-alerts").textContent = waitingAlerts;
+  if (field("home-summary-active-processes")) field("home-summary-active-processes").textContent = activeProcesses;
+  if (field("home-summary-recent-documents")) field("home-summary-recent-documents").textContent = registeredDocuments;
+}
+
 document.querySelector("#home-deadline-toggle")?.addEventListener("click", () => {
   const panel = document.querySelector(".home-deadline-panel");
   setHomeDeadlineCollapsed(!panel?.classList.contains("is-collapsed"));
 });
+
+document.querySelector("#home-open-deadlines")?.addEventListener("click", () => setHomeDeadlineCollapsed(false));
+document.querySelector("#home-summary-due-row")?.addEventListener("click", () => setHomeDeadlineCollapsed(false));
 
 function renderEnvironmentalDashboard() {
   environmentalProcesses.forEach(applyProcessDeadlineRules);

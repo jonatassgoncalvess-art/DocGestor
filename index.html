@@ -188,59 +188,100 @@
                     vencimentos e alertas em uma rotina de gestão mais clara, rastreável e segura.
                   </p>
                 </div>
+                <div class="home-hero-visual" aria-hidden="true">
+                  <div class="home-visual-base"></div>
+                  <div class="home-visual-badge"></div>
+                  <div class="home-visual-document">
+                    <span class="home-visual-dot red"></span>
+                    <span class="home-visual-line short"></span>
+                    <span class="home-visual-line"></span>
+                    <span class="home-visual-line"></span>
+                    <span class="home-visual-dot green"></span>
+                  </div>
+                </div>
               </div>
 
-              <div class="home-intro-grid">
-                <article class="home-info-card">
-                  <span>Base de controle</span>
-                  <h3>Informações mestres bem organizadas</h3>
-                  <p>
-                    O Painel Admin concentra usuários, permissões, empresas, sócios,
-                    cidades, imóveis, empreendimentos, atividades, modelos de documentos
-                    e configurações do sistema.
-                  </p>
-                </article>
-                <article class="home-info-card">
-                  <span>Operação</span>
-                  <h3>Processos conduzidos por etapas</h3>
-                  <p>
-                    Os módulos usam os cadastros para acompanhar processos, check-lists,
-                    protocolos, licenças, lembretes e documentos com continuidade entre
-                    uma etapa e outra.
-                  </p>
-                </article>
-                <article class="home-info-card">
-                  <span>Prazos</span>
-                  <h3>Alertas e agenda integrados</h3>
-                  <p>
-                    Datas de vencimento, avisos antecipados e agendamentos ficam
-                    registrados para apoiar o cumprimento dos prazos e reduzir riscos
-                    de perda de validade ou atraso.
-                  </p>
-                </article>
-                <article class="home-info-card">
-                  <span>Governança</span>
-                  <h3>Histórico e padronização</h3>
-                  <p>
-                    O sistema prioriza registros claros, relatórios em PDF, controle de
-                    acesso por usuário e uma estrutura preparada para receber novos
-                    módulos sem bagunçar a operação.
-                  </p>
-                </article>
-              </div>
+              <div class="home-content-grid">
+                <div class="home-intro-grid">
+                  <article class="home-info-card">
+                    <span class="home-card-icon home-card-icon-control"></span>
+                    <div>
+                      <small>Base de controle</small>
+                      <h3>Informações mestres bem organizadas</h3>
+                      <p>
+                        O Painel Admin concentra usuários, permissões, empresas, sócios,
+                        cidades, imóveis, empreendimentos, atividades, modelos de documentos
+                        e configurações do sistema.
+                      </p>
+                      <button class="home-card-link" type="button" data-view-target="admin" data-admin-target="socios-admin">Acessar cadastros</button>
+                    </div>
+                  </article>
+                  <article class="home-info-card">
+                    <span class="home-card-icon home-card-icon-operation"></span>
+                    <div>
+                      <small>Operação</small>
+                      <h3>Processos conduzidos por etapas</h3>
+                      <p>
+                        Os módulos usam os cadastros para acompanhar processos, check-lists,
+                        protocolos, licenças, lembretes e documentos com continuidade entre
+                        uma etapa e outra.
+                      </p>
+                      <button class="home-card-link green" type="button" data-view-target="licencas">Ver processos</button>
+                    </div>
+                  </article>
+                  <article class="home-info-card">
+                    <span class="home-card-icon home-card-icon-deadline"></span>
+                    <div>
+                      <small>Prazos</small>
+                      <h3>Alertas e agenda integrados</h3>
+                      <p>
+                        Datas de vencimento, avisos antecipados e agendamentos ficam
+                        registrados para apoiar o cumprimento dos prazos e reduzir riscos.
+                      </p>
+                      <button class="home-card-link yellow" type="button" id="home-open-deadlines">Ver vencimentos</button>
+                    </div>
+                  </article>
+                  <article class="home-info-card">
+                    <span class="home-card-icon home-card-icon-governance"></span>
+                    <div>
+                      <small>Governança</small>
+                      <h3>Histórico e padronização</h3>
+                      <p>
+                        Registros claros, relatórios em PDF, controle de acesso por usuário
+                        e estrutura preparada para receber novos módulos com organização.
+                      </p>
+                      <button class="home-card-link blue" type="button" data-view-target="dashboard">Ver relatórios</button>
+                    </div>
+                  </article>
+                </div>
 
-              <div class="home-statement">
-                <p>
-                  O DocGestor foi pensado para substituir controles soltos por um fluxo
-                  único: os dados são cadastrados uma vez, alimentam os módulos
-                  operacionais e retornam em forma de acompanhamento, agenda, relatórios
-                  e histórico.
-                </p>
-                <p>
-                  A proposta é que cada obrigação tenha dono, prazo, documentação,
-                  situação atual e trilha de acompanhamento, mantendo a rotina do Grupo
-                  Carminatti mais previsível e profissional.
-                </p>
+                <aside class="home-quick-panel">
+                  <h3>Resumo rápido</h3>
+                  <button class="home-quick-row" type="button" id="home-summary-due-row">
+                    <span class="home-quick-icon red"></span>
+                    <strong id="home-summary-due-today">0</strong>
+                    <span>Vencimentos hoje</span>
+                    <em>›</em>
+                  </button>
+                  <button class="home-quick-row" type="button" data-view-target="admin" data-admin-target="historico-alertas-fila">
+                    <span class="home-quick-icon yellow"></span>
+                    <strong id="home-summary-unread-alerts">0</strong>
+                    <span>Alertas na fila</span>
+                    <em>›</em>
+                  </button>
+                  <button class="home-quick-row" type="button" data-module-license-status="open">
+                    <span class="home-quick-icon green"></span>
+                    <strong id="home-summary-active-processes">0</strong>
+                    <span>Processos em andamento</span>
+                    <em>›</em>
+                  </button>
+                  <button class="home-quick-row" type="button" data-view-target="admin" data-admin-target="documentos-ambientais">
+                    <span class="home-quick-icon blue"></span>
+                    <strong id="home-summary-recent-documents">0</strong>
+                    <span>Documentos cadastrados</span>
+                    <em>›</em>
+                  </button>
+                </aside>
               </div>
             </div>
 
