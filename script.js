@@ -11,6 +11,7 @@ const agendaSubnav = document.querySelector("#agenda-subnav");
 const settingsSubnav = document.querySelector("#settings-subnav");
 const pageBreadcrumb = document.querySelector("#page-breadcrumb");
 const pageSubtitle = document.querySelector("#page-subtitle");
+const pageIcon = document.querySelector("#page-icon");
 const SESSION_USER_KEY = "docgestor.sessionUser";
 const SESSION_VIEW_KEY = "docgestor.sessionView";
 const SESSION_LICENSE_STATUS_KEY = "docgestor.licenseStatus";
@@ -84,6 +85,29 @@ const adminPanelMeta = {
 function setPageChrome(viewName, override = null) {
   const meta = override || pageMeta[viewName] || { breadcrumb: titles[viewName] || "DocGestor", title: titles[viewName] || "DocGestor", subtitle: "" };
   if (title) title.textContent = meta.title;
+  if (pageIcon) {
+    const text = `${meta.breadcrumb || ""} ${meta.title || ""}`.toLowerCase();
+    const iconType = text.includes("ambiental") || text.includes("licença")
+      ? "environmental"
+      : text.includes("agenda") || text.includes("calend")
+        ? "calendar"
+        : text.includes("admin") || text.includes("configura")
+          ? "admin"
+        : text.includes("perfil") || text.includes("usuário")
+          ? "profile"
+          : text.includes("e-mail") || text.includes("alerta") || text.includes("envio")
+            ? "mail"
+            : text.includes("imóvel") || text.includes("cidade") || text.includes("empreendimento")
+              ? "registry"
+              : text.includes("formul") || text.includes("autoriza")
+                ? "forms"
+                : text.includes("painel")
+                  ? "dashboard"
+                  : text.includes("módulo")
+                    ? "modules"
+                    : "home";
+    pageIcon.className = `page-icon page-icon-${iconType}`;
+  }
   if (pageBreadcrumb) pageBreadcrumb.textContent = meta.breadcrumb || meta.title;
   if (pageSubtitle) {
     pageSubtitle.textContent = meta.subtitle || "";
@@ -2512,8 +2536,12 @@ function applyAccessControl() {
     element.hidden = !canAccess("admin");
   });
   const label = field("current-user-label");
-  if (label) label.textContent = currentUser ? `${currentUser.name} - ${currentUser.profile}` : "Usuário";
+  if (label) label.textContent = currentUser ? currentUser.name : "Usuário";
 }
+
+field("current-user-label")?.addEventListener("click", () => {
+  if (currentUser) openView("profile-settings");
+});
 
 function setPermissionChecks(user) {
   const permissions = userPermissions(user);

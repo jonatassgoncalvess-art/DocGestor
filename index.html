@@ -159,16 +159,19 @@
       <main class="main">
         <header class="topbar">
           <div class="page-heading">
-            <span class="page-breadcrumb" id="page-breadcrumb">00 Home</span>
-            <h1 id="page-title">Home</h1>
-            <p id="page-subtitle">Entrada principal do sistema.</p>
+            <span class="page-icon" id="page-icon" aria-hidden="true"></span>
+            <div>
+              <span class="page-breadcrumb" id="page-breadcrumb">00 Home</span>
+              <h1 id="page-title">Home</h1>
+              <p id="page-subtitle">Entrada principal do sistema.</p>
+            </div>
           </div>
           <div class="top-actions">
             <div class="global-search">
               <input id="global-search-input" type="search" placeholder="Buscar ambientes ou processos" autocomplete="off" />
               <div class="global-search-results" id="global-search-results" hidden></div>
             </div>
-            <span class="current-user" id="current-user-label">Usuário</span>
+            <button class="current-user" id="current-user-label" type="button">Usuário</button>
             <button class="ghost" id="logout-button">Sair</button>
           </div>
         </header>
