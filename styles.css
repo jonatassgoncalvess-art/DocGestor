@@ -1988,27 +1988,125 @@ button {
   grid-column: 1 / -1;
 }
 
-.permission-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(220px, 1fr));
-  gap: 10px;
-}
-
-.permission-grid label {
+.permission-toolbar {
   align-items: center;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  color: var(--ink);
-  display: grid;
-  font-size: 13px;
-  grid-template-columns: 20px 1fr;
-  min-height: 42px;
-  padding: 9px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
 }
 
-.permission-grid input {
+.danger-text {
+  color: var(--brand-red);
+}
+
+.permission-matrix {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(280px, 1fr));
+}
+
+.permission-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.05);
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.permission-card.enabled {
+  border-color: rgba(22, 163, 74, 0.38);
+  box-shadow: 0 14px 32px rgba(22, 163, 74, 0.09);
+}
+
+.permission-card:hover {
+  transform: translateY(-1px);
+}
+
+.permission-card p {
+  color: var(--brand-red);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0;
+  margin: 0 0 4px;
+  text-transform: uppercase;
+}
+
+.permission-card h3 {
+  font-size: 18px;
+  margin: 0 0 4px;
+}
+
+.permission-card span {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.permission-switch {
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  font-weight: 800;
+  gap: 10px;
+  justify-content: space-between;
+  min-height: 46px;
+  padding: 10px 12px;
+}
+
+.permission-switch input {
+  accent-color: var(--brand-green);
+  height: 20px;
   min-height: auto;
-  width: 16px;
+  order: 2;
+  width: 20px;
+}
+
+.permission-actions {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.permission-actions label {
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--ink);
+  cursor: pointer;
+  display: flex;
+  font-size: 13px;
+  font-weight: 700;
+  gap: 8px;
+  justify-content: center;
+  min-height: 38px;
+  padding: 8px;
+}
+
+.permission-actions input {
+  accent-color: var(--brand-red);
+  min-height: auto;
+  width: 15px;
+}
+
+.permission-actions input:disabled + span,
+.permission-actions label:has(input:disabled) {
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.permission-core {
+  grid-template-columns: 1fr;
 }
 
 .security-actions {
@@ -3979,7 +4077,7 @@ textarea {
   .admin-layout,
   .admin-crud,
   .user-admin-grid,
-  .permission-grid,
+  .permission-matrix,
   .home-layout,
   .home-content-grid,
   .home-intro-grid,
@@ -4057,7 +4155,7 @@ textarea {
   .admin-crud,
   .user-admin-grid,
   .user-form,
-  .permission-grid,
+  .permission-matrix,
   .home-layout,
   .home-hero,
   .home-content-grid,

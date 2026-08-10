@@ -2457,10 +2457,14 @@ const MASTER_USER = {
   profile: "Administrador Maximo",
   status: "Ativo",
   permissions: ["admin", "dashboard", "modules", "environmental", "iptu", "diverseDocuments", "forms", "agenda", "users", "registries", "adminEnvironmental"],
+  modulePermissions: {},
   isMaster: true,
 };
 
 const MASTER_PASSWORD_KEY = "docgestor.masterPassword";
+const PERMISSION_SCOPES = ["dashboard", "admin", "users", "registries", "adminEnvironmental", "environmental", "iptu", "diverseDocuments", "forms", "agenda"];
+const OPERATIONAL_PERMISSION_KEYS = ["environmental", "iptu", "diverseDocuments", "forms"];
+const ADMIN_PERMISSION_KEYS = ["users", "registries", "adminEnvironmental"];
 
 function masterPassword() {
   return localStorage.getItem(MASTER_PASSWORD_KEY) || "CA123*";
@@ -2494,9 +2498,42 @@ function defaultPermissionsForProfile(profile) {
   return ["dashboard", "modules", "environmental"];
 }
 
+function normalizePermissionKeys(keys = []) {
+  const normalized = [...keys];
+  if (normalized.some((permission) => OPERATIONAL_PERMISSION_KEYS.includes(permission))) normalized.push("modules");
+  if (normalized.some((permission) => ADMIN_PERMISSION_KEYS.includes(permission))) normalized.push("admin");
+  return Array.from(new Set(normalized));
+}
+
 function userPermissions(user) {
-  if (Array.isArray(user?.permissions)) return user.permissions;
-  return defaultPermissionsForProfile(user?.profile);
+  if (Array.isArray(user?.permissions)) return normalizePermissionKeys(user.permissions);
+  return normalizePermissionKeys(defaultPermissionsForProfile(user?.profile));
+}
+
+function defaultPermissionMatrix(permissions = []) {
+  return PERMISSION_SCOPES.reduce((matrix, scope) => {
+    matrix[scope] = {
+      view: permissions.includes(scope),
+      create: false,
+      edit: false,
+      delete: false,
+    };
+    return matrix;
+  }, {});
+}
+
+function normalizedPermissionMatrix(user) {
+  const permissions = userPermissions(user);
+  const base = defaultPermissionMatrix(permissions);
+  const saved = user?.modulePermissions || {};
+  PERMISSION_SCOPES.forEach((scope) => {
+    base[scope] = {
+      ...base[scope],
+      ...(saved[scope] || {}),
+      view: Boolean((saved[scope] && saved[scope].view) || permissions.includes(scope)),
+    };
+  });
+  return base;
 }
 
 function canAccess(permissionKey) {
@@ -2564,15 +2601,75 @@ field("current-user-label")?.addEventListener("click", () => {
 
 function setPermissionChecks(user) {
   const permissions = userPermissions(user);
+  const matrix = normalizedPermissionMatrix(user);
   document.querySelectorAll("[data-permission-key]").forEach((input) => {
     input.checked = permissions.includes(input.dataset.permissionKey);
   });
+  document.querySelectorAll("[data-permission-scope]").forEach((input) => {
+    const scope = input.dataset.permissionScope;
+    const action = input.dataset.permissionAction || "view";
+    const scopeRules = matrix[scope] || {};
+    input.checked = Boolean(scopeRules[action]);
+  });
+  updatePermissionActionState();
 }
 
 function readPermissionChecks() {
-  return Array.from(document.querySelectorAll("[data-permission-key]"))
+  const selected = Array.from(document.querySelectorAll("[data-permission-key]"))
     .filter((input) => input.checked)
     .map((input) => input.dataset.permissionKey);
+  return normalizePermissionKeys(selected);
+}
+
+function readPermissionMatrix() {
+  const matrix = defaultPermissionMatrix(readPermissionChecks());
+  document.querySelectorAll("[data-permission-scope]").forEach((input) => {
+    const scope = input.dataset.permissionScope;
+    const action = input.dataset.permissionAction || "view";
+    if (!matrix[scope]) matrix[scope] = { view: false, create: false, edit: false, delete: false };
+    matrix[scope][action] = Boolean(input.checked);
+  });
+  Object.keys(matrix).forEach((scope) => {
+    if (!matrix[scope].view) {
+      matrix[scope].create = false;
+      matrix[scope].edit = false;
+      matrix[scope].delete = false;
+    }
+  });
+  return matrix;
+}
+
+function updatePermissionActionState() {
+  document.querySelectorAll(".permission-card").forEach((card) => {
+    const viewInput = card.querySelector('[data-permission-action="view"]');
+    const hasAccess = Boolean(viewInput?.checked);
+    card.classList.toggle("enabled", hasAccess);
+    card.querySelectorAll('[data-permission-action]:not([data-permission-action="view"])').forEach((input) => {
+      input.disabled = !hasAccess;
+      if (!hasAccess) input.checked = false;
+    });
+  });
+}
+
+function applyPermissionPreset(type) {
+  document.querySelectorAll("[data-permission-scope]").forEach((input) => {
+    input.checked = false;
+  });
+  if (type === "operator") {
+    ["dashboard", "environmental", "agenda"].forEach((scope) => {
+      document.querySelector(`[data-permission-scope="${scope}"][data-permission-action="view"]`)?.click();
+    });
+  }
+  if (type === "admin") {
+    ["dashboard", "admin", "users", "registries", "adminEnvironmental", "environmental", "iptu", "diverseDocuments", "forms", "agenda"].forEach((scope) => {
+      const viewInput = document.querySelector(`[data-permission-scope="${scope}"][data-permission-action="view"]`);
+      if (viewInput) viewInput.checked = true;
+    });
+    document.querySelectorAll('[data-permission-action="create"], [data-permission-action="edit"], [data-permission-action="delete"]').forEach((input) => {
+      input.checked = true;
+    });
+  }
+  updatePermissionActionState();
 }
 
 function loginError(message) {
@@ -2817,6 +2914,18 @@ function userStatusClass(status) {
   return "yellow";
 }
 
+function userPermissionSummary(user) {
+  const permissions = userPermissions(user);
+  const modules = [
+    permissions.includes("environmental") ? "Ambiental" : "",
+    permissions.includes("iptu") ? "IPTU" : "",
+    permissions.includes("diverseDocuments") ? "Lembretes" : "",
+    permissions.includes("forms") ? "Formulários" : "",
+    permissions.includes("agenda") ? "Agenda" : "",
+  ].filter(Boolean);
+  return modules.length ? `${modules.length} módulo(s): ${modules.join(", ")}` : "Sem módulos operacionais liberados";
+}
+
 function renderUsers() {
   if (!userList) return;
   userCount.textContent = `${users.length} itens`;
@@ -2827,6 +2936,7 @@ function renderUsers() {
           <div>
             <strong>${user.name}</strong>
             <small>${user.email}</small>
+            <small>${userPermissionSummary(user)}</small>
           </div>
           <div>
             <span>${user.profile}</span>
@@ -2878,10 +2988,32 @@ async function persistUser(user, wasExisting) {
       selectedUserId = saved.id;
       renderUsers();
     }
+    await persistUserPermissionMatrix(user);
     await syncUserAlertRecipient(user);
   } catch (error) {
     console.warn("Não foi possível salvar o usuário no Supabase.", error.message);
     alert(`Não foi possível salvar o usuário no banco: ${error.message}`);
+  }
+}
+
+async function persistUserPermissionMatrix(user) {
+  if (!window.DocGestorDB || user?.isMaster || !looksLikeUuid(user?.id)) return;
+  const matrix = normalizedPermissionMatrix(user);
+  try {
+    await window.DocGestorDB.removeWhere("user_permissions", `user_id=eq.${encodeURIComponent(user.id)}`);
+    const rows = Object.entries(matrix)
+      .filter(([, rules]) => rules.view || rules.create || rules.edit || rules.delete)
+      .map(([moduleCode, rules]) => ({
+        user_id: user.id,
+        module_code: moduleCode,
+        can_view: Boolean(rules.view),
+        can_create: Boolean(rules.create),
+        can_edit: Boolean(rules.edit),
+        can_delete: Boolean(rules.delete),
+      }));
+    await Promise.all(rows.map((row) => window.DocGestorDB.create("user_permissions", row)));
+  } catch (error) {
+    console.warn("Não foi possível salvar as permissões por módulo no Supabase.", error.message);
   }
 }
 
@@ -2904,6 +3036,7 @@ async function saveCurrentUser() {
     status: existing?.status || "Ativo",
     password: existing?.password || "123456",
     permissions: Array.isArray(existing?.permissions) ? existing.permissions : [],
+    modulePermissions: existing?.modulePermissions || {},
   };
 
   if (existing) {
@@ -2995,11 +3128,30 @@ document.querySelector("#profile-password-save")?.addEventListener("click", save
 document.querySelector("#permissions-save")?.addEventListener("click", async () => {
   const user = selectedUser();
   user.permissions = readPermissionChecks();
+  user.modulePermissions = readPermissionMatrix();
   await persistUser(user, looksLikeUuid(user.id));
   closeModal("permissions-modal");
   addUserLog("Permissões salvas", `Permissões exclusivas atualizadas para ${user.name}.`);
   if (currentUser && sameId(currentUser.id, user.id)) applyAccessControl();
 });
+permissionsModal?.addEventListener("change", (event) => {
+  const input = event.target.closest("[data-permission-scope]");
+  if (!input) return;
+  const scope = input.dataset.permissionScope;
+  const action = input.dataset.permissionAction || "view";
+  if (action !== "view" && input.checked) {
+    const viewInput = permissionsModal.querySelector(`[data-permission-scope="${scope}"][data-permission-action="view"]`);
+    if (viewInput) viewInput.checked = true;
+  }
+  if (ADMIN_PERMISSION_KEYS.includes(scope) && input.checked) {
+    const adminInput = permissionsModal.querySelector('[data-permission-scope="admin"][data-permission-action="view"]');
+    if (adminInput) adminInput.checked = true;
+  }
+  updatePermissionActionState();
+});
+document.querySelector("#permissions-operator")?.addEventListener("click", () => applyPermissionPreset("operator"));
+document.querySelector("#permissions-admin")?.addEventListener("click", () => applyPermissionPreset("admin"));
+document.querySelector("#permissions-clear")?.addEventListener("click", () => applyPermissionPreset("clear"));
 document.querySelector("#confirm-password-reset")?.addEventListener("click", () => {
   const user = users.find((item) => sameId(item.id, passwordResetUserId));
   if (!user) return;
@@ -10177,6 +10329,7 @@ async function loadSupabaseData() {
     agendaRows,
     alertHistoryRows,
     userRows,
+    userPermissionRows,
     backupRows,
     systemEmailRows,
     authorizationRows,
@@ -10207,6 +10360,7 @@ async function loadSupabaseData() {
     dbList("agenda_events"),
     dbList("alert_history", "select=*&order=created_at.desc"),
     dbList("app_users"),
+    dbList("user_permissions"),
     dbList("system_backup_configs", "select=*&order=updated_at.desc&limit=1"),
     dbList("system_email_configs", "select=*&order=updated_at.desc&limit=1"),
     dbList("form_authorizations", "select=*&order=created_at.desc"),
@@ -10516,20 +10670,39 @@ async function loadSupabaseData() {
     createdAt: row.created_at || "",
   }));
 
-  users = userRows.map((row) => ({
-    id: row.id,
-    name: row.name,
-    email: row.email,
-    phone: row.phone || "",
-    cpf: row.cpf || "",
-    roleTitle: row.role_title || "",
-    company: companyById[row.company_id]?.name || "",
-    branch: companyById[row.branch_id]?.name || "",
-    profile: row.profile || "Consulta",
-    status: row.status || "Ativo",
-    password: row.password || "123456",
-    permissions: Array.isArray(row.permissions) ? row.permissions : [],
-  }));
+  const permissionsByUserId = userPermissionRows.reduce((acc, row) => {
+    if (!row.user_id || !row.module_code) return acc;
+    if (!acc[row.user_id]) acc[row.user_id] = {};
+    acc[row.user_id][row.module_code] = {
+      view: Boolean(row.can_view),
+      create: Boolean(row.can_create),
+      edit: Boolean(row.can_edit),
+      delete: Boolean(row.can_delete),
+    };
+    return acc;
+  }, {});
+
+  users = userRows.map((row) => {
+    const modulePermissions = permissionsByUserId[row.id] || {};
+    const permissionKeys = Object.entries(modulePermissions)
+      .filter(([, rules]) => rules.view)
+      .map(([moduleCode]) => moduleCode);
+    return {
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      phone: row.phone || "",
+      cpf: row.cpf || "",
+      roleTitle: row.role_title || "",
+      company: companyById[row.company_id]?.name || "",
+      branch: companyById[row.branch_id]?.name || "",
+      profile: row.profile || "Consulta",
+      status: row.status || "Ativo",
+      password: row.password || "123456",
+      permissions: permissionKeys.length ? permissionKeys : Array.isArray(row.permissions) ? row.permissions : [],
+      modulePermissions,
+    };
+  });
   await syncUserAlertRecipients();
 
   if (backupRows[0]) {
