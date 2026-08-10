@@ -3,6 +3,10 @@
     {
       "path": "/api/processar-alertas",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/processar-backups",
+      "schedule": "*/15 * * * *"
     }
   ]
 }

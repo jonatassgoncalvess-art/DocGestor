@@ -52,6 +52,11 @@ create index if not exists idx_system_backup_configs_updated_at on system_backup
 create index if not exists idx_system_backup_runs_started_at on system_backup_runs(started_at desc);
 create index if not exists idx_system_backup_runs_status on system_backup_runs(status);
 
+insert into storage.buckets (id, name, public)
+values ('docgestor-backups', 'docgestor-backups', false)
+on conflict (id) do update
+set public = false;
+
 alter table system_backup_configs enable row level security;
 alter table system_backup_runs enable row level security;
 

@@ -3375,6 +3375,7 @@ function backupProviderLabel(value) {
 
 function backupStatusClass(status) {
   if (status === "Pausado") return "yellow";
+  if (status === "Executando") return "yellow";
   if (status === "Falhou") return "red";
   return "green";
 }
@@ -3538,22 +3539,62 @@ async function saveBackupConfig() {
 function testBackupDestination() {
   const payload = backupFormPayload();
   const message = payload.provider === "supabase"
-    ? "Destino valido para a primeira versao. Crie um bucket privado no Supabase Storage com esse nome/caminho antes de ativar a rotina real."
+    ? "Destino válido. A rotina backend cria o bucket privado automaticamente quando a chave service role estiver configurada na Vercel."
     : "Destino registrado. Para envio automático real, será necessário configurar a credencial segura desse provedor no backend.";
   alert(`${backupProviderLabel(payload.provider)}\n${payload.destination}\n\n${message}`);
 }
 
 async function generateBackupNow() {
-  const confirmed = window.confirm("Deseja registrar uma execucao manual de backup agora?");
+  const confirmed = window.confirm("Deseja gerar um backup real agora, usando a configuração atual?");
   if (!confirmed) return;
   Object.assign(backupConfig, backupFormPayload());
-  backupConfig.lastBackup = new Date().toISOString();
+  backupConfig.status = "Executando";
   backupConfig.nextBackup = computeNextBackupDate(backupConfig);
-  backupConfig.status = "Configurado";
   persistBackupConfigLocal();
   renderBackupConfig();
   await persistBackupConfigSupabase();
-  alert("Backup manual registrado. A geração real do arquivo será feita quando conectarmos a rotina backend.");
+  try {
+    const response = await fetch("/api/processar-backups", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        configId: backupConfig.id,
+        config: {
+          id: backupConfig.id,
+          enabled: backupConfig.enabled,
+          frequency: backupConfig.frequency,
+          time: backupConfig.time,
+          retentionDays: backupConfig.retentionDays,
+          weekday: backupConfig.weekday,
+          monthday: backupConfig.monthday,
+          provider: backupConfig.provider,
+          destination: backupConfig.destination,
+          status: backupConfig.status,
+          nextBackup: backupConfig.nextBackup,
+        },
+      }),
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || "Não foi possível gerar o backup.");
+    }
+    backupConfig.lastBackup = result.lastBackup || new Date().toISOString();
+    backupConfig.nextBackup = result.nextBackup || computeNextBackupDate(backupConfig);
+    backupConfig.status = "Configurado";
+    persistBackupConfigLocal();
+    renderBackupConfig();
+    await persistBackupConfigSupabase();
+    const warning = result.tableErrors && Object.keys(result.tableErrors).length
+      ? `\n\nAtenção: algumas tabelas não entraram no backup porque ainda não existem no banco: ${Object.keys(result.tableErrors).join(", ")}.`
+      : "";
+    alert(`Backup gerado com sucesso.\nArquivo: ${result.fileUrl || result.fileName}${warning}`);
+  } catch (error) {
+    backupConfig.status = "Falhou";
+    persistBackupConfigLocal();
+    renderBackupConfig();
+    await persistBackupConfigSupabase();
+    alert(`Não foi possível gerar o backup real: ${error.message}`);
+  }
 }
 
 ["backup-enabled", "backup-frequency", "backup-time", "backup-retention", "backup-weekday", "backup-monthday", "backup-provider", "backup-destination"].forEach((id) => {
