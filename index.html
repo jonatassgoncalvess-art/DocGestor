@@ -1549,114 +1549,11 @@
           <button class="ghost small" data-close-modal="permissions-modal">Fechar</button>
         </div>
         <div class="permission-toolbar">
-          <button class="ghost small" type="button" id="permissions-operator">Acesso operacional</button>
-          <button class="ghost small" type="button" id="permissions-admin">Acesso administrativo</button>
+          <button class="ghost small" type="button" id="permissions-operator">Operacional básico</button>
+          <button class="ghost small" type="button" id="permissions-admin">Todos os ambientes</button>
           <button class="ghost small danger-text" type="button" id="permissions-clear">Limpar acessos</button>
         </div>
-        <div class="permission-matrix" aria-label="Autorizações por módulo">
-          <article class="permission-card permission-core">
-            <div>
-              <p>Base do sistema</p>
-              <h3>Entrada e painéis</h3>
-              <span>Libera a visão geral e a navegação principal.</span>
-            </div>
-            <label class="permission-switch">
-              <input type="checkbox" data-permission-key="dashboard" data-permission-scope="dashboard" data-permission-action="view" />
-              <span>Visualizar</span>
-            </label>
-          </article>
-          <article class="permission-card">
-            <div>
-              <p>01 Painel Admin</p>
-              <h3>Administração</h3>
-              <span>Configura usuários, cadastros, ambiental administrativo, envios e backups.</span>
-            </div>
-            <label class="permission-switch">
-              <input type="checkbox" data-permission-key="admin" data-permission-scope="admin" data-permission-action="view" />
-              <span>Acessar painel</span>
-            </label>
-            <div class="permission-actions">
-              <label><input type="checkbox" data-permission-key="users" data-permission-scope="users" data-permission-action="view" /> Usuários</label>
-              <label><input type="checkbox" data-permission-key="registries" data-permission-scope="registries" data-permission-action="view" /> Cadastros</label>
-              <label><input type="checkbox" data-permission-key="adminEnvironmental" data-permission-scope="adminEnvironmental" data-permission-action="view" /> Ambiental</label>
-            </div>
-          </article>
-          <article class="permission-card">
-            <div>
-              <p>03.1 Módulo</p>
-              <h3>Licenças Ambientais</h3>
-              <span>Processos, etapas, licenças, alertas e dossiês ambientais.</span>
-            </div>
-            <label class="permission-switch">
-              <input type="checkbox" data-permission-key="environmental" data-permission-scope="environmental" data-permission-action="view" />
-              <span>Acessar módulo</span>
-            </label>
-            <div class="permission-actions">
-              <label><input type="checkbox" data-permission-scope="environmental" data-permission-action="create" /> Cadastrar</label>
-              <label><input type="checkbox" data-permission-scope="environmental" data-permission-action="edit" /> Editar</label>
-              <label><input type="checkbox" data-permission-scope="environmental" data-permission-action="delete" /> Excluir</label>
-            </div>
-          </article>
-          <article class="permission-card">
-            <div>
-              <p>03.2 Módulo</p>
-              <h3>IPTU</h3>
-              <span>Permissão preparada para o módulo de IPTU.</span>
-            </div>
-            <label class="permission-switch">
-              <input type="checkbox" data-permission-key="iptu" data-permission-scope="iptu" data-permission-action="view" />
-              <span>Acessar módulo</span>
-            </label>
-            <div class="permission-actions">
-              <label><input type="checkbox" data-permission-scope="iptu" data-permission-action="create" /> Cadastrar</label>
-              <label><input type="checkbox" data-permission-scope="iptu" data-permission-action="edit" /> Editar</label>
-              <label><input type="checkbox" data-permission-scope="iptu" data-permission-action="delete" /> Excluir</label>
-            </div>
-          </article>
-          <article class="permission-card">
-            <div>
-              <p>03.3 Módulo</p>
-              <h3>Lembretes Diversos</h3>
-              <span>Agendamentos avulsos, prazos e avisos por e-mail.</span>
-            </div>
-            <label class="permission-switch">
-              <input type="checkbox" data-permission-key="diverseDocuments" data-permission-scope="diverseDocuments" data-permission-action="view" />
-              <span>Acessar módulo</span>
-            </label>
-            <div class="permission-actions">
-              <label><input type="checkbox" data-permission-scope="diverseDocuments" data-permission-action="create" /> Cadastrar</label>
-              <label><input type="checkbox" data-permission-scope="diverseDocuments" data-permission-action="edit" /> Editar</label>
-              <label><input type="checkbox" data-permission-scope="diverseDocuments" data-permission-action="delete" /> Excluir</label>
-            </div>
-          </article>
-          <article class="permission-card">
-            <div>
-              <p>03.4 Módulo</p>
-              <h3>Formulários</h3>
-              <span>Formulários operacionais e autorizações internas.</span>
-            </div>
-            <label class="permission-switch">
-              <input type="checkbox" data-permission-key="forms" data-permission-scope="forms" data-permission-action="view" />
-              <span>Acessar módulo</span>
-            </label>
-            <div class="permission-actions">
-              <label><input type="checkbox" data-permission-scope="forms" data-permission-action="create" /> Cadastrar</label>
-              <label><input type="checkbox" data-permission-scope="forms" data-permission-action="edit" /> Editar</label>
-              <label><input type="checkbox" data-permission-scope="forms" data-permission-action="delete" /> Excluir</label>
-            </div>
-          </article>
-          <article class="permission-card permission-core">
-            <div>
-              <p>04 Agenda</p>
-              <h3>Calendário e anotações</h3>
-              <span>Permite acessar compromissos e alertas da agenda.</span>
-            </div>
-            <label class="permission-switch">
-              <input type="checkbox" data-permission-key="agenda" data-permission-scope="agenda" data-permission-action="view" />
-              <span>Acessar agenda</span>
-            </label>
-          </article>
-        </div>
+        <div class="permission-list" id="permission-list" aria-label="Lista de ambientes autorizados"></div>
         <div class="modal-actions">
           <button class="ghost" data-close-modal="permissions-modal">Cancelar</button>
           <button class="primary" id="permissions-save">Salvar permissões</button>

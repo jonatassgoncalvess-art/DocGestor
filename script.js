@@ -308,7 +308,8 @@ function createUuid() {
 
 function openView(viewName) {
   const requiredPermission = viewPermission(viewName);
-  if (currentUser && !canAccess(requiredPermission)) {
+  const requiredEnvironment = environmentCodeForView(viewName);
+  if (currentUser && (!canAccess(requiredPermission) || (requiredEnvironment && !canAccessEnvironmentCode(requiredEnvironment)))) {
     openView(firstAccessibleView());
     return;
   }
@@ -503,6 +504,11 @@ function openAdminPanel(panelName) {
 }
 
 function openAdminSearchPanel(panelName) {
+  const code = environmentCodeForAdminTarget(panelName);
+  if (code && currentUser && !canAccessEnvironmentCode(code)) {
+    openView(firstAccessibleView());
+    return;
+  }
   openView("admin");
   if (adminSubnav) {
     adminSubnav.classList.add("open");
@@ -513,6 +519,8 @@ function openAdminSearchPanel(panelName) {
 
 document.querySelectorAll("[data-admin-target]").forEach((button) => {
   button.addEventListener("click", () => {
+    const code = environmentCodeForAdminTarget(button.dataset.adminTarget);
+    if (code && currentUser && !canAccessEnvironmentCode(code)) return;
     openView("admin");
     if (adminSubnav) {
       adminSubnav.classList.add("open");
@@ -620,7 +628,14 @@ function searchableProcessItems() {
 }
 
 function globalSearchItems() {
-  return [...searchableEnvironments, ...searchableProcessItems()].filter((item) => canAccess(item.permission));
+  return [...searchableEnvironments, ...searchableProcessItems()].filter((item) => {
+    if (!canAccess(item.permission)) return false;
+    if (item.code && searchableEnvironments.some((environment) => environment.code === item.code)) {
+      if (item.code === "00" || item.code === "05.1") return true;
+      return canAccessEnvironmentCode(item.code);
+    }
+    return true;
+  });
 }
 
 function closeGlobalSearch() {
@@ -2458,6 +2473,7 @@ const MASTER_USER = {
   status: "Ativo",
   permissions: ["admin", "dashboard", "modules", "environmental", "iptu", "diverseDocuments", "forms", "agenda", "users", "registries", "adminEnvironmental"],
   modulePermissions: {},
+  environmentAccess: [],
   isMaster: true,
 };
 
@@ -2465,6 +2481,7 @@ const MASTER_PASSWORD_KEY = "docgestor.masterPassword";
 const PERMISSION_SCOPES = ["dashboard", "admin", "users", "registries", "adminEnvironmental", "environmental", "iptu", "diverseDocuments", "forms", "agenda"];
 const OPERATIONAL_PERMISSION_KEYS = ["environmental", "iptu", "diverseDocuments", "forms"];
 const ADMIN_PERMISSION_KEYS = ["users", "registries", "adminEnvironmental"];
+const ENV_PERMISSION_PREFIX = "env:";
 
 function masterPassword() {
   return localStorage.getItem(MASTER_PASSWORD_KEY) || "CA123*";
@@ -2508,6 +2525,99 @@ function normalizePermissionKeys(keys = []) {
 function userPermissions(user) {
   if (Array.isArray(user?.permissions)) return normalizePermissionKeys(user.permissions);
   return normalizePermissionKeys(defaultPermissionsForProfile(user?.profile));
+}
+
+function permissionEnvironmentItems() {
+  return searchableEnvironments
+    .filter((item) => item.code !== "00" && item.code !== "05.1")
+    .map((item) => ({
+      ...item,
+      group: item.code.split(".")[0],
+      parentCode: item.code.includes(".") ? item.code.slice(0, item.code.lastIndexOf(".")) : "",
+    }));
+}
+
+function normalizeEnvironmentAccess(codes = []) {
+  const validCodes = new Set(permissionEnvironmentItems().map((item) => item.code));
+  const normalized = new Set();
+  codes.filter(Boolean).forEach((code) => {
+    normalized.add(code);
+    const parts = code.split(".");
+    while (parts.length > 1) {
+      parts.pop();
+      const parentCode = parts.join(".");
+      if (validCodes.has(parentCode)) normalized.add(parentCode);
+    }
+  });
+  return Array.from(normalized).sort((a, b) => Number(a.split(".")[0]) - Number(b.split(".")[0]) || a.localeCompare(b, "pt-BR", { numeric: true }));
+}
+
+function environmentAccess(user) {
+  if (user?.isMaster) return permissionEnvironmentItems().map((item) => item.code);
+  if (Array.isArray(user?.environmentAccess) && user.environmentAccess.length) return normalizeEnvironmentAccess(user.environmentAccess);
+  const permissions = userPermissions(user);
+  return normalizeEnvironmentAccess(permissionEnvironmentItems()
+    .filter((item) => permissions.includes(item.permission))
+    .map((item) => item.code));
+}
+
+function canAccessEnvironmentCode(code, user = currentUser) {
+  if (!code || !user) return true;
+  if (user.isMaster) return true;
+  return environmentAccess(user).includes(code);
+}
+
+function environmentCodeForAdminTarget(target) {
+  return {
+    "usuarios-admin": "01.1",
+    "socios-admin": "01.2.1",
+    "empresas-filiais": "01.2.2",
+    "cidades-admin": "01.2.3",
+    "imoveis-admin": "01.2.4",
+    "imoveis-urbanos-admin": "01.2.4.1",
+    "imoveis-rurais-admin": "01.2.4.2",
+    "painel-imoveis-admin": "01.2.4.3",
+    "empreendimentos-admin": "01.2.5",
+    "atividades-admin": "01.2.6",
+    "tipos-licencas": "01.3.1",
+    "documentos-ambientais": "01.3.2",
+    "modelos-checklist": "01.3.3",
+    "email-sistema": "01.4.1",
+    "envios-admin": "01.4.2",
+    "historico-alertas": "01.4.3",
+    "historico-alertas-fila": "01.4.3.1",
+    "historico-alertas-enviados": "01.4.3.2",
+    "backup-sistema": "01.5.1",
+  }[target] || "";
+}
+
+function environmentCodeForView(viewName) {
+  return {
+    admin: "01",
+    dashboard: "02",
+    "dashboard-ambiental": "02.1",
+    "dashboard-iptu": "02.2",
+    "dashboard-agendamentos": "02.3",
+    modulos: "03",
+    licencas: "03.1",
+    iptu: "03.2",
+    "documentos-diversos": "03.3",
+    formularios: "03.4",
+    autorizacoes: "03.4.1",
+    agenda: "04.1",
+    "agenda-notes": "04.2",
+  }[viewName] || "";
+}
+
+function environmentCodeForLicenseStatus(status) {
+  return {
+    general: "03.1",
+    open: "03.1.1",
+    pending: "03.1.2",
+    expired: "03.1.3",
+    done: "03.1.4",
+    licenses: "03.1.5",
+  }[status] || "03.1";
 }
 
 function defaultPermissionMatrix(permissions = []) {
@@ -2564,20 +2674,24 @@ function viewPermission(viewName) {
 }
 
 function firstAccessibleView() {
-  if (canAccess("dashboard")) return "dashboard";
-  if (canAccess("environmental")) return "licencas";
-  if (canAccess("iptu")) return "iptu";
-  if (canAccess("diverseDocuments")) return "documentos-diversos";
-  if (canAccess("forms")) return "formularios";
-  if (canAccess("agenda")) return "agenda";
-  if (canAccess("admin")) return "admin";
-  if (canAccess("modules")) return "modulos";
+  if (canAccessEnvironmentCode("02") && canAccess("dashboard")) return "dashboard";
+  if (canAccessEnvironmentCode("03.1") && canAccess("environmental")) return "licencas";
+  if (canAccessEnvironmentCode("03.2") && canAccess("iptu")) return "iptu";
+  if (canAccessEnvironmentCode("03.3") && canAccess("diverseDocuments")) return "documentos-diversos";
+  if (canAccessEnvironmentCode("03.4") && canAccess("forms")) return "formularios";
+  if (canAccessEnvironmentCode("04.1") && canAccess("agenda")) return "agenda";
+  if (canAccessEnvironmentCode("01") && canAccess("admin")) return "admin";
+  if (canAccessEnvironmentCode("03") && canAccess("modules")) return "modulos";
   return "home";
 }
 
 function applyAccessControl() {
   document.querySelectorAll("[data-permission-view]").forEach((element) => {
     element.hidden = !canAccess(element.dataset.permissionView);
+  });
+  document.querySelectorAll("[data-view]").forEach((element) => {
+    const code = environmentCodeForView(element.dataset.view);
+    if (code && !canAccessEnvironmentCode(code)) element.hidden = true;
   });
   document.querySelectorAll('[data-admin-target="usuarios-admin"]').forEach((element) => {
     element.hidden = !canAccess("users");
@@ -2591,6 +2705,26 @@ function applyAccessControl() {
   document.querySelectorAll('[data-admin-target="email-sistema"], [data-admin-target="envios-admin"], [data-admin-target="historico-alertas"], [data-admin-target="historico-alertas-fila"], [data-admin-target="historico-alertas-enviados"], [data-admin-target="backup-sistema"]').forEach((element) => {
     element.hidden = !canAccess("admin");
   });
+  document.querySelectorAll("[data-admin-target]").forEach((element) => {
+    const code = environmentCodeForAdminTarget(element.dataset.adminTarget);
+    if (code && !canAccessEnvironmentCode(code)) element.hidden = true;
+  });
+  document.querySelectorAll("[data-dashboard-target]").forEach((element) => {
+    const code = environmentCodeForView(element.dataset.dashboardTarget);
+    if (code && !canAccessEnvironmentCode(code)) element.hidden = true;
+  });
+  document.querySelectorAll("[data-view-target]").forEach((element) => {
+    const code = environmentCodeForView(element.dataset.viewTarget);
+    if (code && !canAccessEnvironmentCode(code)) element.hidden = true;
+  });
+  document.querySelectorAll("[data-module-license-status]").forEach((element) => {
+    const code = environmentCodeForLicenseStatus(element.dataset.moduleLicenseStatus);
+    if (code && !canAccessEnvironmentCode(code)) element.hidden = true;
+  });
+  document.querySelectorAll("[data-agenda-target]").forEach((element) => {
+    const code = environmentCodeForView(element.dataset.agendaTarget);
+    if (code && !canAccessEnvironmentCode(code)) element.hidden = true;
+  });
   const label = field("current-user-label");
   if (label) label.textContent = currentUser ? currentUser.name : "Usuário";
 }
@@ -2600,75 +2734,105 @@ field("current-user-label")?.addEventListener("click", () => {
 });
 
 function setPermissionChecks(user) {
-  const permissions = userPermissions(user);
-  const matrix = normalizedPermissionMatrix(user);
-  document.querySelectorAll("[data-permission-key]").forEach((input) => {
-    input.checked = permissions.includes(input.dataset.permissionKey);
-  });
-  document.querySelectorAll("[data-permission-scope]").forEach((input) => {
-    const scope = input.dataset.permissionScope;
-    const action = input.dataset.permissionAction || "view";
-    const scopeRules = matrix[scope] || {};
-    input.checked = Boolean(scopeRules[action]);
-  });
-  updatePermissionActionState();
+  renderPermissionList(user);
 }
 
 function readPermissionChecks() {
-  const selected = Array.from(document.querySelectorAll("[data-permission-key]"))
-    .filter((input) => input.checked)
-    .map((input) => input.dataset.permissionKey);
+  const selectedEnvironmentCodes = readEnvironmentChecks();
+  const selected = permissionEnvironmentItems()
+    .filter((item) => selectedEnvironmentCodes.includes(item.code))
+    .map((item) => item.permission)
+    .filter(Boolean);
   return normalizePermissionKeys(selected);
+}
+
+function readEnvironmentChecks() {
+  return normalizeEnvironmentAccess(Array.from(document.querySelectorAll("[data-permission-env-code]"))
+    .filter((input) => input.checked)
+    .map((input) => input.dataset.permissionEnvCode));
 }
 
 function readPermissionMatrix() {
   const matrix = defaultPermissionMatrix(readPermissionChecks());
-  document.querySelectorAll("[data-permission-scope]").forEach((input) => {
-    const scope = input.dataset.permissionScope;
-    const action = input.dataset.permissionAction || "view";
-    if (!matrix[scope]) matrix[scope] = { view: false, create: false, edit: false, delete: false };
-    matrix[scope][action] = Boolean(input.checked);
-  });
-  Object.keys(matrix).forEach((scope) => {
-    if (!matrix[scope].view) {
-      matrix[scope].create = false;
-      matrix[scope].edit = false;
-      matrix[scope].delete = false;
-    }
+  readEnvironmentChecks().forEach((code) => {
+    const item = permissionEnvironmentItems().find((environmentItem) => environmentItem.code === code);
+    const scope = item?.permission;
+    if (!scope || !matrix[scope]) return;
+    matrix[scope].view = true;
   });
   return matrix;
 }
 
 function updatePermissionActionState() {
-  document.querySelectorAll(".permission-card").forEach((card) => {
-    const viewInput = card.querySelector('[data-permission-action="view"]');
-    const hasAccess = Boolean(viewInput?.checked);
-    card.classList.toggle("enabled", hasAccess);
-    card.querySelectorAll('[data-permission-action]:not([data-permission-action="view"])').forEach((input) => {
-      input.disabled = !hasAccess;
-      if (!hasAccess) input.checked = false;
-    });
+  document.querySelectorAll(".permission-row").forEach((row) => {
+    const input = row.querySelector("[data-permission-env-code]");
+    row.classList.toggle("enabled", Boolean(input?.checked));
   });
 }
 
 function applyPermissionPreset(type) {
-  document.querySelectorAll("[data-permission-scope]").forEach((input) => {
+  document.querySelectorAll("[data-permission-env-code]").forEach((input) => {
     input.checked = false;
   });
   if (type === "operator") {
-    ["dashboard", "environmental", "agenda"].forEach((scope) => {
-      document.querySelector(`[data-permission-scope="${scope}"][data-permission-action="view"]`)?.click();
+    const operatorCodes = ["02", "02.1", "03", "03.1", "03.1.1", "03.1.2", "03.1.3", "03.1.4", "03.1.5", "04.1", "04.2"];
+    operatorCodes.forEach((code) => {
+      const input = document.querySelector(`[data-permission-env-code="${code}"]`);
+      if (input) input.checked = true;
     });
   }
   if (type === "admin") {
-    ["dashboard", "admin", "users", "registries", "adminEnvironmental", "environmental", "iptu", "diverseDocuments", "forms", "agenda"].forEach((scope) => {
-      const viewInput = document.querySelector(`[data-permission-scope="${scope}"][data-permission-action="view"]`);
-      if (viewInput) viewInput.checked = true;
-    });
-    document.querySelectorAll('[data-permission-action="create"], [data-permission-action="edit"], [data-permission-action="delete"]').forEach((input) => {
+    document.querySelectorAll("[data-permission-env-code]").forEach((input) => {
       input.checked = true;
     });
   }
+  updatePermissionActionState();
+}
+
+function permissionGroupLabel(groupCode) {
+  return {
+    "01": "01 Painel Admin",
+    "02": "02 Painel Geral",
+    "03": "03 Módulos",
+    "04": "04 Agenda",
+    "05": "05 Configurações",
+  }[groupCode] || groupCode;
+}
+
+function renderPermissionList(user) {
+  const list = field("permission-list");
+  if (!list) return;
+  const allowedCodes = new Set(environmentAccess(user));
+  const groups = permissionEnvironmentItems().reduce((acc, item) => {
+    if (!acc[item.group]) acc[item.group] = [];
+    acc[item.group].push(item);
+    return acc;
+  }, {});
+  list.innerHTML = Object.entries(groups)
+    .map(([groupCode, items]) => `
+      <section class="permission-section">
+        <header>
+          <strong>${escapeHtml(permissionGroupLabel(groupCode))}</strong>
+          <span>${items.length} ambiente(s)</span>
+        </header>
+        <div class="permission-rows">
+          ${items
+            .map((item) => {
+              const depth = Math.max(0, item.code.split(".").length - 1);
+              return `
+                <label class="permission-row permission-depth-${depth} ${allowedCodes.has(item.code) ? "enabled" : ""}">
+                  <input type="checkbox" data-permission-env-code="${escapeHtml(item.code)}" ${allowedCodes.has(item.code) ? "checked" : ""} />
+                  <span class="permission-code">${escapeHtml(item.code)}</span>
+                  <span class="permission-title">${escapeHtml(item.title)}</span>
+                  <small>${escapeHtml(item.detail || "")}</small>
+                </label>
+              `;
+            })
+            .join("")}
+        </div>
+      </section>
+    `)
+    .join("");
   updatePermissionActionState();
 }
 
@@ -3011,6 +3175,16 @@ async function persistUserPermissionMatrix(user) {
         can_edit: Boolean(rules.edit),
         can_delete: Boolean(rules.delete),
       }));
+    environmentAccess(user).forEach((code) => {
+      rows.push({
+        user_id: user.id,
+        module_code: `${ENV_PERMISSION_PREFIX}${code}`,
+        can_view: true,
+        can_create: false,
+        can_edit: false,
+        can_delete: false,
+      });
+    });
     await Promise.all(rows.map((row) => window.DocGestorDB.create("user_permissions", row)));
   } catch (error) {
     console.warn("Não foi possível salvar as permissões por módulo no Supabase.", error.message);
@@ -3037,6 +3211,7 @@ async function saveCurrentUser() {
     password: existing?.password || "123456",
     permissions: Array.isArray(existing?.permissions) ? existing.permissions : [],
     modulePermissions: existing?.modulePermissions || {},
+    environmentAccess: existing?.environmentAccess || [],
   };
 
   if (existing) {
@@ -3127,6 +3302,7 @@ document.querySelector("#profile-password-clear")?.addEventListener("click", cle
 document.querySelector("#profile-password-save")?.addEventListener("click", saveProfilePassword);
 document.querySelector("#permissions-save")?.addEventListener("click", async () => {
   const user = selectedUser();
+  user.environmentAccess = readEnvironmentChecks();
   user.permissions = readPermissionChecks();
   user.modulePermissions = readPermissionMatrix();
   await persistUser(user, looksLikeUuid(user.id));
@@ -3135,18 +3311,12 @@ document.querySelector("#permissions-save")?.addEventListener("click", async () 
   if (currentUser && sameId(currentUser.id, user.id)) applyAccessControl();
 });
 permissionsModal?.addEventListener("change", (event) => {
-  const input = event.target.closest("[data-permission-scope]");
+  const input = event.target.closest("[data-permission-env-code]");
   if (!input) return;
-  const scope = input.dataset.permissionScope;
-  const action = input.dataset.permissionAction || "view";
-  if (action !== "view" && input.checked) {
-    const viewInput = permissionsModal.querySelector(`[data-permission-scope="${scope}"][data-permission-action="view"]`);
-    if (viewInput) viewInput.checked = true;
-  }
-  if (ADMIN_PERMISSION_KEYS.includes(scope) && input.checked) {
-    const adminInput = permissionsModal.querySelector('[data-permission-scope="admin"][data-permission-action="view"]');
-    if (adminInput) adminInput.checked = true;
-  }
+  const codes = readEnvironmentChecks();
+  document.querySelectorAll("[data-permission-env-code]").forEach((checkbox) => {
+    checkbox.checked = codes.includes(checkbox.dataset.permissionEnvCode);
+  });
   updatePermissionActionState();
 });
 document.querySelector("#permissions-operator")?.addEventListener("click", () => applyPermissionPreset("operator"));
@@ -7293,6 +7463,16 @@ function renderEnvironmentalReportSection(titleText, subtitleText, items, render
 }
 
 function renderLicenseStatus(status = "open") {
+  const environmentCode = environmentCodeForLicenseStatus(status);
+  if (currentUser && environmentCode && !canAccessEnvironmentCode(environmentCode)) {
+    const fallbackStatus = ["general", "open", "pending", "expired", "done", "licenses"].find((item) => canAccessEnvironmentCode(environmentCodeForLicenseStatus(item)));
+    if (fallbackStatus && fallbackStatus !== status) {
+      renderLicenseStatus(fallbackStatus);
+      return;
+    }
+    openView(firstAccessibleView());
+    return;
+  }
   const list = document.querySelector("#license-status-list");
   const titleTarget = document.querySelector("#license-status-title");
   const subtitleTarget = document.querySelector("#license-status-subtitle");
@@ -10673,12 +10853,19 @@ async function loadSupabaseData() {
   const permissionsByUserId = userPermissionRows.reduce((acc, row) => {
     if (!row.user_id || !row.module_code) return acc;
     if (!acc[row.user_id]) acc[row.user_id] = {};
+    if (row.module_code.startsWith(ENV_PERMISSION_PREFIX)) return acc;
     acc[row.user_id][row.module_code] = {
       view: Boolean(row.can_view),
       create: Boolean(row.can_create),
       edit: Boolean(row.can_edit),
       delete: Boolean(row.can_delete),
     };
+    return acc;
+  }, {});
+  const environmentAccessByUserId = userPermissionRows.reduce((acc, row) => {
+    if (!row.user_id || !row.module_code?.startsWith(ENV_PERMISSION_PREFIX) || !row.can_view) return acc;
+    if (!acc[row.user_id]) acc[row.user_id] = [];
+    acc[row.user_id].push(row.module_code.replace(ENV_PERMISSION_PREFIX, ""));
     return acc;
   }, {});
 
@@ -10701,6 +10888,7 @@ async function loadSupabaseData() {
       password: row.password || "123456",
       permissions: permissionKeys.length ? permissionKeys : Array.isArray(row.permissions) ? row.permissions : [],
       modulePermissions,
+      environmentAccess: normalizeEnvironmentAccess(environmentAccessByUserId[row.id] || []),
     };
   });
   await syncUserAlertRecipients();
