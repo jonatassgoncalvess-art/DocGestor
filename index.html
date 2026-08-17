@@ -126,10 +126,16 @@
               <button class="admin-link nav-depth-2" data-module-license-status="licenses" data-permission-view="environmental">03.1.5 Licenças</button>
             </div>
             <button class="admin-link nav-depth-1" data-view-target="iptu" data-permission-view="iptu">03.2 IPTU</button>
-            <button class="admin-link nav-depth-1" data-view-target="documentos-diversos" data-permission-view="diverseDocuments">03.3 Lembretes Diversos</button>
-            <button class="admin-link nav-depth-1" data-view-target="formularios" data-permission-view="forms">03.4 Formulários</button>
+            <button class="admin-link nav-depth-1" data-view-target="alvara" data-permission-view="alvara">03.3 Alvará</button>
+            <button class="admin-link nav-depth-1" data-view-target="bombeiros" data-permission-view="bombeiros">03.4 Bombeiros</button>
+            <button class="admin-link nav-depth-1" data-view-target="adapar" data-permission-view="adapar">03.5 ADAPAR</button>
+            <button class="admin-link nav-depth-1" data-view-target="renasem" data-permission-view="renasem">03.6 RENASEM</button>
+            <button class="admin-link nav-depth-1" data-view-target="ccir" data-permission-view="ccir">03.7 CCIR</button>
+            <button class="admin-link nav-depth-1" data-view-target="mapa" data-permission-view="mapa">03.8 MAPA</button>
+            <button class="admin-link nav-depth-1" data-view-target="documentos-diversos" data-permission-view="diverseDocuments">03.9 Lembretes Diversos</button>
+            <button class="admin-link nav-depth-1" data-view-target="formularios" data-permission-view="forms">03.10 Formulários</button>
             <div class="side-tree-group module-child-group">
-              <button class="admin-link nav-depth-2" data-view-target="autorizacoes" data-permission-view="forms">03.4.1 Autorizações</button>
+              <button class="admin-link nav-depth-2" data-view-target="autorizacoes" data-permission-view="forms">03.10.1 Autorizações</button>
             </div>
           </div>
           <button class="nav-item" data-view="agenda" data-agenda-menu-toggle="true" data-permission-view="agenda" aria-expanded="false">
@@ -971,15 +977,51 @@
             </article>
             <article class="module-card">
               <span>03.3 Módulo</span>
-              <h3>Lembretes Diversos</h3>
-              <p>Lembretes avulsos, alertas por data, repetição e estabelecimento vinculado.</p>
-              <button class="ghost small" data-view-target="documentos-diversos" data-permission-view="diverseDocuments">Abrir 03.3</button>
+              <h3>Alvará</h3>
+              <p>Controle de alvarás, validade, documentos exigidos e renovações por estabelecimento.</p>
+              <button class="ghost small" data-view-target="alvara" data-permission-view="alvara">Abrir 03.3</button>
             </article>
             <article class="module-card">
               <span>03.4 Módulo</span>
+              <h3>Bombeiros</h3>
+              <p>Controle de AVCB/CLCB, prazos, protocolos, exigências e vencimentos do Corpo de Bombeiros.</p>
+              <button class="ghost small" data-view-target="bombeiros" data-permission-view="bombeiros">Abrir 03.4</button>
+            </article>
+            <article class="module-card">
+              <span>03.5 Módulo</span>
+              <h3>ADAPAR</h3>
+              <p>Gestão de registros, obrigações, protocolos e prazos vinculados à ADAPAR.</p>
+              <button class="ghost small" data-view-target="adapar" data-permission-view="adapar">Abrir 03.5</button>
+            </article>
+            <article class="module-card">
+              <span>03.6 Módulo</span>
+              <h3>RENASEM</h3>
+              <p>Controle de registros RENASEM, validade, renovações e documentação relacionada.</p>
+              <button class="ghost small" data-view-target="renasem" data-permission-view="renasem">Abrir 03.6</button>
+            </article>
+            <article class="module-card">
+              <span>03.7 Módulo</span>
+              <h3>CCIR</h3>
+              <p>Gestão de CCIR, vínculos rurais, vencimentos e documentação dos imóveis.</p>
+              <button class="ghost small" data-view-target="ccir" data-permission-view="ccir">Abrir 03.7</button>
+            </article>
+            <article class="module-card">
+              <span>03.8 Módulo</span>
+              <h3>MAPA</h3>
+              <p>Controle de registros, protocolos, exigências e vencimentos relacionados ao MAPA.</p>
+              <button class="ghost small" data-view-target="mapa" data-permission-view="mapa">Abrir 03.8</button>
+            </article>
+            <article class="module-card">
+              <span>03.9 Módulo</span>
+              <h3>Lembretes Diversos</h3>
+              <p>Lembretes avulsos, alertas por data, repetição e estabelecimento vinculado.</p>
+              <button class="ghost small" data-view-target="documentos-diversos" data-permission-view="diverseDocuments">Abrir 03.9</button>
+            </article>
+            <article class="module-card">
+              <span>03.10 Módulo</span>
               <h3>Formulários</h3>
               <p>Modelos, preenchimento e organização de formulários operacionais do sistema.</p>
-              <button class="ghost small" data-view-target="formularios" data-permission-view="forms">Abrir 03.4</button>
+              <button class="ghost small" data-view-target="formularios" data-permission-view="forms">Abrir 03.10</button>
             </article>
           </div>
         </section>
@@ -1028,9 +1070,147 @@
           </section>
         </section>
 
-        <section class="view" id="documentos-diversos">
+        <section class="view" id="alvara">
           <div class="module-context">
             <p class="eyebrow">03.3 Módulo operacional</p>
+            <h2>Alvará</h2>
+          </div>
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Controle de alvarás</h2>
+                <span class="muted">Ambiente inicial para organizar alvarás, prazos e renovações.</span>
+              </div>
+              <span class="pill green">0 itens</span>
+            </div>
+            <div class="crud-list">
+              <article>
+                <strong>Nenhum alvará cadastrado</strong>
+                <span>Os registros deste módulo serão listados aqui quando o fluxo de cadastro for implementado.</span>
+                <div></div>
+              </article>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="bombeiros">
+          <div class="module-context">
+            <p class="eyebrow">03.4 Módulo operacional</p>
+            <h2>Bombeiros</h2>
+          </div>
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Controle do Corpo de Bombeiros</h2>
+                <span class="muted">Ambiente inicial para AVCB, CLCB, protocolos, exigências e vencimentos.</span>
+              </div>
+              <span class="pill green">0 itens</span>
+            </div>
+            <div class="crud-list">
+              <article>
+                <strong>Nenhum registro cadastrado</strong>
+                <span>Os controles de Bombeiros serão listados aqui quando o fluxo do módulo for criado.</span>
+                <div></div>
+              </article>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="adapar">
+          <div class="module-context">
+            <p class="eyebrow">03.5 Módulo operacional</p>
+            <h2>ADAPAR</h2>
+          </div>
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Controle ADAPAR</h2>
+                <span class="muted">Ambiente inicial para registros, protocolos, documentos e prazos da ADAPAR.</span>
+              </div>
+              <span class="pill green">0 itens</span>
+            </div>
+            <div class="crud-list">
+              <article>
+                <strong>Nenhum registro cadastrado</strong>
+                <span>Os processos vinculados à ADAPAR serão listados aqui.</span>
+                <div></div>
+              </article>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="renasem">
+          <div class="module-context">
+            <p class="eyebrow">03.6 Módulo operacional</p>
+            <h2>RENASEM</h2>
+          </div>
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Controle RENASEM</h2>
+                <span class="muted">Ambiente inicial para registros RENASEM, validade, renovações e documentos.</span>
+              </div>
+              <span class="pill green">0 itens</span>
+            </div>
+            <div class="crud-list">
+              <article>
+                <strong>Nenhum RENASEM cadastrado</strong>
+                <span>Os registros RENASEM serão listados aqui conforme o módulo evoluir.</span>
+                <div></div>
+              </article>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="ccir">
+          <div class="module-context">
+            <p class="eyebrow">03.7 Módulo operacional</p>
+            <h2>CCIR</h2>
+          </div>
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Controle CCIR</h2>
+                <span class="muted">Ambiente inicial para CCIR, imóveis rurais, vínculos e vencimentos.</span>
+              </div>
+              <span class="pill green">0 itens</span>
+            </div>
+            <div class="crud-list">
+              <article>
+                <strong>Nenhum CCIR cadastrado</strong>
+                <span>Os registros de CCIR serão listados aqui quando o fluxo do módulo for criado.</span>
+                <div></div>
+              </article>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="mapa">
+          <div class="module-context">
+            <p class="eyebrow">03.8 Módulo operacional</p>
+            <h2>MAPA</h2>
+          </div>
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Controle MAPA</h2>
+                <span class="muted">Ambiente inicial para registros, protocolos, exigências e prazos vinculados ao MAPA.</span>
+              </div>
+              <span class="pill green">0 itens</span>
+            </div>
+            <div class="crud-list">
+              <article>
+                <strong>Nenhum registro cadastrado</strong>
+                <span>Os controles vinculados ao MAPA serão listados aqui.</span>
+                <div></div>
+              </article>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="documentos-diversos">
+          <div class="module-context">
+            <p class="eyebrow">03.9 Módulo operacional</p>
             <h2>Lembretes Diversos</h2>
             <div class="title-actions">
               <button class="primary" id="diverse-reminder-new">Novo lembrete</button>
@@ -1050,7 +1230,7 @@
 
         <section class="view" id="formularios">
           <div class="module-context">
-            <p class="eyebrow">03.4 Módulo operacional</p>
+            <p class="eyebrow">03.10 Módulo operacional</p>
             <h2>Formulários</h2>
           </div>
           <section class="panel">
@@ -1063,7 +1243,7 @@
             </div>
             <div class="crud-list">
               <article>
-                <strong>03.4.1 Autorizações</strong>
+                <strong>03.10.1 Autorizações</strong>
                 <span>Emissão, pré-visualização e controle de autorizações internas do Grupo Carminatti.</span>
                 <div>
                   <button class="ghost" data-view-target="autorizacoes" data-permission-view="forms">Abrir</button>
@@ -1075,7 +1255,7 @@
 
         <section class="view" id="autorizacoes">
           <div class="module-context">
-            <p class="eyebrow">03.4.1 Formulários</p>
+            <p class="eyebrow">03.10.1 Formulários</p>
             <h2>Autorizações</h2>
           </div>
           <section class="panel">
@@ -1151,6 +1331,12 @@
                     <option value="Pendência">Pendência</option>
                     <option value="Reunião">Reunião</option>
                     <option value="IPTU">IPTU</option>
+                    <option value="Alvará">Alvará</option>
+                    <option value="Bombeiros">Bombeiros</option>
+                    <option value="ADAPAR">ADAPAR</option>
+                    <option value="RENASEM">RENASEM</option>
+                    <option value="CCIR">CCIR</option>
+                    <option value="MAPA">MAPA</option>
                     <option value="Lembretes Diversos">Lembretes Diversos</option>
                     <option value="Formulários">Formulários</option>
                     <option value="Administrativo">Administrativo</option>
@@ -1322,6 +1508,12 @@
                   <option>Pendência</option>
                   <option>Reunião</option>
                   <option>IPTU</option>
+                  <option>Alvará</option>
+                  <option>Bombeiros</option>
+                  <option>ADAPAR</option>
+                  <option>RENASEM</option>
+                  <option>CCIR</option>
+                  <option>MAPA</option>
                   <option>Lembretes Diversos</option>
                   <option>Formulários</option>
                   <option>Administrativo</option>
@@ -1344,8 +1536,14 @@
                   <select id="agenda-note-link-module">
                     <option value="environmental">03.1 Licenças Ambientais</option>
                     <option value="iptu">03.2 IPTU</option>
-                    <option value="diverse-documents">03.3 Lembretes Diversos</option>
-                    <option value="forms">03.4 Formulários</option>
+                    <option value="alvara">03.3 Alvará</option>
+                    <option value="bombeiros">03.4 Bombeiros</option>
+                    <option value="adapar">03.5 ADAPAR</option>
+                    <option value="renasem">03.6 RENASEM</option>
+                    <option value="ccir">03.7 CCIR</option>
+                    <option value="mapa">03.8 MAPA</option>
+                    <option value="diverse-documents">03.9 Lembretes Diversos</option>
+                    <option value="forms">03.10 Formulários</option>
                   </select>
                 </label>
                 <button class="ghost" type="button" id="agenda-note-link-select">Selecionar</button>
@@ -1387,7 +1585,7 @@
           <section class="modal-panel wide-modal" role="dialog" aria-modal="true" aria-labelledby="diverse-reminder-modal-title">
             <div class="modal-head">
               <div>
-                <p class="eyebrow">03.3 Lembretes Diversos</p>
+                <p class="eyebrow">03.9 Lembretes Diversos</p>
                 <h2 id="diverse-reminder-modal-title">Novo lembrete</h2>
               </div>
               <button class="ghost small" data-close-modal="diverse-reminder-modal">Fechar</button>
@@ -1431,7 +1629,7 @@
           <section class="modal-panel wide-modal" role="dialog" aria-modal="true" aria-labelledby="diverse-reminder-company-title">
             <div class="modal-head">
               <div>
-                <p class="eyebrow">03.3 Lembretes Diversos</p>
+                <p class="eyebrow">03.9 Lembretes Diversos</p>
                 <h2 id="diverse-reminder-company-title">Selecionar Estabelecimento</h2>
               </div>
               <button class="ghost small" data-close-modal="diverse-reminder-company-modal">Fechar</button>
@@ -1496,7 +1694,7 @@
       <section class="modal-panel wide-modal" role="dialog" aria-modal="true" aria-labelledby="authorization-modal-title">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">03.4.1 Autorizações</p>
+            <p class="eyebrow">03.10.1 Autorizações</p>
             <h2 id="authorization-modal-title">Nova autorização</h2>
           </div>
           <button class="ghost small" data-close-modal="authorization-modal">Fechar</button>

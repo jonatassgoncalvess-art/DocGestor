@@ -30,8 +30,14 @@ insert into app_modules (id, code, name, parent_code, display_order, is_admin_ar
 values
   (gen_random_uuid(), 'environmental', '03.1 Licenças Ambientais', '03', 3.1, false, true),
   (gen_random_uuid(), 'iptu', '03.2 IPTU', '03', 3.2, false, true),
-  (gen_random_uuid(), 'diverse-documents', '03.3 Lembretes Diversos', '03', 3.3, false, true),
-  (gen_random_uuid(), 'forms', '03.4 Formulários', '03', 3.4, false, true)
+  (gen_random_uuid(), 'alvara', '03.3 Alvará', '03', 3.3, false, true),
+  (gen_random_uuid(), 'bombeiros', '03.4 Bombeiros', '03', 3.4, false, true),
+  (gen_random_uuid(), 'adapar', '03.5 ADAPAR', '03', 3.5, false, true),
+  (gen_random_uuid(), 'renasem', '03.6 RENASEM', '03', 3.6, false, true),
+  (gen_random_uuid(), 'ccir', '03.7 CCIR', '03', 3.7, false, true),
+  (gen_random_uuid(), 'mapa', '03.8 MAPA', '03', 3.8, false, true),
+  (gen_random_uuid(), 'diverse-documents', '03.9 Lembretes Diversos', '03', 3.9, false, true),
+  (gen_random_uuid(), 'forms', '03.10 Formulários', '03', 3.10, false, true)
 on conflict (code) do update
 set
   name = excluded.name,

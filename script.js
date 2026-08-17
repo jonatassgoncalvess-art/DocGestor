@@ -31,9 +31,15 @@ const titles = {
   modulos: "Módulos",
   licencas: "03.1 Licenças Ambientais",
   iptu: "03.2 IPTU",
-  "documentos-diversos": "03.3 Lembretes Diversos",
-  formularios: "03.4 Formulários",
-  autorizacoes: "03.4.1 Autorizações",
+  alvara: "03.3 Alvará",
+  bombeiros: "03.4 Bombeiros",
+  adapar: "03.5 ADAPAR",
+  renasem: "03.6 RENASEM",
+  ccir: "03.7 CCIR",
+  mapa: "03.8 MAPA",
+  "documentos-diversos": "03.9 Lembretes Diversos",
+  formularios: "03.10 Formulários",
+  autorizacoes: "03.10.1 Autorizações",
   usuarios: "Usuários e permissões",
   agenda: "04.1 Calendário",
   "agenda-notes": "04.2 Anotações",
@@ -51,9 +57,15 @@ const pageMeta = {
   modulos: { breadcrumb: "03 Módulos", title: "Módulos", subtitle: "Entrada dos módulos operacionais disponíveis no DocGestor." },
   licencas: { breadcrumb: "03.1 Módulos > Licenças Ambientais", title: "03.1 Licenças Ambientais", subtitle: "Processos, etapas, licenças, vencimentos e dossiês ambientais." },
   iptu: { breadcrumb: "03.2 Módulos > IPTU", title: "03.2 IPTU", subtitle: "Módulo em desenvolvimento para controle de guias, prazos e comprovantes." },
-  "documentos-diversos": { breadcrumb: "03.3 Módulos > Lembretes Diversos", title: "03.3 Lembretes Diversos", subtitle: "Lembretes avulsos com alertas e repetição programada." },
-  formularios: { breadcrumb: "03.4 Módulos > Formulários", title: "03.4 Formulários", subtitle: "Modelos, registros e documentos operacionais." },
-  autorizacoes: { breadcrumb: "03.4.1 Formulários > Autorizações", title: "03.4.1 Autorizações", subtitle: "Emissão e controle de autorizações internas." },
+  alvara: { breadcrumb: "03.3 Módulos > Alvará", title: "03.3 Alvará", subtitle: "Módulo em preparação para alvarás, protocolos, validade e renovações." },
+  bombeiros: { breadcrumb: "03.4 Módulos > Bombeiros", title: "03.4 Bombeiros", subtitle: "Módulo em preparação para controles do Corpo de Bombeiros." },
+  adapar: { breadcrumb: "03.5 Módulos > ADAPAR", title: "03.5 ADAPAR", subtitle: "Módulo em preparação para processos e vencimentos vinculados à ADAPAR." },
+  renasem: { breadcrumb: "03.6 Módulos > RENASEM", title: "03.6 RENASEM", subtitle: "Módulo em preparação para registros, validade e renovações RENASEM." },
+  ccir: { breadcrumb: "03.7 Módulos > CCIR", title: "03.7 CCIR", subtitle: "Módulo em preparação para controle de CCIR e vínculos rurais." },
+  mapa: { breadcrumb: "03.8 Módulos > MAPA", title: "03.8 MAPA", subtitle: "Módulo em preparação para registros e controles vinculados ao MAPA." },
+  "documentos-diversos": { breadcrumb: "03.9 Módulos > Lembretes Diversos", title: "03.9 Lembretes Diversos", subtitle: "Lembretes avulsos com alertas e repetição programada." },
+  formularios: { breadcrumb: "03.10 Módulos > Formulários", title: "03.10 Formulários", subtitle: "Modelos, registros e documentos operacionais." },
+  autorizacoes: { breadcrumb: "03.10.1 Formulários > Autorizações", title: "03.10.1 Autorizações", subtitle: "Emissão e controle de autorizações internas." },
   agenda: { breadcrumb: "04.1 Agenda > Calendário", title: "04.1 Calendário", subtitle: "Calendário operacional com feriados, prazos e alertas." },
   "agenda-notes": { breadcrumb: "04.2 Agenda > Anotações", title: "04.2 Anotações", subtitle: "Listagem e cadastro de agendamentos vinculados aos módulos." },
   settings: { breadcrumb: "05 Configurações", title: "Configurações", subtitle: "Preferências e ajustes do usuário." },
@@ -317,7 +329,7 @@ function openView(viewName) {
     ? "admin"
     : ["dashboard-ambiental", "dashboard-iptu", "dashboard-agendamentos"].includes(viewName)
       ? "dashboard"
-    : ["licencas", "iptu", "documentos-diversos", "formularios", "autorizacoes"].includes(viewName)
+    : ["licencas", "iptu", "alvara", "bombeiros", "adapar", "renasem", "ccir", "mapa", "documentos-diversos", "formularios", "autorizacoes"].includes(viewName)
       ? "modulos"
       : viewName === "agenda-notes"
         ? "agenda"
@@ -597,9 +609,15 @@ const searchableEnvironments = [
   { code: "03.1.4", title: "Concluídas", detail: "Processos concluídos", permission: "environmental", action: () => openLicenseStatus("done") },
   { code: "03.1.5", title: "Licenças", detail: "Licenças ambientais geradas", permission: "environmental", action: () => openLicenseStatus("licenses") },
   { code: "03.2", title: "IPTU", detail: "Guias, vencimentos e comprovantes", permission: "iptu", action: () => openView("iptu") },
-  { code: "03.3", title: "Lembretes Diversos", detail: "Lembretes avulsos, prazos e alertas", permission: "diverseDocuments", action: () => openView("documentos-diversos") },
-  { code: "03.4", title: "Formulários", detail: "Modelos e preenchimento de formulários operacionais", permission: "forms", action: () => openView("formularios") },
-  { code: "03.4.1", title: "Autorizações", detail: "Emissão e controle de autorizações internas", permission: "forms", action: () => openView("autorizacoes") },
+  { code: "03.3", title: "Alvará", detail: "Alvarás, validade, documentos e renovações", permission: "alvara", action: () => openView("alvara") },
+  { code: "03.4", title: "Bombeiros", detail: "AVCB, CLCB, protocolos e vencimentos", permission: "bombeiros", action: () => openView("bombeiros") },
+  { code: "03.5", title: "ADAPAR", detail: "Registros, protocolos e obrigações da ADAPAR", permission: "adapar", action: () => openView("adapar") },
+  { code: "03.6", title: "RENASEM", detail: "Registros RENASEM, validade e renovações", permission: "renasem", action: () => openView("renasem") },
+  { code: "03.7", title: "CCIR", detail: "CCIR, imóveis rurais e vínculos documentais", permission: "ccir", action: () => openView("ccir") },
+  { code: "03.8", title: "MAPA", detail: "Registros, protocolos e obrigações do MAPA", permission: "mapa", action: () => openView("mapa") },
+  { code: "03.9", title: "Lembretes Diversos", detail: "Lembretes avulsos, prazos e alertas", permission: "diverseDocuments", action: () => openView("documentos-diversos") },
+  { code: "03.10", title: "Formulários", detail: "Modelos e preenchimento de formulários operacionais", permission: "forms", action: () => openView("formularios") },
+  { code: "03.10.1", title: "Autorizações", detail: "Emissão e controle de autorizações internas", permission: "forms", action: () => openView("autorizacoes") },
   { code: "04.1", title: "Calendário", detail: "Agenda em formato calendário", permission: "agenda", action: () => openView("agenda") },
   { code: "04.2", title: "Anotações", detail: "Agendamentos e alertas pendentes", permission: "agenda", action: () => openView("agenda-notes") },
   { code: "05.1", title: "Perfil", detail: "Dados cadastrais e senha do usuário", permission: "profile", action: () => openView("profile-settings") },
@@ -1280,7 +1298,7 @@ async function persistDiverseReminderAlert(reminder, alert, dateValue, repeatInd
             scheduled_for: scheduledFor,
             alert_type: alert.key,
             reminder_name: reminder.name,
-            warning: "Nenhum destinatário ativo configurado para o módulo 03.3.",
+            warning: "Nenhum destinatário ativo configurado para o módulo 03.9.",
           },
         });
       } catch (error) {
@@ -1917,7 +1935,7 @@ function buildAuthorizationReport(item) {
     : "Sem prazo de vigência definido";
   return {
     title: "Autorização",
-    module: "03.4.1 Autorizações",
+    module: "03.10.1 Autorizações",
     subtitle: false,
     titleCentered: true,
     footer: "Grupo Carminatti - Documento interno gerado pelo DocGestor by Carminatti.",
@@ -2022,6 +2040,8 @@ function renewDiverseReminder(reminder) {
 }
 
 function agendaLinkOptions(filter) {
+  const selectedModule = field("agenda-note-link-module")?.value || "environmental";
+  if (selectedModule !== "environmental") return [];
   if (filter === "licenses") {
     return activeLicenses().map((license) => ({
       id: `${license.processId}-${license.stageNumber}`,
@@ -2471,15 +2491,15 @@ const MASTER_USER = {
   email: "Admin",
   profile: "Administrador Maximo",
   status: "Ativo",
-  permissions: ["admin", "dashboard", "modules", "environmental", "iptu", "diverseDocuments", "forms", "agenda", "users", "registries", "adminEnvironmental"],
+  permissions: ["admin", "dashboard", "modules", "environmental", "iptu", "alvara", "bombeiros", "adapar", "renasem", "ccir", "mapa", "diverseDocuments", "forms", "agenda", "users", "registries", "adminEnvironmental"],
   modulePermissions: {},
   environmentAccess: [],
   isMaster: true,
 };
 
 const MASTER_PASSWORD_KEY = "docgestor.masterPassword";
-const PERMISSION_SCOPES = ["dashboard", "admin", "users", "registries", "adminEnvironmental", "environmental", "iptu", "diverseDocuments", "forms", "agenda"];
-const OPERATIONAL_PERMISSION_KEYS = ["environmental", "iptu", "diverseDocuments", "forms"];
+const PERMISSION_SCOPES = ["dashboard", "admin", "users", "registries", "adminEnvironmental", "environmental", "iptu", "alvara", "bombeiros", "adapar", "renasem", "ccir", "mapa", "diverseDocuments", "forms", "agenda"];
+const OPERATIONAL_PERMISSION_KEYS = ["environmental", "iptu", "alvara", "bombeiros", "adapar", "renasem", "ccir", "mapa", "diverseDocuments", "forms"];
 const ADMIN_PERMISSION_KEYS = ["users", "registries", "adminEnvironmental"];
 const ENV_PERMISSION_PREFIX = "env:";
 
@@ -2507,7 +2527,7 @@ function selectedUser() {
 
 function defaultPermissionsForProfile(profile) {
   if (profile === "Administrador Geral" || profile === "Administrador do Grupo") {
-    return ["admin", "dashboard", "modules", "environmental", "iptu", "diverseDocuments", "forms", "agenda", "users", "registries", "adminEnvironmental"];
+    return ["admin", "dashboard", "modules", "environmental", "iptu", "alvara", "bombeiros", "adapar", "renasem", "ccir", "mapa", "diverseDocuments", "forms", "agenda", "users", "registries", "adminEnvironmental"];
   }
   if (profile === "Gestor Ambiental" || profile === "Operador Ambiental") {
     return ["dashboard", "modules", "environmental", "agenda"];
@@ -2601,9 +2621,15 @@ function environmentCodeForView(viewName) {
     modulos: "03",
     licencas: "03.1",
     iptu: "03.2",
-    "documentos-diversos": "03.3",
-    formularios: "03.4",
-    autorizacoes: "03.4.1",
+    alvara: "03.3",
+    bombeiros: "03.4",
+    adapar: "03.5",
+    renasem: "03.6",
+    ccir: "03.7",
+    mapa: "03.8",
+    "documentos-diversos": "03.9",
+    formularios: "03.10",
+    autorizacoes: "03.10.1",
     agenda: "04.1",
     "agenda-notes": "04.2",
   }[viewName] || "";
@@ -2652,7 +2678,7 @@ function canAccess(permissionKey) {
   if (!currentUser) return false;
   const permissions = userPermissions(currentUser);
   if (permissionKey === "modules") {
-    return permissions.some((permission) => ["modules", "environmental", "iptu", "diverseDocuments", "forms"].includes(permission));
+    return permissions.some((permission) => ["modules", "environmental", "iptu", "alvara", "bombeiros", "adapar", "renasem", "ccir", "mapa", "diverseDocuments", "forms"].includes(permission));
   }
   return permissions.includes(permissionKey);
 }
@@ -2665,6 +2691,12 @@ function viewPermission(viewName) {
   if (viewName === "dashboard-agendamentos") return "agenda";
   if (viewName === "modulos") return "modules";
   if (viewName === "iptu") return "iptu";
+  if (viewName === "alvara") return "alvara";
+  if (viewName === "bombeiros") return "bombeiros";
+  if (viewName === "adapar") return "adapar";
+  if (viewName === "renasem") return "renasem";
+  if (viewName === "ccir") return "ccir";
+  if (viewName === "mapa") return "mapa";
   if (viewName === "documentos-diversos") return "diverseDocuments";
   if (viewName === "formularios" || viewName === "autorizacoes") return "forms";
   if (viewName === "licencas") return "environmental";
@@ -2677,8 +2709,14 @@ function firstAccessibleView() {
   if (canAccessEnvironmentCode("02") && canAccess("dashboard")) return "dashboard";
   if (canAccessEnvironmentCode("03.1") && canAccess("environmental")) return "licencas";
   if (canAccessEnvironmentCode("03.2") && canAccess("iptu")) return "iptu";
-  if (canAccessEnvironmentCode("03.3") && canAccess("diverseDocuments")) return "documentos-diversos";
-  if (canAccessEnvironmentCode("03.4") && canAccess("forms")) return "formularios";
+  if (canAccessEnvironmentCode("03.3") && canAccess("alvara")) return "alvara";
+  if (canAccessEnvironmentCode("03.4") && canAccess("bombeiros")) return "bombeiros";
+  if (canAccessEnvironmentCode("03.5") && canAccess("adapar")) return "adapar";
+  if (canAccessEnvironmentCode("03.6") && canAccess("renasem")) return "renasem";
+  if (canAccessEnvironmentCode("03.7") && canAccess("ccir")) return "ccir";
+  if (canAccessEnvironmentCode("03.8") && canAccess("mapa")) return "mapa";
+  if (canAccessEnvironmentCode("03.9") && canAccess("diverseDocuments")) return "documentos-diversos";
+  if (canAccessEnvironmentCode("03.10") && canAccess("forms")) return "formularios";
   if (canAccessEnvironmentCode("04.1") && canAccess("agenda")) return "agenda";
   if (canAccessEnvironmentCode("01") && canAccess("admin")) return "admin";
   if (canAccessEnvironmentCode("03") && canAccess("modules")) return "modulos";
@@ -3083,6 +3121,12 @@ function userPermissionSummary(user) {
   const modules = [
     permissions.includes("environmental") ? "Ambiental" : "",
     permissions.includes("iptu") ? "IPTU" : "",
+    permissions.includes("alvara") ? "Alvará" : "",
+    permissions.includes("bombeiros") ? "Bombeiros" : "",
+    permissions.includes("adapar") ? "ADAPAR" : "",
+    permissions.includes("renasem") ? "RENASEM" : "",
+    permissions.includes("ccir") ? "CCIR" : "",
+    permissions.includes("mapa") ? "MAPA" : "",
     permissions.includes("diverseDocuments") ? "Lembretes" : "",
     permissions.includes("forms") ? "Formulários" : "",
     permissions.includes("agenda") ? "Agenda" : "",
@@ -3945,8 +3989,14 @@ let selectedSendModuleId = "environmental";
 const defaultSystemModules = [
   { id: "environmental", name: "03.1 Licenças Ambientais" },
   { id: "iptu", name: "03.2 IPTU" },
-  { id: "diverse-documents", name: "03.3 Lembretes Diversos" },
-  { id: "forms", name: "03.4 Formulários" },
+  { id: "alvara", name: "03.3 Alvará" },
+  { id: "bombeiros", name: "03.4 Bombeiros" },
+  { id: "adapar", name: "03.5 ADAPAR" },
+  { id: "renasem", name: "03.6 RENASEM" },
+  { id: "ccir", name: "03.7 CCIR" },
+  { id: "mapa", name: "03.8 MAPA" },
+  { id: "diverse-documents", name: "03.9 Lembretes Diversos" },
+  { id: "forms", name: "03.10 Formulários" },
 ];
 
 const availableAlertModules = [...defaultSystemModules];
@@ -3958,6 +4008,12 @@ function sendModuleLabel(moduleKey) {
 const alertModulePermissionMap = {
   environmental: "environmental",
   iptu: "iptu",
+  alvara: "alvara",
+  bombeiros: "bombeiros",
+  adapar: "adapar",
+  renasem: "renasem",
+  ccir: "ccir",
+  mapa: "mapa",
   "diverse-documents": "diverseDocuments",
   forms: "forms",
 };
@@ -9434,7 +9490,7 @@ function collectHomeDeadlineItems() {
       addItem({
         title: `${alert.label || "Lembrete"} - ${reminder.name || "Documento"}`,
         detail: reminder.companyLabel || reminder.description || "",
-        module: "03.3 Lembretes Diversos",
+        module: "03.9 Lembretes Diversos",
         date: alert.date,
         time: alert.time || "09:00",
         source: "Lembrete",
@@ -10563,7 +10619,9 @@ async function loadSupabaseData() {
       }));
     const mergedModules = [...loadedModules];
     defaultSystemModules.forEach((module) => {
-      if (!mergedModules.some((item) => item.id === module.id)) mergedModules.push(module);
+      const existing = mergedModules.find((item) => item.id === module.id);
+      if (existing) existing.name = module.name;
+      else mergedModules.push(module);
     });
     availableAlertModules.splice(
       0,
