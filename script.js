@@ -5455,26 +5455,51 @@ let selectedCarRegistryId = 0;
 const carList = document.querySelector("#car-list");
 const carCount = document.querySelector("#car-count");
 let selectedCarDashboardKey = "";
-const DELETED_CAR_REGISTRY_IDS_KEY = "docgestor.deletedCarRegistryIds";
+const DELETED_CAR_REGISTRIES_KEY = "docgestor.deletedCarRegistries";
 
-function deletedCarRegistryIds() {
+function deletedCarRegistries() {
   try {
-    const ids = JSON.parse(localStorage.getItem(DELETED_CAR_REGISTRY_IDS_KEY) || "[]");
-    return Array.isArray(ids) ? ids.map(String) : [];
+    const data = JSON.parse(localStorage.getItem(DELETED_CAR_REGISTRIES_KEY) || '{"ids":[],"numbers":[]}');
+    const legacyIds = JSON.parse(localStorage.getItem("docgestor.deletedCarRegistryIds") || "[]");
+    return {
+      ids: [
+        ...(Array.isArray(data.ids) ? data.ids : []),
+        ...(Array.isArray(legacyIds) ? legacyIds : []),
+      ].map(String),
+      numbers: Array.isArray(data.numbers) ? data.numbers.map((item) => normalizeSearchText(item)) : [],
+    };
   } catch {
-    return [];
+    return { ids: [], numbers: [] };
   }
 }
 
-function markCarRegistryDeleted(id) {
-  if (!id) return;
-  const ids = new Set(deletedCarRegistryIds());
-  ids.add(String(id));
-  localStorage.setItem(DELETED_CAR_REGISTRY_IDS_KEY, JSON.stringify([...ids]));
+function saveDeletedCarRegistries(data) {
+  localStorage.setItem(DELETED_CAR_REGISTRIES_KEY, JSON.stringify({
+    ids: Array.from(new Set(data.ids || [])),
+    numbers: Array.from(new Set(data.numbers || [])),
+  }));
 }
 
-function carRegistryWasDeleted(id) {
-  return deletedCarRegistryIds().includes(String(id));
+function markCarRegistryDeleted(registry) {
+  const deleted = deletedCarRegistries();
+  if (registry?.id) deleted.ids.push(String(registry.id));
+  if (registry?.number) deleted.numbers.push(normalizeSearchText(registry.number));
+  saveDeletedCarRegistries(deleted);
+}
+
+function forgetDeletedCarRegistry(registry) {
+  const deleted = deletedCarRegistries();
+  const id = String(registry?.id || "");
+  const number = normalizeSearchText(registry?.number || "");
+  saveDeletedCarRegistries({
+    ids: deleted.ids.filter((item) => item !== id),
+    numbers: deleted.numbers.filter((item) => item !== number),
+  });
+}
+
+function carRegistryWasDeleted(registry) {
+  const deleted = deletedCarRegistries();
+  return deleted.ids.includes(String(registry?.id || "")) || deleted.numbers.includes(normalizeSearchText(registry?.car_number || registry?.number || ""));
 }
 const CAR_AREA_FIELDS = [
   { key: "totalArea", label: "Área total do imóvel" },
@@ -5741,6 +5766,7 @@ function carSearchText(registry) {
 function filteredCarRegistries() {
   const search = normalizeSearchText(field("car-search")?.value || "");
   return carRegistries
+    .filter((registry) => !carRegistryWasDeleted(registry))
     .filter((registry) => !search || carSearchText(registry).includes(search))
     .sort((a, b) => String(a.number || "").localeCompare(String(b.number || ""), "pt-BR", { numeric: true }));
 }
@@ -5787,12 +5813,18 @@ function openCarMap(registry) {
 
 async function deleteCarRegistry(registry) {
   if (!registry) return false;
-  markCarRegistryDeleted(registry.id);
+  markCarRegistryDeleted(registry);
   if (!looksLikeUuid(registry.id) || !window.DocGestorDB) return true;
 
   try {
     await window.DocGestorDB.remove("car_registries", registry.id);
-    const remainingRows = await window.DocGestorDB.list("car_registries", `select=id&id=eq.${encodeURIComponent(registry.id)}`);
+    if (registry.number) {
+      await window.DocGestorDB.removeWhere("car_registries", `car_number=eq.${encodeURIComponent(registry.number)}`).catch(() => null);
+    }
+    const remainingFilter = registry.number
+      ? `or=(id.eq.${encodeURIComponent(registry.id)},car_number.eq.${encodeURIComponent(registry.number)})`
+      : `id=eq.${encodeURIComponent(registry.id)}`;
+    const remainingRows = await window.DocGestorDB.list("car_registries", `select=id,car_number&${remainingFilter}`);
     if (Array.isArray(remainingRows) && remainingRows.length > 0) {
       console.warn("CAR ainda retornou pelo Supabase após DELETE; será ocultado pelo marcador local de exclusão.", registry.id);
     }
@@ -6245,7 +6277,7 @@ carList?.addEventListener("click", (event) => {
   if (button.dataset.carAction === "delete") {
     confirmDelete(`Deseja realmente excluir o CAR ${registry.number}?`, async () => {
       await deleteCarRegistry(registry);
-      const index = carRegistries.findIndex((item) => sameId(item.id, registry.id));
+      const index = carRegistries.findIndex((item) => sameId(item.id, registry.id) || normalizeSearchText(item.number) === normalizeSearchText(registry.number));
       if (index >= 0) carRegistries.splice(index, 1);
       renderCarRegistries();
     });
@@ -11181,6 +11213,7 @@ async function persistCarRegistry(registry, wasExisting) {
       updateLocalId(carRegistries, registry.id, saved.id);
       registry.id = saved.id;
       selectedCarRegistryId = saved.id;
+      forgetDeletedCarRegistry(registry);
     }
     return Boolean(saved?.id);
   } catch (error) {
@@ -11851,7 +11884,7 @@ async function loadSupabaseData() {
   });
 
   carRegistries = carRows
-    .filter((row) => !carRegistryWasDeleted(row.id))
+    .filter((row) => !carRegistryWasDeleted(row))
     .map((row) => ({
       id: row.id,
       number: row.car_number || "",
