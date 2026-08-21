@@ -78,6 +78,7 @@ const adminPanelMeta = {
   "empresas-filiais": { breadcrumb: "01.2.2 Cadastros > Empresas e Filiais", title: "01.2.2 Empresas e Filiais", subtitle: "Matrizes, filiais e vínculos societários." },
   "cidades-admin": { breadcrumb: "01.2.3 Cadastros > Cidades", title: "01.2.3 Cidades", subtitle: "Cidades e estados usados no cadastro de imóveis." },
   "car-admin": { breadcrumb: "01.2.4 Cadastros > CAR", title: "01.2.4 CAR", subtitle: "Cadastro Ambiental Rural anterior ao cadastro das matrículas e imóveis." },
+  "painel-car-admin": { breadcrumb: "01.2.4.1 CAR > Painel CAR", title: "01.2.4.1 Painel CAR", subtitle: "Visão gráfica das áreas declaradas nos CARs cadastrados." },
   "imoveis-admin": { breadcrumb: "01.2.5 Cadastros > Imóveis", title: "01.2.5 Imóveis", subtitle: "Imóveis urbanos e rurais vinculados a proprietários." },
   "imoveis-urbanos-admin": { breadcrumb: "01.2.5.1 Imóveis > Urbanos", title: "01.2.5.1 Urbanos", subtitle: "Listagem automática dos imóveis urbanos cadastrados." },
   "imoveis-rurais-admin": { breadcrumb: "01.2.5.2 Imóveis > Rurais", title: "01.2.5.2 Rurais", subtitle: "Listagem automática dos imóveis rurais cadastrados." },
@@ -514,6 +515,9 @@ function openAdminPanel(panelName) {
   if (targetPanelName === "historico-alertas") {
     setAlertHistoryView(panelName);
   }
+  if (panelName === "painel-car-admin") {
+    renderCarDashboard();
+  }
 }
 
 function openAdminSearchPanel(panelName) {
@@ -584,6 +588,7 @@ const searchableEnvironments = [
   { code: "01.2.2", title: "Empresas e Filiais", detail: "Matrizes, filiais e sócios vinculados", permission: "registries", action: () => openAdminSearchPanel("empresas-filiais") },
   { code: "01.2.3", title: "Cidades", detail: "Cidades usadas nos imóveis", permission: "registries", action: () => openAdminSearchPanel("cidades-admin") },
   { code: "01.2.4", title: "CAR", detail: "Cadastro Ambiental Rural e matrículas informadas", permission: "registries", action: () => openAdminSearchPanel("car-admin") },
+  { code: "01.2.4.1", title: "Painel CAR", detail: "Gráfico das áreas declaradas nos CARs", permission: "registries", action: () => openAdminSearchPanel("painel-car-admin") },
   { code: "01.2.5", title: "Imóveis", detail: "Imóveis urbanos, rurais e proprietários", permission: "registries", action: () => openAdminSearchPanel("imoveis-admin") },
   { code: "01.2.5.1", title: "Urbanos", detail: "Listagem automática de imóveis urbanos", permission: "registries", action: () => openAdminSearchPanel("imoveis-urbanos-admin") },
   { code: "01.2.5.2", title: "Rurais", detail: "Listagem automática de imóveis rurais", permission: "registries", action: () => openAdminSearchPanel("imoveis-rurais-admin") },
@@ -2596,6 +2601,7 @@ function environmentCodeForAdminTarget(target) {
     "empresas-filiais": "01.2.2",
     "cidades-admin": "01.2.3",
     "car-admin": "01.2.4",
+    "painel-car-admin": "01.2.4.1",
     "imoveis-admin": "01.2.5",
     "imoveis-urbanos-admin": "01.2.5.1",
     "imoveis-rurais-admin": "01.2.5.2",
@@ -2737,7 +2743,7 @@ function applyAccessControl() {
   document.querySelectorAll('[data-admin-target="usuarios-admin"]').forEach((element) => {
     element.hidden = !canAccess("users");
   });
-  document.querySelectorAll('[data-admin-target="socios-admin"], [data-admin-target="empresas-filiais"], [data-admin-target="cidades-admin"], [data-admin-target="car-admin"], [data-admin-target="imoveis-admin"], [data-admin-target="imoveis-urbanos-admin"], [data-admin-target="imoveis-rurais-admin"], [data-admin-target="painel-imoveis-admin"], [data-admin-target="empreendimentos-admin"], [data-admin-target="atividades-admin"]').forEach((element) => {
+  document.querySelectorAll('[data-admin-target="socios-admin"], [data-admin-target="empresas-filiais"], [data-admin-target="cidades-admin"], [data-admin-target="car-admin"], [data-admin-target="painel-car-admin"], [data-admin-target="imoveis-admin"], [data-admin-target="imoveis-urbanos-admin"], [data-admin-target="imoveis-rurais-admin"], [data-admin-target="painel-imoveis-admin"], [data-admin-target="empreendimentos-admin"], [data-admin-target="atividades-admin"]').forEach((element) => {
     element.hidden = !canAccess("registries");
   });
   document.querySelectorAll('[data-admin-target="tipos-licencas"], [data-admin-target="documentos-ambientais"], [data-admin-target="modelos-checklist"]').forEach((element) => {
@@ -5361,6 +5367,7 @@ let carRegistries = [];
 let selectedCarRegistryId = 0;
 const carList = document.querySelector("#car-list");
 const carCount = document.querySelector("#car-count");
+let selectedCarDashboardKey = "";
 const CAR_AREA_FIELDS = [
   { key: "totalArea", label: "Área total do imóvel" },
   { key: "legalReserveArea", label: "Reserva Legal - RL" },
@@ -5377,6 +5384,23 @@ const CAR_AREA_FIELDS = [
   { key: "easementArea", label: "Servidão administrativa" },
   { key: "publicUtilityArea", label: "Utilidade pública" },
 ];
+const CAR_AREA_COLORS = {
+  totalArea: "#64748b",
+  legalReserveArea: "#166534",
+  appArea: "#0ea5e9",
+  nativeVegetationArea: "#22c55e",
+  fallowArea: "#f59e0b",
+  restrictedUseArea: "#a855f7",
+  riversArea: "#0284c7",
+  springsArea: "#38bdf8",
+  lakesArea: "#2563eb",
+  wetlandsArea: "#14b8a6",
+  improvementsArea: "#ef4444",
+  roadsArea: "#78716c",
+  easementArea: "#8b5cf6",
+  publicUtilityArea: "#f97316",
+  consolidatedArea: "#84cc16",
+};
 const CAR_ALWAYS_VISIBLE_AREA_KEYS = new Set(["totalArea", "legalReserveArea", "appArea"]);
 let hiddenCarAreaKeys = new Set();
 let currentCarAreaValues = {};
@@ -5619,7 +5643,7 @@ function renderCarRegistries() {
   carList.innerHTML = items.length
     ? items.map((registry) => `
       <article>
-        <strong>CAR ${escapeHtml(registry.number)}</strong>
+        <strong><span class="car-regularity ${carRegularityStatus(registry).className}">${carRegularityStatus(registry).label}</span> CAR ${escapeHtml(registry.number)}</strong>
         <span>${escapeHtml(carRegistrySummary(registry))}</span>
         <div>
           <button type="button" data-car-action="edit" data-car-id="${registry.id}">Editar</button>
@@ -5628,6 +5652,21 @@ function renderCarRegistries() {
       </article>
     `).join("")
     : `<article><strong>Nenhum CAR cadastrado</strong><span>Cadastre o CAR para manter o controle separado dos imóveis rurais.</span><div></div></article>`;
+  renderCarDashboard();
+}
+
+function carRegularityStatus(registry) {
+  const totalArea = normalizeCarAreaValue(registry.totalArea);
+  const legalReserve = normalizeCarAreaValue(registry.legalReserveArea);
+  const appArea = normalizeCarAreaValue(registry.appArea);
+  const coverage = registry.appRlCoverage || "";
+  const reserveOk = totalArea && legalReserve !== "" && Number(legalReserve) >= Number(totalArea) * 0.2 - 0.01;
+  const appOk = !appArea || coverage === "integral";
+  const regular = Boolean(reserveOk && appOk);
+  return {
+    label: regular ? "Regular" : "Irregular",
+    className: regular ? "regular" : "irregular",
+  };
 }
 
 function carRegistrySummary(registry) {
@@ -5640,6 +5679,133 @@ function carRegistrySummary(registry) {
     ? ` - Coordenadas: ${registry.latitude || "lat. não informada"}, ${registry.longitude || "long. não informada"}`
     : "";
   return `${registrations}${totalArea}${legalReserve}${coordinates} - Situação: ${registry.status || "Ativo"}`;
+}
+
+function carDashboardSelectableItems() {
+  return carRegistries.flatMap((registry) => [
+    { key: `car:${registry.id}`, value: `CAR ${registry.number}`, label: `CAR ${registry.number}` },
+    ...(registry.registrations || []).map((registration) => ({
+      key: `mat:${registration}`,
+      value: `Matrícula ${registration}`,
+      label: `Matrícula ${registration} - CAR ${registry.number}`,
+    })),
+  ]);
+}
+
+function selectedCarDashboardRegistries() {
+  if (!selectedCarDashboardKey) return carRegistries;
+  if (selectedCarDashboardKey.startsWith("car:")) {
+    const id = selectedCarDashboardKey.replace("car:", "");
+    return carRegistries.filter((registry) => sameId(registry.id, id));
+  }
+  if (selectedCarDashboardKey.startsWith("mat:")) {
+    const registration = selectedCarDashboardKey.replace("mat:", "");
+    return carRegistries.filter((registry) => (registry.registrations || []).includes(registration));
+  }
+  return carRegistries;
+}
+
+function carDashboardSlices(registries) {
+  const sliceFields = CAR_AREA_FIELDS.filter((item) => item.key !== "totalArea");
+  const totals = Object.fromEntries(sliceFields.map((item) => [item.key, 0]));
+  let consolidatedTotal = 0;
+  registries.forEach((registry) => {
+    sliceFields.forEach((item) => {
+      if (item.key === "appArea" && registry.appRlCoverage === "integral") return;
+      totals[item.key] += Number(normalizeCarAreaValue(registry[item.key]) || 0);
+    });
+    consolidatedTotal += Number(normalizeCarAreaValue(registry.consolidatedArea) || calculateStoredCarConsolidatedArea(registry) || 0);
+  });
+  totals.consolidatedArea = consolidatedTotal;
+  return [
+    ...sliceFields.map((item) => ({ ...item, value: totals[item.key], color: CAR_AREA_COLORS[item.key] })),
+    { key: "consolidatedArea", label: "Área rural consolidada", value: totals.consolidatedArea, color: CAR_AREA_COLORS.consolidatedArea },
+  ].filter((item) => Number(item.value || 0) > 0);
+}
+
+function calculateStoredCarConsolidatedArea(registry) {
+  const totalArea = Number(normalizeCarAreaValue(registry.totalArea) || 0);
+  if (!totalArea) return 0;
+  const occupiedArea = CAR_AREA_FIELDS
+    .filter((item) => item.key !== "totalArea")
+    .filter((item) => !(item.key === "appArea" && registry.appRlCoverage === "integral"))
+    .reduce((sum, item) => sum + Number(normalizeCarAreaValue(registry[item.key]) || 0), 0);
+  return Math.max(0, totalArea - occupiedArea);
+}
+
+function pieSlicePath(cx, cy, radius, startAngle, endAngle) {
+  const start = polarToCartesian(cx, cy, radius, endAngle);
+  const end = polarToCartesian(cx, cy, radius, startAngle);
+  const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+  return `M ${cx} ${cy} L ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArcFlag} 0 ${end.x} ${end.y} Z`;
+}
+
+function polarToCartesian(cx, cy, radius, angleInDegrees) {
+  const angleInRadians = (angleInDegrees - 90) * Math.PI / 180;
+  return {
+    x: cx + (radius * Math.cos(angleInRadians)),
+    y: cy + (radius * Math.sin(angleInRadians)),
+  };
+}
+
+function renderCarDashboard() {
+  const chart = field("car-dashboard-chart");
+  const legend = field("car-dashboard-legend");
+  const totalBadge = field("car-dashboard-total");
+  const options = field("car-dashboard-options");
+  if (!chart || !legend) return;
+  const selectableItems = carDashboardSelectableItems();
+  if (options) {
+    options.innerHTML = selectableItems.map((item) => `<option value="${escapeHtml(item.value)}">${escapeHtml(item.label)}</option>`).join("");
+  }
+  const registries = selectedCarDashboardRegistries();
+  const slices = carDashboardSlices(registries);
+  const areaTotal = registries.reduce((sum, registry) => sum + Number(normalizeCarAreaValue(registry.totalArea) || 0), 0);
+  if (totalBadge) {
+    totalBadge.textContent = selectedCarDashboardKey
+      ? `${registries.length} CAR selecionado`
+      : `${carRegistries.length} CAR na visão geral`;
+  }
+  if (!slices.length) {
+    chart.innerHTML = `<div class="empty-chart">Nenhuma área informada</div>`;
+    legend.innerHTML = `<article><strong>Sem dados para o gráfico</strong><span>Preencha áreas em um CAR para visualizar a composição.</span></article>`;
+    return;
+  }
+  const total = slices.reduce((sum, item) => sum + Number(item.value || 0), 0);
+  let cursor = 0;
+  const paths = slices.map((item) => {
+    const angle = (Number(item.value) / total) * 360;
+    const path = pieSlicePath(110, 110, 96, cursor, cursor + angle);
+    cursor += angle;
+    return `<path d="${path}" fill="${item.color}"><title>${escapeHtml(item.label)} - ${formatCarAreaValue(item.value, 2)} m²</title></path>`;
+  }).join("");
+  chart.innerHTML = `
+    <svg viewBox="0 0 220 220" role="img" aria-label="Gráfico de áreas do CAR">
+      ${paths}
+      <circle cx="110" cy="110" r="48" fill="#fff"></circle>
+      <text x="110" y="104" text-anchor="middle">Total</text>
+      <text x="110" y="124" text-anchor="middle">${formatCarAreaValue(areaTotal / 10000, 2) || "0"} ha</text>
+    </svg>
+  `;
+  legend.innerHTML = slices.map((item) => {
+    const percent = total ? (Number(item.value) / total) * 100 : 0;
+    return `
+      <article>
+        <span class="legend-dot" style="background:${item.color}"></span>
+        <strong>${escapeHtml(item.label)}</strong>
+        <small>${formatCarAreaValue(item.value, 2)} m² | ${formatCarAreaValue(Number(item.value) / 10000, 4)} ha | ${formatCarAreaValue(percent, 2)}%</small>
+      </article>
+    `;
+  }).join("");
+}
+
+function applyCarDashboardSearch() {
+  const input = field("car-dashboard-search");
+  const value = normalizeSearchText(input?.value || "");
+  const selected = carDashboardSelectableItems().find((item) => normalizeSearchText(item.value) === value || normalizeSearchText(item.label) === value);
+  selectedCarDashboardKey = selected?.key || "";
+  if (input && selected) input.value = selected.value;
+  renderCarDashboard();
 }
 
 function renderCarRegistrationInputs(values = [""]) {
@@ -5738,6 +5904,19 @@ renderCarAreaFields();
 document.querySelector("#car-new")?.addEventListener("click", newCarRegistry);
 document.querySelector("#car-save")?.addEventListener("click", saveCarRegistry);
 document.querySelector("#car-registration-add")?.addEventListener("click", addCarRegistrationInput);
+field("car-dashboard-apply")?.addEventListener("click", applyCarDashboardSearch);
+field("car-dashboard-search")?.addEventListener("change", applyCarDashboardSearch);
+field("car-dashboard-search")?.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    applyCarDashboardSearch();
+  }
+});
+field("car-dashboard-reset")?.addEventListener("click", () => {
+  selectedCarDashboardKey = "";
+  if (field("car-dashboard-search")) field("car-dashboard-search").value = "";
+  renderCarDashboard();
+});
 field("car-area-grid")?.addEventListener("input", handleCarAreaInput);
 field("car-area-grid")?.addEventListener("change", (event) => {
   const input = event.target.closest('[name="car-app-rl-coverage"]');

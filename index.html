@@ -80,6 +80,7 @@
               <button class="admin-link nav-depth-2" data-admin-target="empresas-filiais">01.2.2 Empresas e Filiais</button>
               <button class="admin-link nav-depth-2" data-admin-target="cidades-admin">01.2.3 Cidades</button>
               <button class="admin-link nav-depth-2" data-admin-target="car-admin">01.2.4 CAR</button>
+              <button class="admin-link nav-depth-3" data-admin-target="painel-car-admin">01.2.4.1 Painel CAR</button>
               <button class="admin-link nav-depth-2" data-admin-target="imoveis-admin">01.2.5 Imóveis</button>
               <button class="admin-link nav-depth-3" data-admin-target="imoveis-urbanos-admin">01.2.5.1 Urbanos</button>
               <button class="admin-link nav-depth-3" data-admin-target="imoveis-rurais-admin">01.2.5.2 Rurais</button>
@@ -390,6 +391,38 @@
                     <input id="car-search" type="search" placeholder="Buscar por número, imóvel, situação ou observação" />
                   </label>
                   <div class="crud-list" id="car-list"></div>
+                </section>
+              </section>
+
+              <section class="admin-panel" id="admin-painel-car-admin">
+                <div class="section-title">
+                  <div>
+                    <p class="eyebrow">01.2.4.1 Painel CAR</p>
+                    <h2>Visão gráfica das áreas declaradas nos CARs</h2>
+                  </div>
+                </div>
+                <section class="panel car-dashboard-panel">
+                  <div class="panel-head">
+                    <div>
+                      <h2>Distribuição das áreas declaradas</h2>
+                      <p class="panel-note">Base: campos preenchidos em m²/ha nos CARs cadastrados. Campos zerados não entram no gráfico.</p>
+                    </div>
+                    <span class="pill green" id="car-dashboard-total">Visão geral</span>
+                  </div>
+                  <div class="car-dashboard-toolbar">
+                    <label>Buscar CAR ou matrícula
+                      <input id="car-dashboard-search" type="search" placeholder="Digite o número do CAR ou matrícula" list="car-dashboard-options" />
+                      <datalist id="car-dashboard-options"></datalist>
+                    </label>
+                    <button class="ghost" id="car-dashboard-apply" type="button">Selecionar</button>
+                    <button class="primary" id="car-dashboard-reset" type="button">Visão Geral</button>
+                  </div>
+                  <div class="car-dashboard-layout">
+                    <div class="car-pie-stage">
+                      <div id="car-dashboard-chart" class="car-pie-chart"></div>
+                    </div>
+                    <div class="car-chart-legend" id="car-dashboard-legend"></div>
+                  </div>
                 </section>
               </section>
 
