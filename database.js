@@ -40,6 +40,45 @@
     return data;
   }
 
+  async function backendDelete(table, query) {
+    const response = await fetch("/api/excluir-registro", {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+      },
+      body: JSON.stringify({ table, query }),
+    });
+
+    const text = await response.text();
+    let data = null;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      data = null;
+    }
+
+    if (!response.ok || !data?.success) {
+      throw new Error(data?.error || response.statusText || "Falha ao excluir pelo backend");
+    }
+
+    return Array.isArray(data.rows) ? data.rows : [];
+  }
+
+  async function deleteRequest(table, query) {
+    try {
+      return await backendDelete(table, query);
+    } catch (error) {
+      const isLocalPreview = ["localhost", "127.0.0.1", ""].includes(window.location.hostname) || window.location.protocol === "file:";
+      if (isLocalPreview) {
+        return request(table, { method: "DELETE", query });
+      }
+      throw error;
+    }
+  }
+
   const db = {
     async ping() {
       return fetch(`${config.url}/auth/v1/health`, {
@@ -67,17 +106,11 @@
     },
 
     remove(table, id) {
-      return request(table, {
-        method: "DELETE",
-        query: `id=eq.${encodeURIComponent(id)}`,
-      });
+      return deleteRequest(table, `id=eq.${encodeURIComponent(id)}`);
     },
 
     removeWhere(table, query) {
-      return request(table, {
-        method: "DELETE",
-        query,
-      });
+      return deleteRequest(table, query);
     },
   };
 
