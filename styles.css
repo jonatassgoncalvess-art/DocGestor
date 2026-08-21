@@ -2408,6 +2408,34 @@ button {
   font-size: 14px;
 }
 
+.dynamic-field-box {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.dynamic-field-head,
+.dynamic-field-row {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr auto;
+}
+
+.dynamic-field-head span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.dynamic-field-list {
+  display: grid;
+  gap: 8px;
+}
+
 .alert-history-summary {
   border: 1px solid var(--line);
   border-radius: 8px;

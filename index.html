@@ -380,7 +380,7 @@
                 <div class="section-title">
                   <div>
                     <p class="eyebrow">01.2.4 CAR</p>
-                    <h2>Cadastro Ambiental Rural vinculado aos imóveis</h2>
+                    <h2>Cadastro Ambiental Rural anterior ao imóvel</h2>
                   </div>
                   <button class="primary" id="car-new">Novo CAR</button>
                 </div>
@@ -2017,7 +2017,7 @@
     </div>
 
     <div class="modal-backdrop" id="car-modal" aria-hidden="true">
-      <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="car-modal-title">
+      <section class="modal-panel wide-modal" role="dialog" aria-modal="true" aria-labelledby="car-modal-title">
         <div class="modal-head">
           <div>
             <p class="eyebrow">01.2.4 CAR</p>
@@ -2027,10 +2027,7 @@
         </div>
         <form class="user-form" id="car-form">
           <input type="hidden" id="car-id" value="0" />
-          <label>Número do CAR<input id="car-number" required /></label>
-          <label>Imóvel vinculado
-            <select id="car-property"></select>
-          </label>
+          <label>Número do CAR<input id="car-number" required placeholder="PR-4100000-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" /></label>
           <label>Situação
             <select id="car-status">
               <option>Ativo</option>
@@ -2039,7 +2036,32 @@
               <option>Cancelado</option>
             </select>
           </label>
-          <label>Observações<textarea id="car-notes" rows="4"></textarea></label>
+          <label>Latitude<input id="car-latitude" type="number" step="0.000001" placeholder="-25.000000" /></label>
+          <label>Longitude<input id="car-longitude" type="number" step="0.000001" placeholder="-53.000000" /></label>
+          <div class="wide-field dynamic-field-box">
+            <div class="dynamic-field-head">
+              <span>Matrículas informadas no CAR</span>
+              <button class="ghost small" id="car-registration-add" type="button">+ Matrícula</button>
+            </div>
+            <div class="dynamic-field-list" id="car-registration-list"></div>
+          </div>
+          <label class="wide-field">Perímetro do imóvel<textarea id="car-perimeter-description" rows="3"></textarea></label>
+          <label>Área de Reserva Legal - RL (m²)<input id="car-legal-reserve-area" type="number" min="0" step="0.01" /></label>
+          <label>Situação da Reserva Legal<input id="car-legal-reserve-status" placeholder="Proposta, averbada ou aprovada" /></label>
+          <label class="wide-field">Áreas de Preservação Permanente - APP<textarea id="car-app-description" rows="3"></textarea></label>
+          <label class="wide-field">Remanescentes de vegetação nativa<textarea id="car-native-vegetation-description" rows="3"></textarea></label>
+          <label>Área Rural Consolidada (m²)<input id="car-consolidated-area" type="number" min="0" step="0.01" /></label>
+          <label>Área de Pousio (m²)<input id="car-fallow-area" type="number" min="0" step="0.01" /></label>
+          <label class="wide-field">Áreas de uso restrito<textarea id="car-restricted-use-description" rows="3"></textarea></label>
+          <label class="wide-field">Rios e córregos<textarea id="car-rivers-description" rows="3"></textarea></label>
+          <label class="wide-field">Nascentes e olhos d'água<textarea id="car-springs-description" rows="3"></textarea></label>
+          <label class="wide-field">Lagos e lagoas<textarea id="car-lakes-description" rows="3"></textarea></label>
+          <label class="wide-field">Banhados e veredas<textarea id="car-wetlands-description" rows="3"></textarea></label>
+          <label class="wide-field">Benfeitorias e sedes<textarea id="car-improvements-description" rows="3"></textarea></label>
+          <label class="wide-field">Estradas e caminhos<textarea id="car-roads-description" rows="3"></textarea></label>
+          <label class="wide-field">Servidão administrativa<textarea id="car-easement-description" rows="3"></textarea></label>
+          <label class="wide-field">Utilidade pública<textarea id="car-public-utility-description" rows="3"></textarea></label>
+          <label class="wide-field">Observações<textarea id="car-notes" rows="4"></textarea></label>
         </form>
         <div class="modal-actions">
           <button class="ghost" data-close-modal="car-modal">Cancelar</button>

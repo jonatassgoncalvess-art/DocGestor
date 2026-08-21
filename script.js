@@ -77,7 +77,7 @@ const adminPanelMeta = {
   "socios-admin": { breadcrumb: "01.2.1 Cadastros > Sócios", title: "01.2.1 Sócios", subtitle: "Sócios e responsáveis legais usados nos módulos do sistema." },
   "empresas-filiais": { breadcrumb: "01.2.2 Cadastros > Empresas e Filiais", title: "01.2.2 Empresas e Filiais", subtitle: "Matrizes, filiais e vínculos societários." },
   "cidades-admin": { breadcrumb: "01.2.3 Cadastros > Cidades", title: "01.2.3 Cidades", subtitle: "Cidades e estados usados no cadastro de imóveis." },
-  "car-admin": { breadcrumb: "01.2.4 Cadastros > CAR", title: "01.2.4 CAR", subtitle: "Cadastro Ambiental Rural vinculado aos imóveis rurais." },
+  "car-admin": { breadcrumb: "01.2.4 Cadastros > CAR", title: "01.2.4 CAR", subtitle: "Cadastro Ambiental Rural anterior ao cadastro das matrículas e imóveis." },
   "imoveis-admin": { breadcrumb: "01.2.5 Cadastros > Imóveis", title: "01.2.5 Imóveis", subtitle: "Imóveis urbanos e rurais vinculados a proprietários." },
   "imoveis-urbanos-admin": { breadcrumb: "01.2.5.1 Imóveis > Urbanos", title: "01.2.5.1 Urbanos", subtitle: "Listagem automática dos imóveis urbanos cadastrados." },
   "imoveis-rurais-admin": { breadcrumb: "01.2.5.2 Imóveis > Rurais", title: "01.2.5.2 Rurais", subtitle: "Listagem automática dos imóveis rurais cadastrados." },
@@ -583,7 +583,7 @@ const searchableEnvironments = [
   { code: "01.2.1", title: "Sócios", detail: "Sócios e responsáveis legais", permission: "registries", action: () => openAdminSearchPanel("socios-admin") },
   { code: "01.2.2", title: "Empresas e Filiais", detail: "Matrizes, filiais e sócios vinculados", permission: "registries", action: () => openAdminSearchPanel("empresas-filiais") },
   { code: "01.2.3", title: "Cidades", detail: "Cidades usadas nos imóveis", permission: "registries", action: () => openAdminSearchPanel("cidades-admin") },
-  { code: "01.2.4", title: "CAR", detail: "Cadastro Ambiental Rural dos imóveis", permission: "registries", action: () => openAdminSearchPanel("car-admin") },
+  { code: "01.2.4", title: "CAR", detail: "Cadastro Ambiental Rural e matrículas informadas", permission: "registries", action: () => openAdminSearchPanel("car-admin") },
   { code: "01.2.5", title: "Imóveis", detail: "Imóveis urbanos, rurais e proprietários", permission: "registries", action: () => openAdminSearchPanel("imoveis-admin") },
   { code: "01.2.5.1", title: "Urbanos", detail: "Listagem automática de imóveis urbanos", permission: "registries", action: () => openAdminSearchPanel("imoveis-urbanos-admin") },
   { code: "01.2.5.2", title: "Rurais", detail: "Listagem automática de imóveis rurais", permission: "registries", action: () => openAdminSearchPanel("imoveis-rurais-admin") },
@@ -5362,24 +5362,11 @@ let selectedCarRegistryId = 0;
 const carList = document.querySelector("#car-list");
 const carCount = document.querySelector("#car-count");
 
-function carPropertyOptions(selectedPropertyId = "") {
-  const ruralProperties = properties.filter((property) => property.type === "rural");
-  return [
-    `<option value="">Sem imóvel vinculado</option>`,
-    ...ruralProperties.map((property) => `<option value="${property.id}" ${sameId(property.id, selectedPropertyId) ? "selected" : ""}>Matrícula ${escapeHtml(property.registration)} - ${escapeHtml(property.reference || propertyOwnerLabel(property) || "Rural")}</option>`),
-  ].join("");
-}
-
-function populateCarProperties(selectedPropertyId = "") {
-  const select = field("car-property");
-  if (!select) return;
-  select.innerHTML = carPropertyOptions(selectedPropertyId);
-}
-
-function carPropertyLabel(propertyId) {
-  const property = properties.find((item) => sameId(item.id, propertyId));
-  if (!property) return "Sem imóvel vinculado";
-  return `Matrícula ${property.registration} - ${property.reference || propertyOwnerLabel(property) || "Rural"}`;
+function nonNegativeCarNumber(id) {
+  const input = field(id);
+  const value = Math.max(0, Number(input?.value || 0));
+  if (input && Number(input.value || 0) < 0) input.value = "0";
+  return value || "";
 }
 
 function carSearchText(registry) {
@@ -5387,7 +5374,14 @@ function carSearchText(registry) {
     registry.number,
     registry.status,
     registry.notes,
-    carPropertyLabel(registry.propertyId),
+    registry.latitude,
+    registry.longitude,
+    ...(registry.registrations || []),
+    registry.perimeterDescription,
+    registry.legalReserveStatus,
+    registry.appDescription,
+    registry.nativeVegetationDescription,
+    registry.restrictedUseDescription,
   ].filter(Boolean).join(" "));
 }
 
@@ -5406,7 +5400,7 @@ function renderCarRegistries() {
     ? items.map((registry) => `
       <article>
         <strong>CAR ${escapeHtml(registry.number)}</strong>
-        <span>${escapeHtml(carPropertyLabel(registry.propertyId))} - Situação: ${escapeHtml(registry.status || "Ativo")}${registry.notes ? ` - ${escapeHtml(registry.notes)}` : ""}</span>
+        <span>${escapeHtml(carRegistrySummary(registry))}</span>
         <div>
           <button type="button" data-car-action="edit" data-car-id="${registry.id}">Editar</button>
           <button type="button" data-car-action="delete" data-car-id="${registry.id}">Excluir</button>
@@ -5416,13 +5410,63 @@ function renderCarRegistries() {
     : `<article><strong>Nenhum CAR cadastrado</strong><span>Cadastre o CAR para manter o controle separado dos imóveis rurais.</span><div></div></article>`;
 }
 
+function carRegistrySummary(registry) {
+  const registrations = Array.isArray(registry.registrations) && registry.registrations.length
+    ? `Matrículas: ${registry.registrations.join(", ")}`
+    : "Sem matrícula informada";
+  const coordinates = registry.latitude || registry.longitude
+    ? ` - Coordenadas: ${registry.latitude || "lat. não informada"}, ${registry.longitude || "long. não informada"}`
+    : "";
+  return `${registrations}${coordinates} - Situação: ${registry.status || "Ativo"}`;
+}
+
+function renderCarRegistrationInputs(values = [""]) {
+  const list = field("car-registration-list");
+  if (!list) return;
+  const safeValues = values.length ? values : [""];
+  list.innerHTML = safeValues.map((value, index) => `
+    <div class="dynamic-field-row">
+      <input class="car-registration-input" value="${escapeHtml(value)}" placeholder="Número da matrícula" />
+      <button class="ghost small" type="button" data-car-registration-remove="${index}" ${safeValues.length === 1 ? "disabled" : ""}>Remover</button>
+    </div>
+  `).join("");
+}
+
+function carRegistrationValues() {
+  return [...document.querySelectorAll(".car-registration-input")]
+    .map((input) => input.value.trim())
+    .filter(Boolean);
+}
+
+function addCarRegistrationInput() {
+  renderCarRegistrationInputs([...carRegistrationValues(), ""]);
+}
+
 function fillCarForm(registry) {
   if (!registry) return;
   selectedCarRegistryId = registry.id;
   field("car-id").value = registry.id;
   field("car-number").value = registry.number || "";
-  populateCarProperties(registry.propertyId || "");
   field("car-status").value = registry.status || "Ativo";
+  field("car-latitude").value = registry.latitude || "";
+  field("car-longitude").value = registry.longitude || "";
+  renderCarRegistrationInputs(registry.registrations || [""]);
+  field("car-perimeter-description").value = registry.perimeterDescription || "";
+  field("car-legal-reserve-area").value = registry.legalReserveArea || "";
+  field("car-legal-reserve-status").value = registry.legalReserveStatus || "";
+  field("car-app-description").value = registry.appDescription || "";
+  field("car-native-vegetation-description").value = registry.nativeVegetationDescription || "";
+  field("car-consolidated-area").value = registry.consolidatedArea || "";
+  field("car-fallow-area").value = registry.fallowArea || "";
+  field("car-restricted-use-description").value = registry.restrictedUseDescription || "";
+  field("car-rivers-description").value = registry.riversDescription || "";
+  field("car-springs-description").value = registry.springsDescription || "";
+  field("car-lakes-description").value = registry.lakesDescription || "";
+  field("car-wetlands-description").value = registry.wetlandsDescription || "";
+  field("car-improvements-description").value = registry.improvementsDescription || "";
+  field("car-roads-description").value = registry.roadsDescription || "";
+  field("car-easement-description").value = registry.easementDescription || "";
+  field("car-public-utility-description").value = registry.publicUtilityDescription || "";
   field("car-notes").value = registry.notes || "";
 }
 
@@ -5431,8 +5475,26 @@ function newCarRegistry() {
   selectedCarRegistryId = id;
   field("car-id").value = id;
   field("car-number").value = "";
-  populateCarProperties();
   field("car-status").value = "Ativo";
+  field("car-latitude").value = "";
+  field("car-longitude").value = "";
+  renderCarRegistrationInputs([""]);
+  field("car-perimeter-description").value = "";
+  field("car-legal-reserve-area").value = "";
+  field("car-legal-reserve-status").value = "";
+  field("car-app-description").value = "";
+  field("car-native-vegetation-description").value = "";
+  field("car-consolidated-area").value = "";
+  field("car-fallow-area").value = "";
+  field("car-restricted-use-description").value = "";
+  field("car-rivers-description").value = "";
+  field("car-springs-description").value = "";
+  field("car-lakes-description").value = "";
+  field("car-wetlands-description").value = "";
+  field("car-improvements-description").value = "";
+  field("car-roads-description").value = "";
+  field("car-easement-description").value = "";
+  field("car-public-utility-description").value = "";
   field("car-notes").value = "";
   document.querySelector("#car-modal-title").textContent = "Novo CAR";
   openModal("car-modal");
@@ -5445,8 +5507,26 @@ async function saveCarRegistry() {
   const payload = {
     id: id || Date.now(),
     number: field("car-number").value.trim(),
-    propertyId: field("car-property").value || "",
     status: field("car-status").value,
+    latitude: field("car-latitude").value,
+    longitude: field("car-longitude").value,
+    registrations: carRegistrationValues(),
+    perimeterDescription: field("car-perimeter-description").value.trim(),
+    legalReserveArea: nonNegativeCarNumber("car-legal-reserve-area"),
+    legalReserveStatus: field("car-legal-reserve-status").value.trim(),
+    appDescription: field("car-app-description").value.trim(),
+    nativeVegetationDescription: field("car-native-vegetation-description").value.trim(),
+    consolidatedArea: nonNegativeCarNumber("car-consolidated-area"),
+    fallowArea: nonNegativeCarNumber("car-fallow-area"),
+    restrictedUseDescription: field("car-restricted-use-description").value.trim(),
+    riversDescription: field("car-rivers-description").value.trim(),
+    springsDescription: field("car-springs-description").value.trim(),
+    lakesDescription: field("car-lakes-description").value.trim(),
+    wetlandsDescription: field("car-wetlands-description").value.trim(),
+    improvementsDescription: field("car-improvements-description").value.trim(),
+    roadsDescription: field("car-roads-description").value.trim(),
+    easementDescription: field("car-easement-description").value.trim(),
+    publicUtilityDescription: field("car-public-utility-description").value.trim(),
     notes: field("car-notes").value.trim(),
   };
   if (!payload.number) {
@@ -5464,7 +5544,16 @@ async function saveCarRegistry() {
 
 document.querySelector("#car-new")?.addEventListener("click", newCarRegistry);
 document.querySelector("#car-save")?.addEventListener("click", saveCarRegistry);
+document.querySelector("#car-registration-add")?.addEventListener("click", addCarRegistrationInput);
 field("car-search")?.addEventListener("input", renderCarRegistries);
+field("car-registration-list")?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-car-registration-remove]");
+  if (!button) return;
+  const index = Number(button.dataset.carRegistrationRemove);
+  const values = carRegistrationValues();
+  values.splice(index, 1);
+  renderCarRegistrationInputs(values);
+});
 carList?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-car-action]");
   if (!button) return;
@@ -10179,15 +10268,28 @@ async function persistCarRegistry(registry, wasExisting) {
   if (!window.DocGestorDB) return false;
   const organizationId = await defaultOrganizationId();
   if (!organizationId) return false;
-  const propertyId = registry.propertyId || null;
-  if (propertyId && !looksLikeUuid(propertyId)) {
-    alert("Não foi possível salvar o CAR no banco porque o imóvel vinculado ainda não possui ID válido no Supabase.");
-    return false;
-  }
   const payload = {
     organization_id: organizationId,
     car_number: registry.number,
-    property_id: looksLikeUuid(propertyId) ? propertyId : null,
+    registrations: registry.registrations || [],
+    latitude: registry.latitude || null,
+    longitude: registry.longitude || null,
+    perimeter_description: registry.perimeterDescription || null,
+    legal_reserve_area_m2: registry.legalReserveArea === "" ? null : Number(registry.legalReserveArea || 0),
+    legal_reserve_status: registry.legalReserveStatus || null,
+    app_description: registry.appDescription || null,
+    native_vegetation_description: registry.nativeVegetationDescription || null,
+    consolidated_area_m2: registry.consolidatedArea === "" ? null : Number(registry.consolidatedArea || 0),
+    fallow_area_m2: registry.fallowArea === "" ? null : Number(registry.fallowArea || 0),
+    restricted_use_description: registry.restrictedUseDescription || null,
+    rivers_description: registry.riversDescription || null,
+    springs_description: registry.springsDescription || null,
+    lakes_description: registry.lakesDescription || null,
+    wetlands_description: registry.wetlandsDescription || null,
+    improvements_description: registry.improvementsDescription || null,
+    roads_description: registry.roadsDescription || null,
+    easement_description: registry.easementDescription || null,
+    public_utility_description: registry.publicUtilityDescription || null,
     status: registry.status || "Ativo",
     notes: registry.notes || null,
   };
@@ -10868,7 +10970,25 @@ async function loadSupabaseData() {
   carRegistries = carRows.map((row) => ({
     id: row.id,
     number: row.car_number || "",
-    propertyId: row.property_id || "",
+    registrations: Array.isArray(row.registrations) ? row.registrations : [],
+    latitude: row.latitude ?? "",
+    longitude: row.longitude ?? "",
+    perimeterDescription: row.perimeter_description || "",
+    legalReserveArea: row.legal_reserve_area_m2 ?? "",
+    legalReserveStatus: row.legal_reserve_status || "",
+    appDescription: row.app_description || "",
+    nativeVegetationDescription: row.native_vegetation_description || "",
+    consolidatedArea: row.consolidated_area_m2 ?? "",
+    fallowArea: row.fallow_area_m2 ?? "",
+    restrictedUseDescription: row.restricted_use_description || "",
+    riversDescription: row.rivers_description || "",
+    springsDescription: row.springs_description || "",
+    lakesDescription: row.lakes_description || "",
+    wetlandsDescription: row.wetlands_description || "",
+    improvementsDescription: row.improvements_description || "",
+    roadsDescription: row.roads_description || "",
+    easementDescription: row.easement_description || "",
+    publicUtilityDescription: row.public_utility_description || "",
     status: row.status || "Ativo",
     notes: row.notes || "",
   }));
