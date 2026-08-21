@@ -1953,6 +1953,28 @@ button {
   grid-column: 1 / -1;
 }
 
+.form-block-title {
+  align-items: center;
+  color: var(--brand-red);
+  display: grid;
+  font-size: 12px;
+  font-weight: 900;
+  gap: 12px;
+  grid-column: 1 / -1;
+  grid-template-columns: auto 1fr;
+  letter-spacing: 0;
+  margin: 4px 0 2px;
+  text-transform: uppercase;
+}
+
+.form-block-title::after {
+  background: var(--line);
+  content: "";
+  display: block;
+  height: 1px;
+  width: 100%;
+}
+
 .user-list {
   display: grid;
   gap: 10px;

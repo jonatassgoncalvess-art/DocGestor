@@ -2191,6 +2191,7 @@
         </div>
         <form class="user-form" id="property-form">
           <input type="hidden" id="property-id" value="0" />
+          <div class="form-block-title">Dados iniciais</div>
           <label>Tipo de propriedade
             <select id="property-owner-type">
               <option value="pf">Pessoas Físicas</option>
@@ -2200,27 +2201,31 @@
           <label>Proprietário
             <select id="property-owner"></select>
           </label>
-          <label class="property-type-line">Tipo de imóvel
+          <label>Tipo de imóvel
             <select id="property-type">
               <option value="urban">Urbano</option>
               <option value="rural">Rural</option>
             </select>
           </label>
+          <label>Cidade<select id="property-city"></select></label>
+
+          <div class="form-block-title">Dados do imóvel</div>
           <label>Lote<input id="property-lot" /></label>
           <label class="urban-field">Quadra<input id="property-block" /></label>
           <label class="rural-field" hidden>Gleba<input id="property-glebe" /></label>
-          <label class="urban-area-field" hidden>m2 do imóvel<input id="property-urban-area" type="number" min="0" /></label>
-          <label class="rural-field" hidden>Área total da matrícula (m²)<input id="property-rural-area" type="number" min="0" /></label>
-          <label class="rural-field" hidden>Área total da matrícula (ha)<input id="property-hectares" type="number" min="0" step="0.0001" /></label>
+          <label>Localização<input id="property-address" /></label>
+          <label>Referência<input id="property-reference" /></label>
           <label>Matrícula<input id="property-registration" inputmode="numeric" /></label>
           <label class="rural-field" hidden>CAR vinculado<input id="property-car-number" readonly placeholder="Informe a matrícula para consultar o CAR" /></label>
           <p class="wide-field property-car-status rural-field" id="property-car-status" hidden>Nenhum CAR consultado.</p>
-          <label>Referência de localização<input id="property-reference" /></label>
-          <label>Endereço<input id="property-address" /></label>
-          <label>Cidade<select id="property-city"></select></label>
           <label class="urban-field">Inscricao imobiliaria<input id="property-municipal-registration" /></label>
           <label class="rural-field" hidden>Número CCIR/INCRA<input id="property-ccir-incra" /></label>
           <label class="rural-field" hidden>CIB/NIRF/ITR<input id="property-cib-itr" inputmode="numeric" pattern="[0-9]*" /></label>
+
+          <div class="form-block-title">Informações do imóvel</div>
+          <label class="urban-area-field" hidden>Área total da matrícula (m²)<input id="property-urban-area" type="number" min="0" /></label>
+          <label class="rural-field" hidden>Área total da matrícula (m²)<input id="property-rural-area" type="number" min="0" /></label>
+          <label class="rural-field" hidden>Área total da matrícula (ha)<input id="property-hectares" type="number" min="0" step="0.0001" /></label>
           <label class="property-use-field" hidden>Uso da propriedade
             <select id="property-rural-use">
               <option>Lavoura</option>
