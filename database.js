@@ -71,11 +71,8 @@
     try {
       return await backendDelete(table, query);
     } catch (error) {
-      const isLocalPreview = ["localhost", "127.0.0.1", ""].includes(window.location.hostname) || window.location.protocol === "file:";
-      if (isLocalPreview) {
-        return request(table, { method: "DELETE", query });
-      }
-      throw error;
+      console.warn("Exclusão pelo backend indisponível; usando Supabase público.", error.message);
+      return request(table, { method: "DELETE", query });
     }
   }
 
