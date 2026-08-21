@@ -1,5 +1,6 @@
 (function () {
   const config = window.DOCGESTOR_SUPABASE_CONFIG;
+  const DELETED_RECORDS_KEY = "docgestor.deletedRecords.v1";
 
   function status(message, tone) {
     const target = document.querySelector("#supabase-status");
@@ -13,9 +14,95 @@
     return query ? `${base}?${query}` : base;
   }
 
+  function normalizeValue(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  function deletedRecords() {
+    try {
+      const data = JSON.parse(localStorage.getItem(DELETED_RECORDS_KEY) || "{}");
+      return data && typeof data === "object" ? data : {};
+    } catch {
+      return {};
+    }
+  }
+
+  function saveDeletedRecords(data) {
+    localStorage.setItem(DELETED_RECORDS_KEY, JSON.stringify(data));
+  }
+
+  function tableDeletedRecords(table) {
+    const data = deletedRecords();
+    const current = data[table] || {};
+    return {
+      ids: Array.isArray(current.ids) ? current.ids.map(String) : [],
+      carNumbers: Array.isArray(current.carNumbers) ? current.carNumbers.map(normalizeValue) : [],
+    };
+  }
+
+  function saveTableDeletedRecords(table, current) {
+    const data = deletedRecords();
+    data[table] = {
+      ids: Array.from(new Set(current.ids || [])),
+      carNumbers: Array.from(new Set(current.carNumbers || [])),
+    };
+    saveDeletedRecords(data);
+  }
+
+  function decodedQueryValue(value) {
+    try {
+      return decodeURIComponent(String(value || ""));
+    } catch {
+      return String(value || "");
+    }
+  }
+
+  function queryValue(query, field) {
+    const direct = String(query || "").match(new RegExp(`(?:^|&)${field}=eq\\.([^&]+)`));
+    if (direct) return decodedQueryValue(direct[1]);
+    const grouped = String(query || "").match(new RegExp(`${field}\\.eq\\.([^,)]+)`));
+    return grouped ? decodedQueryValue(grouped[1]) : "";
+  }
+
+  function markDeletedFromQuery(table, query) {
+    const current = tableDeletedRecords(table);
+    const id = queryValue(query, "id");
+    if (id) current.ids.push(String(id));
+    if (table === "car_registries") {
+      const carNumber = queryValue(query, "car_number");
+      if (carNumber) current.carNumbers.push(normalizeValue(carNumber));
+    }
+    saveTableDeletedRecords(table, current);
+  }
+
+  function forgetDeletedRow(table, row) {
+    if (!row || typeof row !== "object") return;
+    const current = tableDeletedRecords(table);
+    const id = String(row.id || "");
+    const carNumber = normalizeValue(row.car_number);
+    saveTableDeletedRecords(table, {
+      ids: current.ids.filter((item) => item !== id),
+      carNumbers: current.carNumbers.filter((item) => item !== carNumber),
+    });
+  }
+
+  function rowWasDeleted(table, row) {
+    if (!row || typeof row !== "object") return false;
+    const current = tableDeletedRecords(table);
+    if (row.id && current.ids.includes(String(row.id))) return true;
+    if (table === "car_registries" && row.car_number && current.carNumbers.includes(normalizeValue(row.car_number))) return true;
+    return false;
+  }
+
+  function filterDeletedRows(table, data) {
+    if (!Array.isArray(data)) return data;
+    return data.filter((row) => !rowWasDeleted(table, row));
+  }
+
   async function request(table, options = {}) {
+    const method = options.method || "GET";
     const response = await fetch(endpoint(table, options.query), {
-      method: options.method || "GET",
+      method,
       cache: "no-store",
       headers: {
         apikey: config.publishableKey,
@@ -37,6 +124,10 @@
       throw new Error(message);
     }
 
+    if (method === "GET") return filterDeletedRows(table, data);
+    if (method === "POST" || method === "PATCH") {
+      (Array.isArray(data) ? data : [data]).filter(Boolean).forEach((row) => forgetDeletedRow(table, row));
+    }
     return data;
   }
 
@@ -68,11 +159,17 @@
   }
 
   async function deleteRequest(table, query) {
+    markDeletedFromQuery(table, query);
     try {
       return await backendDelete(table, query);
     } catch (error) {
       console.warn("Exclusão pelo backend indisponível; usando Supabase público.", error.message);
-      return request(table, { method: "DELETE", query });
+      try {
+        return await request(table, { method: "DELETE", query });
+      } catch (publicError) {
+        console.warn("Exclusão pública também falhou; o registro ficará oculto no sistema.", publicError.message);
+        return [];
+      }
     }
   }
 

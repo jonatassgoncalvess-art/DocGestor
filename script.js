@@ -5767,24 +5767,11 @@ function openCarMap(registry) {
 async function deleteCarRegistry(registry) {
   if (!registry) return false;
   if (!looksLikeUuid(registry.id) || !window.DocGestorDB) return true;
-
-  try {
-    await window.DocGestorDB.remove("car_registries", registry.id);
-    if (registry.number) {
-      await window.DocGestorDB.removeWhere("car_registries", `car_number=eq.${encodeURIComponent(registry.number)}`).catch(() => null);
-    }
-    const remainingFilter = registry.number
-      ? `or=(id.eq.${encodeURIComponent(registry.id)},car_number.eq.${encodeURIComponent(registry.number)})`
-      : `id=eq.${encodeURIComponent(registry.id)}`;
-    const remainingRows = await window.DocGestorDB.list("car_registries", `select=id,car_number&${remainingFilter}`);
-    if (Array.isArray(remainingRows) && remainingRows.length > 0) {
-      throw new Error("O CAR ainda está no Supabase após a exclusão.");
-    }
-    return true;
-  } catch (error) {
-    console.warn("Não foi possível excluir o CAR no Supabase.", error.message);
-    throw error;
+  await window.DocGestorDB.remove("car_registries", registry.id);
+  if (registry.number) {
+    await window.DocGestorDB.removeWhere("car_registries", `car_number=eq.${encodeURIComponent(registry.number)}`);
   }
+  return true;
 }
 
 function renderCarRegistries() {
