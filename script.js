@@ -5750,11 +5750,8 @@ function renderCarRegistries() {
 function carRegularityStatus(registry) {
   const totalArea = normalizeCarAreaValue(registry.totalArea);
   const legalReserve = normalizeCarAreaValue(registry.legalReserveArea);
-  const appArea = normalizeCarAreaValue(registry.appArea);
-  const coverage = registry.appRlCoverage || "";
   const reserveOk = totalArea && legalReserve !== "" && Number(legalReserve) >= Number(totalArea) * 0.2 - 0.01;
-  const appOk = !appArea || coverage === "integral";
-  const regular = Boolean(reserveOk && appOk);
+  const regular = Boolean(reserveOk);
   return {
     label: regular ? "Regular" : "Irregular",
     className: regular ? "regular" : "irregular",
@@ -6010,6 +6007,11 @@ function fillCarForm(registry) {
   renderCarRegistrationInputs(registry.registrations || [""]);
   hiddenCarAreaKeys = defaultHiddenCarAreaKeys();
   currentCarAreaValues = Object.fromEntries(CAR_AREA_FIELDS.map((item) => [item.key, registry[item.key] || ""]));
+  CAR_AREA_FIELDS.forEach((item) => {
+    if (normalizeCarAreaValue(currentCarAreaValues[item.key]) !== "") {
+      hiddenCarAreaKeys.delete(item.key);
+    }
+  });
   currentCarAreaValues.consolidatedArea = registry.consolidatedArea || "";
   currentCarAreaValues.appRlCoverage = registry.appRlCoverage || "";
   renderCarAreaFields();
