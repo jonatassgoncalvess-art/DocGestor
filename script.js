@@ -5783,12 +5783,12 @@ function renderCarRegistries() {
       <article class="car-list-row">
         <div class="car-list-main">
           <strong>CAR ${escapeHtml(registry.number)}</strong>
-          <span class="car-list-badges">
-            <span class="car-regularity ${carRegularityStatus(registry).className}">${carRegularityStatus(registry).label}</span>
-            ${registry.documentRequirementEnabled ? `<span class="car-regularity requirement">Em exigência</span>` : ""}
-          </span>
         </div>
         <span>${escapeHtml(carRegistrySummary(registry))}</span>
+        <div class="car-list-statuses">
+          <span class="car-regularity ${carRegularityStatus(registry).className}">RL ${carRegularityStatus(registry).label.toUpperCase()}</span>
+          ${registry.documentRequirementEnabled ? `<span class="car-regularity requirement">DOCS EM EXIGÊNCIA</span>` : ""}
+        </div>
         <div class="car-list-actions">
           <button class="map-icon-button" type="button" data-car-action="map" data-car-id="${registry.id}" title="Abrir no Google Maps" aria-label="Abrir coordenadas do CAR no Google Maps"><span class="map-pin-icon" aria-hidden="true"></span></button>
           <button type="button" data-car-action="report" data-car-id="${registry.id}">Relatório</button>
