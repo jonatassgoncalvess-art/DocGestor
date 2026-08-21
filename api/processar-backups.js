@@ -21,6 +21,7 @@ const BACKUP_TABLES = [
   "companies",
   "company_partners",
   "cities",
+  "car_registries",
   "properties",
   "enterprises",
   "enterprise_modules",

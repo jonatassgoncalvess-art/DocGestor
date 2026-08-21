@@ -79,12 +79,13 @@
               <button class="admin-link nav-depth-2" data-admin-target="socios-admin">01.2.1 Sócios</button>
               <button class="admin-link nav-depth-2" data-admin-target="empresas-filiais">01.2.2 Empresas e Filiais</button>
               <button class="admin-link nav-depth-2" data-admin-target="cidades-admin">01.2.3 Cidades</button>
-              <button class="admin-link nav-depth-2" data-admin-target="imoveis-admin">01.2.4 Imóveis</button>
-              <button class="admin-link nav-depth-3" data-admin-target="imoveis-urbanos-admin">01.2.4.1 Urbanos</button>
-              <button class="admin-link nav-depth-3" data-admin-target="imoveis-rurais-admin">01.2.4.2 Rurais</button>
-              <button class="admin-link nav-depth-3" data-admin-target="painel-imoveis-admin">01.2.4.3 Painel Imóveis</button>
-              <button class="admin-link nav-depth-2" data-admin-target="empreendimentos-admin">01.2.5 Empreendimento</button>
-              <button class="admin-link nav-depth-2" data-admin-target="atividades-admin">01.2.6 Atividades</button>
+              <button class="admin-link nav-depth-2" data-admin-target="car-admin">01.2.4 CAR</button>
+              <button class="admin-link nav-depth-2" data-admin-target="imoveis-admin">01.2.5 Imóveis</button>
+              <button class="admin-link nav-depth-3" data-admin-target="imoveis-urbanos-admin">01.2.5.1 Urbanos</button>
+              <button class="admin-link nav-depth-3" data-admin-target="imoveis-rurais-admin">01.2.5.2 Rurais</button>
+              <button class="admin-link nav-depth-3" data-admin-target="painel-imoveis-admin">01.2.5.3 Painel Imóveis</button>
+              <button class="admin-link nav-depth-2" data-admin-target="empreendimentos-admin">01.2.6 Empreendimento</button>
+              <button class="admin-link nav-depth-2" data-admin-target="atividades-admin">01.2.7 Atividades</button>
             </div>
             <div class="side-tree-group">
               <strong>01.3 Ambiental</strong>
@@ -375,10 +376,27 @@
                 </section>
               </section>
 
+              <section class="admin-panel" id="admin-car-admin">
+                <div class="section-title">
+                  <div>
+                    <p class="eyebrow">01.2.4 CAR</p>
+                    <h2>Cadastro Ambiental Rural vinculado aos imóveis</h2>
+                  </div>
+                  <button class="primary" id="car-new">Novo CAR</button>
+                </div>
+                <section class="panel">
+                  <div class="list-head"><h3>CAR cadastrados</h3><span id="car-count">0 itens</span></div>
+                  <label class="search-inline">Buscar CAR
+                    <input id="car-search" type="search" placeholder="Buscar por número, imóvel, situação ou observação" />
+                  </label>
+                  <div class="crud-list" id="car-list"></div>
+                </section>
+              </section>
+
               <section class="admin-panel" id="admin-imoveis-admin">
                 <div class="section-title">
                   <div>
-                    <p class="eyebrow">01.2.4 Imóveis</p>
+                    <p class="eyebrow">01.2.5 Imóveis</p>
                     <h2>Imóveis urbanos ou rurais vinculados ao proprietário</h2>
                   </div>
                   <button class="primary" id="property-new">Novo Imóvel</button>
@@ -395,7 +413,7 @@
               <section class="admin-panel" id="admin-imoveis-urbanos-admin">
                 <div class="section-title">
                   <div>
-                    <p class="eyebrow">01.2.4.1 Urbanos</p>
+                    <p class="eyebrow">01.2.5.1 Urbanos</p>
                     <h2>Listagem automática de imóveis urbanos</h2>
                   </div>
                 </div>
@@ -411,7 +429,7 @@
               <section class="admin-panel" id="admin-imoveis-rurais-admin">
                 <div class="section-title">
                   <div>
-                    <p class="eyebrow">01.2.4.2 Rurais</p>
+                    <p class="eyebrow">01.2.5.2 Rurais</p>
                     <h2>Listagem automática de imóveis rurais</h2>
                   </div>
                 </div>
@@ -427,7 +445,7 @@
               <section class="admin-panel" id="admin-painel-imoveis-admin">
                 <div class="section-title">
                   <div>
-                    <p class="eyebrow">01.2.4.3 Painel Imóveis</p>
+                    <p class="eyebrow">01.2.5.3 Painel Imóveis</p>
                     <h2>Indicadores ambientais dos imóveis rurais</h2>
                   </div>
                 </div>
@@ -453,7 +471,7 @@
               <section class="admin-panel" id="admin-empreendimentos-admin">
                 <div class="section-title">
                   <div>
-                    <p class="eyebrow">01.2.5 Empreendimento</p>
+                    <p class="eyebrow">01.2.6 Empreendimento</p>
                     <h2>Vínculo entre empresa e imóvel onde o empreendimento será construído</h2>
                   </div>
                   <button class="primary" id="enterprise-new">Novo Empreendimento</button>
@@ -467,7 +485,7 @@
               <section class="admin-panel" id="admin-atividades-admin">
                 <div class="section-title">
                   <div>
-                    <p class="eyebrow">01.2.6 Atividades</p>
+                    <p class="eyebrow">01.2.7 Atividades</p>
                     <h2>Atividades vinculadas a CNPJ e empreendimentos</h2>
                   </div>
                   <button class="primary" id="activity-new">Nova Atividade</button>
@@ -1998,11 +2016,43 @@
       </section>
     </div>
 
+    <div class="modal-backdrop" id="car-modal" aria-hidden="true">
+      <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="car-modal-title">
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">01.2.4 CAR</p>
+            <h2 id="car-modal-title">Novo CAR</h2>
+          </div>
+          <button class="ghost small" data-close-modal="car-modal">Fechar</button>
+        </div>
+        <form class="user-form" id="car-form">
+          <input type="hidden" id="car-id" value="0" />
+          <label>Número do CAR<input id="car-number" required /></label>
+          <label>Imóvel vinculado
+            <select id="car-property"></select>
+          </label>
+          <label>Situação
+            <select id="car-status">
+              <option>Ativo</option>
+              <option>Pendente</option>
+              <option>Retificado</option>
+              <option>Cancelado</option>
+            </select>
+          </label>
+          <label>Observações<textarea id="car-notes" rows="4"></textarea></label>
+        </form>
+        <div class="modal-actions">
+          <button class="ghost" data-close-modal="car-modal">Cancelar</button>
+          <button class="primary" id="car-save">Salvar CAR</button>
+        </div>
+      </section>
+    </div>
+
     <div class="modal-backdrop" id="property-modal" aria-hidden="true">
       <section class="modal-panel wide-modal" role="dialog" aria-modal="true" aria-labelledby="property-modal-title">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">01.2.4 Imóveis</p>
+            <p class="eyebrow">01.2.5 Imóveis</p>
             <h2 id="property-modal-title">Novo Imóvel</h2>
           </div>
           <button class="ghost small" data-close-modal="property-modal">Fechar</button>
@@ -2084,7 +2134,7 @@
       <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="enterprise-modal-title">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">01.2.5 Empreendimento</p>
+            <p class="eyebrow">01.2.6 Empreendimento</p>
             <h2 id="enterprise-modal-title">Novo Empreendimento</h2>
           </div>
           <button class="ghost small" data-close-modal="enterprise-modal">Fechar</button>
@@ -2138,7 +2188,7 @@
       <section class="modal-panel wide-modal" role="dialog" aria-modal="true" aria-labelledby="enterprise-property-title">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">01.2.5 Empreendimento</p>
+            <p class="eyebrow">01.2.6 Empreendimento</p>
             <h2 id="enterprise-property-title">Selecionar imóvel</h2>
           </div>
           <button class="ghost small" data-close-modal="enterprise-property-modal">Fechar</button>
@@ -2336,7 +2386,7 @@
       <section class="modal-panel wide-modal" role="dialog" aria-modal="true" aria-labelledby="property-pdf-title">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">01.2.4 Imóveis</p>
+            <p class="eyebrow">01.2.5 Imóveis</p>
             <h2 id="property-pdf-title">Filtros do PDF</h2>
           </div>
           <button class="ghost small" data-close-modal="property-pdf-modal">Fechar</button>
@@ -2425,7 +2475,7 @@
       <section class="modal-panel confirm-modal" role="dialog" aria-modal="true" aria-labelledby="enterprise-modules-title">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">01.2.5 Empreendimento</p>
+            <p class="eyebrow">01.2.6 Empreendimento</p>
             <h2 id="enterprise-modules-title">Inserir módulos</h2>
           </div>
           <button class="ghost small" data-close-modal="enterprise-modules-modal">Fechar</button>
@@ -2442,7 +2492,7 @@
       <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="activity-modal-title">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">01.2.6 Atividades</p>
+            <p class="eyebrow">01.2.7 Atividades</p>
             <h2 id="activity-modal-title">Nova Atividade</h2>
           </div>
           <button class="ghost small" data-close-modal="activity-modal">Fechar</button>
@@ -2479,7 +2529,7 @@
       <section class="modal-panel confirm-modal" role="dialog" aria-modal="true" aria-labelledby="activity-companies-title">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">01.2.6 Atividades</p>
+            <p class="eyebrow">01.2.7 Atividades</p>
             <h2 id="activity-companies-title">Selecionar CNPJs</h2>
           </div>
           <button class="ghost small" data-close-modal="activity-companies-modal">Fechar</button>
@@ -2496,7 +2546,7 @@
       <section class="modal-panel confirm-modal" role="dialog" aria-modal="true" aria-labelledby="activity-enterprises-title">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">01.2.6 Atividades</p>
+            <p class="eyebrow">01.2.7 Atividades</p>
             <h2 id="activity-enterprises-title">Selecionar empreendimentos</h2>
           </div>
           <button class="ghost small" data-close-modal="activity-enterprises-modal">Fechar</button>

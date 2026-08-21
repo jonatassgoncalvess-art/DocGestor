@@ -77,12 +77,13 @@ const adminPanelMeta = {
   "socios-admin": { breadcrumb: "01.2.1 Cadastros > Sócios", title: "01.2.1 Sócios", subtitle: "Sócios e responsáveis legais usados nos módulos do sistema." },
   "empresas-filiais": { breadcrumb: "01.2.2 Cadastros > Empresas e Filiais", title: "01.2.2 Empresas e Filiais", subtitle: "Matrizes, filiais e vínculos societários." },
   "cidades-admin": { breadcrumb: "01.2.3 Cadastros > Cidades", title: "01.2.3 Cidades", subtitle: "Cidades e estados usados no cadastro de imóveis." },
-  "imoveis-admin": { breadcrumb: "01.2.4 Cadastros > Imóveis", title: "01.2.4 Imóveis", subtitle: "Imóveis urbanos e rurais vinculados a proprietários." },
-  "imoveis-urbanos-admin": { breadcrumb: "01.2.4.1 Imóveis > Urbanos", title: "01.2.4.1 Urbanos", subtitle: "Listagem automática dos imóveis urbanos cadastrados." },
-  "imoveis-rurais-admin": { breadcrumb: "01.2.4.2 Imóveis > Rurais", title: "01.2.4.2 Rurais", subtitle: "Listagem automática dos imóveis rurais cadastrados." },
-  "painel-imoveis-admin": { breadcrumb: "01.2.4.3 Imóveis > Painel Imóveis", title: "01.2.4.3 Painel Imóveis", subtitle: "Indicadores de área, reserva legal e APP dos imóveis rurais." },
-  "empreendimentos-admin": { breadcrumb: "01.2.5 Cadastros > Empreendimento", title: "01.2.5 Empreendimento", subtitle: "Empreendimentos vinculados a empresas, imóveis e módulos operacionais." },
-  "atividades-admin": { breadcrumb: "01.2.6 Cadastros > Atividades", title: "01.2.6 Atividades", subtitle: "Atividades, CNAE, CNPJ, empreendimentos e classificação CTF/APP." },
+  "car-admin": { breadcrumb: "01.2.4 Cadastros > CAR", title: "01.2.4 CAR", subtitle: "Cadastro Ambiental Rural vinculado aos imóveis rurais." },
+  "imoveis-admin": { breadcrumb: "01.2.5 Cadastros > Imóveis", title: "01.2.5 Imóveis", subtitle: "Imóveis urbanos e rurais vinculados a proprietários." },
+  "imoveis-urbanos-admin": { breadcrumb: "01.2.5.1 Imóveis > Urbanos", title: "01.2.5.1 Urbanos", subtitle: "Listagem automática dos imóveis urbanos cadastrados." },
+  "imoveis-rurais-admin": { breadcrumb: "01.2.5.2 Imóveis > Rurais", title: "01.2.5.2 Rurais", subtitle: "Listagem automática dos imóveis rurais cadastrados." },
+  "painel-imoveis-admin": { breadcrumb: "01.2.5.3 Imóveis > Painel Imóveis", title: "01.2.5.3 Painel Imóveis", subtitle: "Indicadores de área, reserva legal e APP dos imóveis rurais." },
+  "empreendimentos-admin": { breadcrumb: "01.2.6 Cadastros > Empreendimento", title: "01.2.6 Empreendimento", subtitle: "Empreendimentos vinculados a empresas, imóveis e módulos operacionais." },
+  "atividades-admin": { breadcrumb: "01.2.7 Cadastros > Atividades", title: "01.2.7 Atividades", subtitle: "Atividades, CNAE, CNPJ, empreendimentos e classificação CTF/APP." },
   "tipos-licencas": { breadcrumb: "01.3.1 Ambiental > Tipos de Licenças", title: "01.3.1 Tipos de Licenças", subtitle: "Classificação dos tipos de licenças por formato de licenciamento." },
   "documentos-ambientais": { breadcrumb: "01.3.2 Ambiental > Documentos", title: "01.3.2 Documentos", subtitle: "Documentos e parâmetros vinculados aos tipos de licença ambiental." },
   "modelos-checklist": { breadcrumb: "01.3.3 Ambiental > Modelos de Check-list", title: "01.3.3 Modelos de Check-list", subtitle: "Modelos usados para alimentar as etapas de check-list dos processos." },
@@ -582,12 +583,13 @@ const searchableEnvironments = [
   { code: "01.2.1", title: "Sócios", detail: "Sócios e responsáveis legais", permission: "registries", action: () => openAdminSearchPanel("socios-admin") },
   { code: "01.2.2", title: "Empresas e Filiais", detail: "Matrizes, filiais e sócios vinculados", permission: "registries", action: () => openAdminSearchPanel("empresas-filiais") },
   { code: "01.2.3", title: "Cidades", detail: "Cidades usadas nos imóveis", permission: "registries", action: () => openAdminSearchPanel("cidades-admin") },
-  { code: "01.2.4", title: "Imóveis", detail: "Imóveis urbanos, rurais e proprietários", permission: "registries", action: () => openAdminSearchPanel("imoveis-admin") },
-  { code: "01.2.4.1", title: "Urbanos", detail: "Listagem automática de imóveis urbanos", permission: "registries", action: () => openAdminSearchPanel("imoveis-urbanos-admin") },
-  { code: "01.2.4.2", title: "Rurais", detail: "Listagem automática de imóveis rurais", permission: "registries", action: () => openAdminSearchPanel("imoveis-rurais-admin") },
-  { code: "01.2.4.3", title: "Painel Imóveis", detail: "Indicadores ambientais dos imóveis rurais", permission: "registries", action: () => openAdminSearchPanel("painel-imoveis-admin") },
-  { code: "01.2.5", title: "Empreendimento", detail: "Empresas vinculadas a imóveis", permission: "registries", action: () => openAdminSearchPanel("empreendimentos-admin") },
-  { code: "01.2.6", title: "Atividades", detail: "Atividades, CNAE, CNPJ e CTF/APP", permission: "registries", action: () => openAdminSearchPanel("atividades-admin") },
+  { code: "01.2.4", title: "CAR", detail: "Cadastro Ambiental Rural dos imóveis", permission: "registries", action: () => openAdminSearchPanel("car-admin") },
+  { code: "01.2.5", title: "Imóveis", detail: "Imóveis urbanos, rurais e proprietários", permission: "registries", action: () => openAdminSearchPanel("imoveis-admin") },
+  { code: "01.2.5.1", title: "Urbanos", detail: "Listagem automática de imóveis urbanos", permission: "registries", action: () => openAdminSearchPanel("imoveis-urbanos-admin") },
+  { code: "01.2.5.2", title: "Rurais", detail: "Listagem automática de imóveis rurais", permission: "registries", action: () => openAdminSearchPanel("imoveis-rurais-admin") },
+  { code: "01.2.5.3", title: "Painel Imóveis", detail: "Indicadores ambientais dos imóveis rurais", permission: "registries", action: () => openAdminSearchPanel("painel-imoveis-admin") },
+  { code: "01.2.6", title: "Empreendimento", detail: "Empresas vinculadas a imóveis", permission: "registries", action: () => openAdminSearchPanel("empreendimentos-admin") },
+  { code: "01.2.7", title: "Atividades", detail: "Atividades, CNAE, CNPJ e CTF/APP", permission: "registries", action: () => openAdminSearchPanel("atividades-admin") },
   { code: "01.3.1", title: "Tipos de Licenças", detail: "Classificação ambiental", permission: "adminEnvironmental", action: () => openAdminSearchPanel("tipos-licencas") },
   { code: "01.3.2", title: "Documentos", detail: "Documentos ambientais por licença", permission: "adminEnvironmental", action: () => openAdminSearchPanel("documentos-ambientais") },
   { code: "01.3.3", title: "Modelos de Check-list", detail: "Modelos usados nos processos", permission: "adminEnvironmental", action: () => openAdminSearchPanel("modelos-checklist") },
@@ -2593,12 +2595,13 @@ function environmentCodeForAdminTarget(target) {
     "socios-admin": "01.2.1",
     "empresas-filiais": "01.2.2",
     "cidades-admin": "01.2.3",
-    "imoveis-admin": "01.2.4",
-    "imoveis-urbanos-admin": "01.2.4.1",
-    "imoveis-rurais-admin": "01.2.4.2",
-    "painel-imoveis-admin": "01.2.4.3",
-    "empreendimentos-admin": "01.2.5",
-    "atividades-admin": "01.2.6",
+    "car-admin": "01.2.4",
+    "imoveis-admin": "01.2.5",
+    "imoveis-urbanos-admin": "01.2.5.1",
+    "imoveis-rurais-admin": "01.2.5.2",
+    "painel-imoveis-admin": "01.2.5.3",
+    "empreendimentos-admin": "01.2.6",
+    "atividades-admin": "01.2.7",
     "tipos-licencas": "01.3.1",
     "documentos-ambientais": "01.3.2",
     "modelos-checklist": "01.3.3",
@@ -2734,7 +2737,7 @@ function applyAccessControl() {
   document.querySelectorAll('[data-admin-target="usuarios-admin"]').forEach((element) => {
     element.hidden = !canAccess("users");
   });
-  document.querySelectorAll('[data-admin-target="socios-admin"], [data-admin-target="empresas-filiais"], [data-admin-target="cidades-admin"], [data-admin-target="imoveis-admin"], [data-admin-target="imoveis-urbanos-admin"], [data-admin-target="imoveis-rurais-admin"], [data-admin-target="painel-imoveis-admin"], [data-admin-target="empreendimentos-admin"], [data-admin-target="atividades-admin"]').forEach((element) => {
+  document.querySelectorAll('[data-admin-target="socios-admin"], [data-admin-target="empresas-filiais"], [data-admin-target="cidades-admin"], [data-admin-target="car-admin"], [data-admin-target="imoveis-admin"], [data-admin-target="imoveis-urbanos-admin"], [data-admin-target="imoveis-rurais-admin"], [data-admin-target="painel-imoveis-admin"], [data-admin-target="empreendimentos-admin"], [data-admin-target="atividades-admin"]').forEach((element) => {
     element.hidden = !canAccess("registries");
   });
   document.querySelectorAll('[data-admin-target="tipos-licencas"], [data-admin-target="documentos-ambientais"], [data-admin-target="modelos-checklist"]').forEach((element) => {
@@ -5181,6 +5184,7 @@ function renderProperties() {
   renderPropertyList(urbanPropertyList, urbanPropertyCount, filteredPropertiesByMode("urban", field("urban-property-search")?.value || ""));
   renderPropertyList(ruralPropertyList, ruralPropertyCount, filteredPropertiesByMode("rural", field("rural-property-search")?.value || ""));
   renderEnvironmentalReserveDashboard();
+  renderCarRegistries();
 }
 
 function fillPropertyForm(property) {
@@ -5350,6 +5354,137 @@ propertyList?.addEventListener("click", (event) => {
     const text = document.querySelector("#property-delete-text");
     if (text) text.textContent = `Deseja realmente excluir o imóvel de matrícula ${property.registration}?`;
     openModal("property-delete-modal");
+  }
+});
+
+let carRegistries = [];
+let selectedCarRegistryId = 0;
+const carList = document.querySelector("#car-list");
+const carCount = document.querySelector("#car-count");
+
+function carPropertyOptions(selectedPropertyId = "") {
+  const ruralProperties = properties.filter((property) => property.type === "rural");
+  return [
+    `<option value="">Sem imóvel vinculado</option>`,
+    ...ruralProperties.map((property) => `<option value="${property.id}" ${sameId(property.id, selectedPropertyId) ? "selected" : ""}>Matrícula ${escapeHtml(property.registration)} - ${escapeHtml(property.reference || propertyOwnerLabel(property) || "Rural")}</option>`),
+  ].join("");
+}
+
+function populateCarProperties(selectedPropertyId = "") {
+  const select = field("car-property");
+  if (!select) return;
+  select.innerHTML = carPropertyOptions(selectedPropertyId);
+}
+
+function carPropertyLabel(propertyId) {
+  const property = properties.find((item) => sameId(item.id, propertyId));
+  if (!property) return "Sem imóvel vinculado";
+  return `Matrícula ${property.registration} - ${property.reference || propertyOwnerLabel(property) || "Rural"}`;
+}
+
+function carSearchText(registry) {
+  return normalizeSearchText([
+    registry.number,
+    registry.status,
+    registry.notes,
+    carPropertyLabel(registry.propertyId),
+  ].filter(Boolean).join(" "));
+}
+
+function filteredCarRegistries() {
+  const search = normalizeSearchText(field("car-search")?.value || "");
+  return carRegistries
+    .filter((registry) => !search || carSearchText(registry).includes(search))
+    .sort((a, b) => String(a.number || "").localeCompare(String(b.number || ""), "pt-BR", { numeric: true }));
+}
+
+function renderCarRegistries() {
+  if (!carList || !carCount) return;
+  const items = filteredCarRegistries();
+  carCount.textContent = `${items.length} itens`;
+  carList.innerHTML = items.length
+    ? items.map((registry) => `
+      <article>
+        <strong>CAR ${escapeHtml(registry.number)}</strong>
+        <span>${escapeHtml(carPropertyLabel(registry.propertyId))} - Situação: ${escapeHtml(registry.status || "Ativo")}${registry.notes ? ` - ${escapeHtml(registry.notes)}` : ""}</span>
+        <div>
+          <button type="button" data-car-action="edit" data-car-id="${registry.id}">Editar</button>
+          <button type="button" data-car-action="delete" data-car-id="${registry.id}">Excluir</button>
+        </div>
+      </article>
+    `).join("")
+    : `<article><strong>Nenhum CAR cadastrado</strong><span>Cadastre o CAR para manter o controle separado dos imóveis rurais.</span><div></div></article>`;
+}
+
+function fillCarForm(registry) {
+  if (!registry) return;
+  selectedCarRegistryId = registry.id;
+  field("car-id").value = registry.id;
+  field("car-number").value = registry.number || "";
+  populateCarProperties(registry.propertyId || "");
+  field("car-status").value = registry.status || "Ativo";
+  field("car-notes").value = registry.notes || "";
+}
+
+function newCarRegistry() {
+  const id = Date.now();
+  selectedCarRegistryId = id;
+  field("car-id").value = id;
+  field("car-number").value = "";
+  populateCarProperties();
+  field("car-status").value = "Ativo";
+  field("car-notes").value = "";
+  document.querySelector("#car-modal-title").textContent = "Novo CAR";
+  openModal("car-modal");
+}
+
+async function saveCarRegistry() {
+  const id = field("car-id").value;
+  const existing = carRegistries.find((registry) => sameId(registry.id, id));
+  const wasExisting = Boolean(existing);
+  const payload = {
+    id: id || Date.now(),
+    number: field("car-number").value.trim(),
+    propertyId: field("car-property").value || "",
+    status: field("car-status").value,
+    notes: field("car-notes").value.trim(),
+  };
+  if (!payload.number) {
+    alert("Informe o número do CAR.");
+    return;
+  }
+  const saved = await persistCarRegistry(payload, wasExisting);
+  if (!saved) return;
+  if (existing) Object.assign(existing, payload);
+  else carRegistries.push(payload);
+  selectedCarRegistryId = payload.id;
+  renderCarRegistries();
+  closeModal("car-modal");
+}
+
+document.querySelector("#car-new")?.addEventListener("click", newCarRegistry);
+document.querySelector("#car-save")?.addEventListener("click", saveCarRegistry);
+field("car-search")?.addEventListener("input", renderCarRegistries);
+carList?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-car-action]");
+  if (!button) return;
+  const registry = carRegistries.find((item) => sameId(item.id, button.dataset.carId));
+  if (!registry) return;
+
+  if (button.dataset.carAction === "edit") {
+    fillCarForm(registry);
+    document.querySelector("#car-modal-title").textContent = "Editar CAR";
+    openModal("car-modal");
+  }
+
+  if (button.dataset.carAction === "delete") {
+    confirmDelete(`Deseja realmente excluir o CAR ${registry.number}?`, async () => {
+      const deleted = await persistDelete("car_registries", registry.id, "CAR");
+      if (looksLikeUuid(registry.id) && !deleted) return;
+      const index = carRegistries.findIndex((item) => sameId(item.id, registry.id));
+      if (index >= 0) carRegistries.splice(index, 1);
+      renderCarRegistries();
+    });
   }
 });
 
@@ -8524,7 +8659,7 @@ function buildCompaniesReport(filters = {}) {
 function buildPropertiesRelationReport(filteredProperties, filters = {}) {
   return {
     title: "Relação de Imóveis",
-    module: "01.2.4 Imóveis",
+    module: "01.2.5 Imóveis",
     subtitle: filters.summary || "Ficha consolidada dos imóveis cadastrados.",
     sections: filteredProperties.map((property) => {
       const isRural = property.type === "rural";
@@ -8582,7 +8717,7 @@ function buildPropertiesEnvironmentalReport(filteredProperties, filters = {}) {
 
   return {
     title: "Relatório Ambiental de Imóveis",
-    module: "01.2.4 Imóveis",
+    module: "01.2.5 Imóveis",
     subtitle: filters.summary || "Análise consolidada de área rural, reserva legal e APP.",
     sections: [
       pdfTableSection(
@@ -8617,7 +8752,7 @@ function buildPropertiesReport(filters = {}) {
 function buildEnterprisesReport() {
   return {
     title: "Relatório de Empreendimentos",
-    module: "01.2.5 Empreendimento",
+    module: "01.2.6 Empreendimento",
     subtitle: "Empreendimentos vinculados a empresas e imóveis.",
     sections: [
       pdfTableSection(
@@ -9160,7 +9295,7 @@ function pickerConfig(kind) {
   if (kind === "property-owners") {
     return {
       title: "Selecionar proprietários",
-      context: "01.2.4 Imóveis",
+      context: "01.2.5 Imóveis",
       options: propertyOwnersForPdf().map((owner) => ({ value: owner, label: owner })),
       selected: pdfFilterState.propertyOwners,
       apply(values) {
@@ -9173,7 +9308,7 @@ function pickerConfig(kind) {
     const available = filterPropertiesForPdf({ ...basePropertyPdfFilterValues(), selectionMode: "all" });
     return {
       title: "Selecionar imóveis",
-      context: "01.2.4 Imóveis",
+      context: "01.2.5 Imóveis",
       options: available.map((property) => ({
         value: String(property.id),
         label: `Matrícula ${property.registration} - ${propertyOwnerLabel(property)}`,
@@ -10040,6 +10175,42 @@ async function persistCity(city, wasExisting) {
   }
 }
 
+async function persistCarRegistry(registry, wasExisting) {
+  if (!window.DocGestorDB) return false;
+  const organizationId = await defaultOrganizationId();
+  if (!organizationId) return false;
+  const propertyId = registry.propertyId || null;
+  if (propertyId && !looksLikeUuid(propertyId)) {
+    alert("Não foi possível salvar o CAR no banco porque o imóvel vinculado ainda não possui ID válido no Supabase.");
+    return false;
+  }
+  const payload = {
+    organization_id: organizationId,
+    car_number: registry.number,
+    property_id: looksLikeUuid(propertyId) ? propertyId : null,
+    status: registry.status || "Ativo",
+    notes: registry.notes || null,
+  };
+  try {
+    let saved = null;
+    if (wasExisting && looksLikeUuid(registry.id)) {
+      [saved] = await window.DocGestorDB.update("car_registries", registry.id, payload);
+    } else {
+      [saved] = await window.DocGestorDB.create("car_registries", payload);
+    }
+    if (saved?.id) {
+      updateLocalId(carRegistries, registry.id, saved.id);
+      registry.id = saved.id;
+      selectedCarRegistryId = saved.id;
+    }
+    return Boolean(saved?.id);
+  } catch (error) {
+    console.warn("Não foi possível salvar o CAR no Supabase.", error.message);
+    alert(`Não foi possível salvar o CAR no banco: ${error.message}`);
+    return false;
+  }
+}
+
 async function persistProperty(property, wasExisting) {
   if (!window.DocGestorDB) return false;
   const organizationId = await defaultOrganizationId();
@@ -10543,6 +10714,7 @@ async function loadSupabaseData() {
     companyRows,
     companyPartnerRows,
     cityRows,
+    carRows,
     propertyRows,
     enterpriseRows,
     enterpriseModuleRows,
@@ -10574,6 +10746,7 @@ async function loadSupabaseData() {
     dbList("companies"),
     dbList("company_partners"),
     dbList("cities"),
+    dbList("car_registries"),
     dbList("properties"),
     dbList("enterprises"),
     dbList("enterprise_modules"),
@@ -10691,6 +10864,14 @@ async function loadSupabaseData() {
       status: row.status || "Ativo",
     };
   });
+
+  carRegistries = carRows.map((row) => ({
+    id: row.id,
+    number: row.car_number || "",
+    propertyId: row.property_id || "",
+    status: row.status || "Ativo",
+    notes: row.notes || "",
+  }));
 
   enterprises = enterpriseRows.map((row) => ({
     id: row.id,
@@ -10978,6 +11159,7 @@ async function loadSupabaseData() {
   selectedPartnerId = partners[0]?.id ?? 0;
   selectedCompanyId = companies[0]?.id ?? 0;
   selectedCityId = cities[0]?.id ?? 0;
+  selectedCarRegistryId = carRegistries[0]?.id ?? 0;
   selectedPropertyId = properties[0]?.id ?? 0;
   selectedEnterpriseId = enterprises[0]?.id ?? 0;
   selectedSendRecipientId = sendRecipients[0]?.id ?? 0;
