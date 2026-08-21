@@ -2047,8 +2047,11 @@
           </div>
           <div class="wide-field car-area-box">
             <div class="car-area-head">
-              <strong>Áreas declaradas no CAR</strong>
-              <span>Informe em m² ou ha. O sistema converte automaticamente e calcula o percentual sobre a área total.</span>
+              <div>
+                <strong>Áreas declaradas no CAR</strong>
+                <span>Informe em m² ou ha. O sistema converte automaticamente e calcula o percentual sobre a área total.</span>
+              </div>
+              <button class="ghost small" id="car-show-hidden-areas" type="button" hidden>Mostrar ocultos</button>
             </div>
             <div class="car-area-grid" id="car-area-grid"></div>
             <div class="car-rl-panel" id="car-legal-reserve-panel">
@@ -2058,8 +2061,9 @@
           </div>
           <div class="wide-field check-panel">
             <span>Quanto da APP está na Reserva Legal?</span>
-            <label><input name="car-app-rl-coverage" type="radio" value="integral" /> Integral</label>
+            <label><input name="car-app-rl-coverage" type="radio" value="nada" /> Nada</label>
             <label><input name="car-app-rl-coverage" type="radio" value="parcial" /> Parcial</label>
+            <label><input name="car-app-rl-coverage" type="radio" value="integral" /> Integral</label>
           </div>
           <label class="wide-field">Observações<textarea id="car-notes" rows="4"></textarea></label>
         </form>

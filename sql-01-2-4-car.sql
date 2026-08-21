@@ -46,7 +46,7 @@ create table if not exists public.car_registries (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint car_registries_status_check check (status in ('Ativo', 'Pendente', 'Retificado', 'Cancelado')),
-  constraint car_registries_app_rl_coverage_check check (app_in_legal_reserve is null or app_in_legal_reserve in ('integral', 'parcial')),
+  constraint car_registries_app_rl_coverage_check check (app_in_legal_reserve is null or app_in_legal_reserve in ('nada', 'integral', 'parcial')),
   constraint car_registries_total_area_non_negative check (total_area_m2 is null or total_area_m2 >= 0),
   constraint car_registries_legal_reserve_non_negative check (legal_reserve_area_m2 is null or legal_reserve_area_m2 >= 0),
   constraint car_registries_app_area_non_negative check (app_area_m2 is null or app_area_m2 >= 0),
@@ -118,11 +118,12 @@ alter table public.car_registries
 
 do $$
 begin
-  if not exists (select 1 from pg_constraint where conname = 'car_registries_app_rl_coverage_check') then
-    alter table public.car_registries
-      add constraint car_registries_app_rl_coverage_check
-      check (app_in_legal_reserve is null or app_in_legal_reserve in ('integral', 'parcial'));
-  end if;
+  alter table public.car_registries
+    drop constraint if exists car_registries_app_rl_coverage_check;
+
+  alter table public.car_registries
+    add constraint car_registries_app_rl_coverage_check
+    check (app_in_legal_reserve is null or app_in_legal_reserve in ('nada', 'integral', 'parcial'));
 
   if not exists (select 1 from pg_constraint where conname = 'car_registries_total_area_non_negative') then
     alter table public.car_registries add constraint car_registries_total_area_non_negative check (total_area_m2 is null or total_area_m2 >= 0);

@@ -5378,6 +5378,9 @@ const CAR_AREA_FIELDS = [
   { key: "easementArea", label: "Servidão administrativa" },
   { key: "publicUtilityArea", label: "Utilidade pública" },
 ];
+const CAR_ALWAYS_VISIBLE_AREA_KEYS = new Set(["totalArea", "legalReserveArea", "appArea"]);
+let hiddenCarAreaKeys = new Set();
+let currentCarAreaValues = {};
 
 function nonNegativeCarNumber(id) {
   const input = field(id);
@@ -5409,21 +5412,39 @@ function getCarAreaM2(key) {
   return normalizeCarAreaValue(field(carAreaInputId(key, "m2"))?.value);
 }
 
+function syncVisibleCarAreaValues() {
+  CAR_AREA_FIELDS.forEach((item) => {
+    const visibleValue = getCarAreaM2(item.key);
+    if (visibleValue !== "") currentCarAreaValues[item.key] = visibleValue;
+    if (visibleValue === "" && field(carAreaInputId(item.key, "m2"))) currentCarAreaValues[item.key] = "";
+  });
+}
+
 function renderCarAreaFields() {
   const grid = field("car-area-grid");
   if (!grid) return;
+  const visibleFields = CAR_AREA_FIELDS.filter((item) => CAR_ALWAYS_VISIBLE_AREA_KEYS.has(item.key) || !hiddenCarAreaKeys.has(item.key));
+  const showHiddenButton = field("car-show-hidden-areas");
+  if (showHiddenButton) {
+    showHiddenButton.hidden = hiddenCarAreaKeys.size === 0;
+    showHiddenButton.textContent = `Mostrar ocultos${hiddenCarAreaKeys.size ? ` (${hiddenCarAreaKeys.size})` : ""}`;
+  }
   grid.innerHTML = `
     <div class="car-area-header">Item</div>
     <div class="car-area-header">m²</div>
     <div class="car-area-header">ha</div>
     <div class="car-area-header">% da área total</div>
-    ${CAR_AREA_FIELDS.map((item) => `
+    <div class="car-area-header">Ação</div>
+    ${visibleFields.map((item) => `
       <label class="car-area-label" for="${carAreaInputId(item.key, "m2")}">${escapeHtml(item.label)}</label>
       <input id="${carAreaInputId(item.key, "m2")}" class="car-area-input" data-car-area-key="${item.key}" data-car-area-unit="m2" type="number" min="0" step="0.01" />
       <input id="${carAreaInputId(item.key, "ha")}" class="car-area-input" data-car-area-key="${item.key}" data-car-area-unit="ha" type="number" min="0" step="0.0001" />
       <output id="${carAreaPercentId(item.key)}" class="car-area-percent">0%</output>
+      ${CAR_ALWAYS_VISIBLE_AREA_KEYS.has(item.key) ? `<span class="car-area-fixed"></span>` : `<button class="ghost small car-area-hide" type="button" data-car-area-hide="${item.key}">Ocultar</button>`}
     `).join("")}
   `;
+  visibleFields.forEach((item) => setCarAreaField(item.key, currentCarAreaValues[item.key] || ""));
+  updateCarAreaPercentages();
 }
 
 function setCarAreaField(key, valueM2) {
@@ -5435,12 +5456,16 @@ function setCarAreaField(key, valueM2) {
 }
 
 function clearCarAreaFields() {
+  currentCarAreaValues = {};
+  hiddenCarAreaKeys = new Set();
+  renderCarAreaFields();
   CAR_AREA_FIELDS.forEach((item) => setCarAreaField(item.key, ""));
   updateCarAreaPercentages();
 }
 
 function carAreaPayload() {
-  return Object.fromEntries(CAR_AREA_FIELDS.map((item) => [item.key, getCarAreaM2(item.key)]));
+  syncVisibleCarAreaValues();
+  return Object.fromEntries(CAR_AREA_FIELDS.map((item) => [item.key, currentCarAreaValues[item.key] || ""]));
 }
 
 function updateCarAreaPercentages() {
@@ -5494,6 +5519,9 @@ function handleCarAreaInput(event) {
         ? formatCarAreaValue(Number(value) / 10000, 4)
         : formatCarAreaValue(Number(value) * 10000, 2);
   }
+  currentCarAreaValues[key] = unit === "m2"
+    ? value
+    : value === "" ? "" : Number(value) * 10000;
   updateCarAreaPercentages();
 }
 
@@ -5554,7 +5582,7 @@ function renderCarRegistrationInputs(values = [""]) {
   list.innerHTML = safeValues.map((value, index) => `
     <div class="dynamic-field-row">
       <input class="car-registration-input short-number-input" value="${escapeHtml(value)}" placeholder="Matrícula" inputmode="numeric" pattern="[0-9]*" />
-      <button class="ghost small" type="button" data-car-registration-remove="${index}" ${safeValues.length === 1 ? "disabled" : ""}>Remover</button>
+      ${safeValues.length > 1 ? `<button class="ghost small icon-only" type="button" title="Remover matrícula" data-car-registration-remove="${index}">X</button>` : ""}
     </div>
   `).join("");
 }
@@ -5578,7 +5606,9 @@ function fillCarForm(registry) {
   field("car-latitude").value = registry.latitude || "";
   field("car-longitude").value = registry.longitude || "";
   renderCarRegistrationInputs(registry.registrations || [""]);
-  CAR_AREA_FIELDS.forEach((item) => setCarAreaField(item.key, registry[item.key] || ""));
+  hiddenCarAreaKeys = new Set();
+  currentCarAreaValues = Object.fromEntries(CAR_AREA_FIELDS.map((item) => [item.key, registry[item.key] || ""]));
+  renderCarAreaFields();
   document.querySelectorAll('[name="car-app-rl-coverage"]').forEach((input) => {
     input.checked = input.value === registry.appRlCoverage;
   });
@@ -5638,6 +5668,18 @@ document.querySelector("#car-new")?.addEventListener("click", newCarRegistry);
 document.querySelector("#car-save")?.addEventListener("click", saveCarRegistry);
 document.querySelector("#car-registration-add")?.addEventListener("click", addCarRegistrationInput);
 field("car-area-grid")?.addEventListener("input", handleCarAreaInput);
+field("car-area-grid")?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-car-area-hide]");
+  if (!button || button.disabled) return;
+  syncVisibleCarAreaValues();
+  hiddenCarAreaKeys.add(button.dataset.carAreaHide);
+  renderCarAreaFields();
+});
+field("car-show-hidden-areas")?.addEventListener("click", () => {
+  syncVisibleCarAreaValues();
+  hiddenCarAreaKeys = new Set();
+  renderCarAreaFields();
+});
 field("car-search")?.addEventListener("input", renderCarRegistries);
 field("car-registration-list")?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-car-registration-remove]");

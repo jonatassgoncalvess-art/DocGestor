@@ -2449,8 +2449,10 @@ button {
 }
 
 .car-area-head {
+  align-items: start;
   display: grid;
-  gap: 4px;
+  gap: 12px;
+  grid-template-columns: 1fr auto;
 }
 
 .car-area-head strong {
@@ -2466,7 +2468,7 @@ button {
 .car-area-grid {
   display: grid;
   gap: 8px;
-  grid-template-columns: minmax(210px, 1.4fr) minmax(120px, .75fr) minmax(120px, .75fr) minmax(110px, .6fr);
+  grid-template-columns: minmax(210px, 1.4fr) minmax(120px, .75fr) minmax(120px, .75fr) minmax(110px, .6fr) auto;
 }
 
 .car-area-header {
@@ -2499,6 +2501,20 @@ button {
   justify-content: flex-end;
   min-height: 40px;
   padding: 0 10px;
+}
+
+.car-area-hide {
+  align-self: center;
+}
+
+.car-area-fixed {
+  display: block;
+}
+
+.icon-only {
+  min-height: 34px;
+  min-width: 34px;
+  padding: 0;
 }
 
 .car-rl-panel {
