@@ -82,7 +82,7 @@ const adminPanelMeta = {
   "imoveis-admin": { breadcrumb: "01.2.5 Cadastros > Imóveis", title: "01.2.5 Imóveis", subtitle: "Imóveis urbanos e rurais vinculados a proprietários." },
   "imoveis-urbanos-admin": { breadcrumb: "01.2.5.1 Imóveis > Urbanos", title: "01.2.5.1 Urbanos", subtitle: "Listagem automática dos imóveis urbanos cadastrados." },
   "imoveis-rurais-admin": { breadcrumb: "01.2.5.2 Imóveis > Rurais", title: "01.2.5.2 Rurais", subtitle: "Listagem automática dos imóveis rurais cadastrados." },
-  "painel-imoveis-admin": { breadcrumb: "01.2.5.3 Imóveis > Painel Imóveis", title: "01.2.5.3 Painel Imóveis", subtitle: "Indicadores de área, reserva legal e APP dos imóveis rurais." },
+  "painel-imoveis-admin": { breadcrumb: "01.2.5.3 Imóveis > Painel Imóveis", title: "01.2.5.3 Painel Imóveis", subtitle: "Indicadores de área da matrícula, CAR vinculado e averbações rurais." },
   "empreendimentos-admin": { breadcrumb: "01.2.6 Cadastros > Empreendimento", title: "01.2.6 Empreendimento", subtitle: "Empreendimentos vinculados a empresas, imóveis e módulos operacionais." },
   "atividades-admin": { breadcrumb: "01.2.7 Cadastros > Atividades", title: "01.2.7 Atividades", subtitle: "Atividades, CNAE, CNPJ, empreendimentos e classificação CTF/APP." },
   "tipos-licencas": { breadcrumb: "01.3.1 Ambiental > Tipos de Licenças", title: "01.3.1 Tipos de Licenças", subtitle: "Classificação dos tipos de licenças por formato de licenciamento." },
@@ -5071,22 +5071,49 @@ function populatePropertyOwners(selectedOwner = "") {
   if (selectedOwner && owners.includes(selectedOwner)) propertyOwner.value = selectedOwner;
 }
 
+function findCarByRegistration(registration) {
+  const normalized = String(registration || "").replace(/\D/g, "");
+  if (!normalized) return null;
+  return carRegistries.find((registry) => (registry.registrations || []).some((item) => String(item).replace(/\D/g, "") === normalized)) || null;
+}
+
+function updatePropertyCarLink() {
+  const status = field("property-car-status");
+  const carInput = field("property-car-number");
+  if (propertyType?.value !== "rural") {
+    if (status) status.hidden = true;
+    return;
+  }
+  const registration = field("property-registration")?.value || "";
+  const car = findCarByRegistration(registration);
+  if (carInput) carInput.value = car?.number || "";
+  if (!status) return;
+  status.hidden = false;
+  if (!registration.trim()) {
+    status.className = "wide-field property-car-status rural-field";
+    status.textContent = "Informe o número da matrícula para consultar o CAR.";
+    return;
+  }
+  status.className = `wide-field property-car-status rural-field ${car ? "found" : "missing"}`;
+  status.textContent = car
+    ? `CAR encontrado: ${car.number}. Matrículas vinculadas: ${(car.registrations || []).join(", ")}.`
+    : "Nenhum CAR encontrado para esta matrícula.";
+}
+
 function updateReserveCalculation() {
   const result = document.querySelector("#reserve-result");
-  const status = document.querySelector("#reserve-status");
-  if (!result || !status || propertyType?.value !== "rural") return;
+  if (!result || propertyType?.value !== "rural") return;
   const total = Number(field("property-rural-area").value || 0);
-  const hectares = field("property-hectares");
-  if (hectares) hectares.value = total ? (total / 10000).toFixed(4) : "";
-  const reserve = Number(field("property-legal-reserve").value || 0);
-  const required = total * 0.2;
-  const reserveHa = reserve / 10000;
-  const requiredHa = required / 10000;
-  const ok = total > 0 && reserve >= required;
-  result.classList.toggle("warning", !ok);
-  status.textContent = ok
-    ? `Reserva legal em conformidade: ${reserveHa.toFixed(4)} Ha de ${requiredHa.toFixed(4)} Ha exigidos`
-    : `Reserva legal abaixo de 20%: minimo exigido ${requiredHa.toFixed(4)} Ha`;
+  const hasAverment = Boolean(field("property-has-legal-reserve-averment")?.checked);
+  const reserve = hasAverment ? Number(field("property-legal-reserve-averment-m2")?.value || 0) : 0;
+  const percent = total ? (reserve / total) * 100 : 0;
+  const construction = field("property-has-construction")?.checked ? Number(field("property-construction-area")?.value || 0) : 0;
+  result.classList.toggle("warning", hasAverment && total > 0 && percent < 20);
+  result.innerHTML = `
+    <span>Resumo cadastral da matrícula rural</span>
+    <strong>${hasAverment ? `Reserva Legal averbada: ${formatCarAreaValue(reserve, 2) || "0"} m² (${formatCarAreaValue(percent, 2) || "0"}%)` : "Sem averbação de Reserva Legal informada"}</strong>
+    <small>Área da matrícula: ${formatCarAreaValue(total, 2) || "0"} m² / ${formatCarAreaValue(total / 10000, 4) || "0"} ha. Construção averbada: ${formatCarAreaValue(construction, 2) || "0"} m².</small>
+  `;
 }
 
 function syncAreaPair(sourceId, targetId, direction) {
@@ -5097,6 +5124,50 @@ function syncAreaPair(sourceId, targetId, direction) {
   if (Number(source.value || 0) < 0) source.value = "0";
   if (direction === "m2-to-ha") target.value = value ? (value / 10000).toFixed(4) : "";
   if (direction === "ha-to-m2") target.value = value ? (value * 10000).toFixed(0) : "";
+  updateReserveCalculation();
+}
+
+function syncLegalReserveAverment(source) {
+  const total = nonNegativeFieldValue("property-rural-area");
+  const percentInput = field("property-legal-reserve-averment-percent");
+  const m2Input = field("property-legal-reserve-averment-m2");
+  const haInput = field("property-legal-reserve-averment-ha");
+  if (!percentInput || !m2Input || !haInput) return;
+  let percent = Math.max(0, Number(percentInput.value || 0));
+  let m2 = Math.max(0, Number(m2Input.value || 0));
+  let ha = Math.max(0, Number(haInput.value || 0));
+  if (source === "percent") {
+    percent = Math.min(100, percent);
+    percentInput.value = percent ? formatCarAreaValue(percent, 2) : "";
+    m2 = total ? (total * percent) / 100 : 0;
+    m2Input.value = m2 ? formatCarAreaValue(m2, 2) : "";
+    haInput.value = m2 ? formatCarAreaValue(m2 / 10000, 4) : "";
+  }
+  if (source === "m2") {
+    m2Input.value = m2 ? formatCarAreaValue(m2, 2) : "";
+    haInput.value = m2 ? formatCarAreaValue(m2 / 10000, 4) : "";
+    percentInput.value = total && m2 ? formatCarAreaValue((m2 / total) * 100, 2) : "";
+  }
+  if (source === "ha") {
+    m2 = ha * 10000;
+    haInput.value = ha ? formatCarAreaValue(ha, 4) : "";
+    m2Input.value = m2 ? formatCarAreaValue(m2, 2) : "";
+    percentInput.value = total && m2 ? formatCarAreaValue((m2 / total) * 100, 2) : "";
+  }
+  updateReserveCalculation();
+}
+
+function updateLegalReserveAvermentFields() {
+  const enabled = Boolean(field("property-has-legal-reserve-averment")?.checked);
+  const box = field("property-legal-reserve-averment-fields");
+  if (box) box.hidden = !enabled;
+  if (!enabled) {
+    ["property-legal-reserve-averment-percent", "property-legal-reserve-averment-m2", "property-legal-reserve-averment-ha"].forEach((id) => {
+      if (field(id)) field(id).value = "";
+    });
+  } else {
+    syncLegalReserveAverment("percent");
+  }
   updateReserveCalculation();
 }
 
@@ -5127,6 +5198,8 @@ function updatePropertyFields() {
 
   const constructionAreaField = document.querySelector("#construction-area-field");
   if (constructionAreaField) constructionAreaField.hidden = !showConstructionToggle || !propertyHasConstruction?.checked;
+  updatePropertyCarLink();
+  updateLegalReserveAvermentFields();
   updateReserveCalculation();
 }
 
@@ -5136,7 +5209,10 @@ function propertyListSummary(property) {
     ? `Lote ${property.lot || "não informado"} - Quadra ${property.block || "não informada"}`
     : `Lote ${property.lot || "não informado"} - Gleba ${property.glebe || "não informada"}`;
   const ruralDocument = property.type === "rural" && property.cibItr ? ` - CIB/ITR: ${property.cibItr}` : "";
-  return `Proprietário: ${owner} - ${locationFields}${ruralDocument} - Referência: ${property.reference || "Não informada"}`;
+  const ruralCar = property.type === "rural" ? ` - CAR: ${property.carNumber || "Nenhum CAR encontrado"}` : "";
+  const ruralArea = property.type === "rural" ? ` - Área matrícula: ${formatCarAreaValue(property.ruralArea, 2) || "0"} m²` : "";
+  const averment = property.type === "rural" && property.hasLegalReserveAverment ? ` - RL averbada: ${formatCarAreaValue(property.legalReserveAvermentM2, 2) || "0"} m²` : "";
+  return `Proprietário: ${owner} - ${locationFields}${ruralArea}${ruralCar}${ruralDocument}${averment} - Referência: ${property.reference || "Não informada"}`;
 }
 
 function propertySearchText(property) {
@@ -5148,6 +5224,7 @@ function propertySearchText(property) {
     property.block,
     property.glebe,
     property.cibItr,
+    property.carNumber,
     property.reference,
     property.city,
   ].filter(Boolean).join(" "));
@@ -5214,15 +5291,16 @@ function fillPropertyForm(property) {
   field("property-urban-area").value = property.urbanArea;
   field("property-rural-area").value = property.ruralArea;
   field("property-hectares").value = property.ruralArea ? (property.ruralArea / 10000).toFixed(4) : "";
-  field("property-legal-reserve").value = property.legalReserve;
-  field("property-legal-reserve-ha").value = property.legalReserve ? (property.legalReserve / 10000).toFixed(4) : "";
-  field("property-app-area").value = property.appArea;
-  field("property-app-area-ha").value = property.appArea ? (property.appArea / 10000).toFixed(4) : "";
   updatePropertyFields();
   field("property-rural-use").value = property.ruralUse;
+  field("property-has-legal-reserve-averment").checked = Boolean(property.hasLegalReserveAverment);
+  field("property-legal-reserve-averment-percent").value = property.legalReserveAvermentPercent || "";
+  field("property-legal-reserve-averment-m2").value = property.legalReserveAvermentM2 || "";
+  field("property-legal-reserve-averment-ha").value = property.legalReserveAvermentM2 ? (Number(property.legalReserveAvermentM2) / 10000).toFixed(4) : "";
   field("property-has-construction").checked = property.hasConstruction;
   field("property-construction-area").value = property.constructionArea;
   updatePropertyFields();
+  updatePropertyCarLink();
 }
 
 function newProperty() {
@@ -5246,10 +5324,10 @@ function newProperty() {
   field("property-urban-area").value = "";
   field("property-rural-area").value = "";
   field("property-hectares").value = "";
-  field("property-legal-reserve").value = "";
-  field("property-legal-reserve-ha").value = "";
-  field("property-app-area").value = "";
-  field("property-app-area-ha").value = "";
+  field("property-has-legal-reserve-averment").checked = false;
+  field("property-legal-reserve-averment-percent").value = "";
+  field("property-legal-reserve-averment-m2").value = "";
+  field("property-legal-reserve-averment-ha").value = "";
   updatePropertyFields();
   field("property-rural-use").value = "Lavoura";
   field("property-has-construction").checked = false;
@@ -5287,8 +5365,11 @@ async function saveProperty() {
     cibItr: type === "rural" ? field("property-cib-itr").value.replace(/\D/g, "") : "",
     urbanArea: type === "urban" ? nonNegativeFieldValue("property-urban-area") : 0,
     ruralArea: type === "rural" ? nonNegativeFieldValue("property-rural-area") : 0,
-    legalReserve: type === "rural" ? nonNegativeFieldValue("property-legal-reserve") : 0,
-    appArea: type === "rural" ? nonNegativeFieldValue("property-app-area") : 0,
+    legalReserve: 0,
+    appArea: 0,
+    hasLegalReserveAverment: type === "rural" ? Boolean(field("property-has-legal-reserve-averment")?.checked) : false,
+    legalReserveAvermentPercent: type === "rural" && field("property-has-legal-reserve-averment")?.checked ? nonNegativeFieldValue("property-legal-reserve-averment-percent") : 0,
+    legalReserveAvermentM2: type === "rural" && field("property-has-legal-reserve-averment")?.checked ? nonNegativeFieldValue("property-legal-reserve-averment-m2") : 0,
     ruralUse: field("property-rural-use").value,
     hasConstruction: field("property-has-construction").checked,
     constructionArea: field("property-has-construction").checked ? nonNegativeFieldValue("property-construction-area") : 0,
@@ -5320,28 +5401,33 @@ propertyOwnerType?.addEventListener("change", () => populatePropertyOwners());
 propertyType?.addEventListener("change", updatePropertyFields);
 propertyRuralUse?.addEventListener("change", updatePropertyFields);
 propertyHasConstruction?.addEventListener("change", updatePropertyFields);
+field("property-registration")?.addEventListener("input", () => {
+  const input = field("property-registration");
+  if (propertyType?.value === "rural" && input) input.value = input.value.replace(/\D/g, "");
+  updatePropertyCarLink();
+});
 field("property-search")?.addEventListener("input", renderProperties);
 field("urban-property-search")?.addEventListener("input", renderProperties);
 field("rural-property-search")?.addEventListener("input", renderProperties);
-["property-urban-area", "property-rural-area", "property-legal-reserve", "property-legal-reserve-ha", "property-app-area", "property-app-area-ha", "property-construction-area"].forEach((id) => {
+["property-urban-area", "property-rural-area", "property-hectares", "property-legal-reserve-averment-percent", "property-legal-reserve-averment-m2", "property-legal-reserve-averment-ha", "property-construction-area"].forEach((id) => {
   document.querySelector(`#${id}`)?.addEventListener("input", () => {
     const input = field(id);
     if (input && Number(input.value || 0) < 0) input.value = "0";
     updateReserveCalculation();
   });
 });
-document.querySelector("#property-legal-reserve")?.addEventListener("input", () => {
-  syncAreaPair("property-legal-reserve", "property-legal-reserve-ha", "m2-to-ha");
+field("property-rural-area")?.addEventListener("input", () => {
+  syncAreaPair("property-rural-area", "property-hectares", "m2-to-ha");
+  if (field("property-has-legal-reserve-averment")?.checked) syncLegalReserveAverment("percent");
 });
-document.querySelector("#property-legal-reserve-ha")?.addEventListener("input", () => {
-  syncAreaPair("property-legal-reserve-ha", "property-legal-reserve", "ha-to-m2");
+field("property-hectares")?.addEventListener("input", () => {
+  syncAreaPair("property-hectares", "property-rural-area", "ha-to-m2");
+  if (field("property-has-legal-reserve-averment")?.checked) syncLegalReserveAverment("percent");
 });
-document.querySelector("#property-app-area")?.addEventListener("input", () => {
-  syncAreaPair("property-app-area", "property-app-area-ha", "m2-to-ha");
-});
-document.querySelector("#property-app-area-ha")?.addEventListener("input", () => {
-  syncAreaPair("property-app-area-ha", "property-app-area", "ha-to-m2");
-});
+field("property-has-legal-reserve-averment")?.addEventListener("change", updateLegalReserveAvermentFields);
+field("property-legal-reserve-averment-percent")?.addEventListener("input", () => syncLegalReserveAverment("percent"));
+field("property-legal-reserve-averment-m2")?.addEventListener("input", () => syncLegalReserveAverment("m2"));
+field("property-legal-reserve-averment-ha")?.addEventListener("input", () => syncLegalReserveAverment("ha"));
 propertyList?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-property-action]");
   if (!button) return;
@@ -9214,7 +9300,7 @@ function propertyReserveRequired(property) {
 }
 
 function propertyReserveOk(property) {
-  return property.type !== "rural" || Number(property.legalReserve || 0) >= propertyReserveRequired(property);
+  return property.type !== "rural" || Number(property.legalReserveAvermentM2 || 0) >= propertyReserveRequired(property);
 }
 
 function buildPartnersReport() {
@@ -9264,8 +9350,6 @@ function buildPropertiesRelationReport(filteredProperties, filters = {}) {
     subtitle: filters.summary || "Ficha consolidada dos imóveis cadastrados.",
     sections: filteredProperties.map((property) => {
       const isRural = property.type === "rural";
-      const reserveRequired = propertyReserveRequired(property);
-      const reserveOk = propertyReserveOk(property);
       return pdfFieldsSection(`Matrícula ${property.registration}`, [
         ["Proprietário", propertyOwnerLabel(property)],
         ["Tipo de proprietário", property.ownerType === "pf" ? "Pessoa física" : "Pessoa jurídica"],
@@ -9279,11 +9363,9 @@ function buildPropertiesRelationReport(filteredProperties, filters = {}) {
         ...(isRural ? [["Número CCIR/INCRA", property.ccirIncra]] : []),
         ...(isRural ? [["CIB/ITR", property.cibItr]] : []),
         ["Área total", isRural ? `${formatAreaM2(property.ruralArea)} / ${formatAreaHa(property.ruralArea)}` : formatAreaM2(property.urbanArea)],
-        ["Reserva legal", isRural ? `${formatAreaM2(property.legalReserve)} / ${formatAreaHa(property.legalReserve)}` : "Não aplicável"],
-        ["APP", isRural ? `${formatAreaM2(property.appArea)} / ${formatAreaHa(property.appArea)}` : "Não aplicável"],
-        ["Reserva exigida", isRural ? `${formatAreaM2(reserveRequired)} / ${formatAreaHa(reserveRequired)}` : "Não aplicável"],
-        ["Conformidade ambiental", reserveOk ? "Reserva legal em conformidade" : "Reserva legal abaixo de 20%"],
-        ["Construção", property.hasConstruction ? `${property.constructionArea || 0} m2` : "Não informada"],
+        ["CAR vinculado", isRural ? property.carNumber || "Nenhum CAR encontrado" : "Não aplicável"],
+        ["Averbação de RL", isRural && property.hasLegalReserveAverment ? `${formatAreaM2(property.legalReserveAvermentM2)} / ${formatAreaHa(property.legalReserveAvermentM2)} (${property.legalReserveAvermentPercent || 0}%)` : "Não informada"],
+        ["Construção averbada", property.hasConstruction ? `${formatAreaM2(property.constructionArea)}` : "Não informada"],
       ], { estimate: 270 });
     }),
   };
@@ -9294,50 +9376,44 @@ function buildPropertiesEnvironmentalReport(filteredProperties, filters = {}) {
   const totals = ruralProperties.reduce(
     (acc, property) => {
       acc.area += Number(property.ruralArea || 0);
-      acc.reserve += Number(property.legalReserve || 0);
-      acc.app += Number(property.appArea || 0);
+      acc.reserve += Number(property.legalReserveAvermentM2 || 0);
+      acc.construction += Number(property.hasConstruction ? property.constructionArea || 0 : 0);
       return acc;
     },
-    { area: 0, reserve: 0, app: 0 },
+    { area: 0, reserve: 0, construction: 0 },
   );
-  const required = totals.area * 0.2;
-  const isOk = totals.reserve >= required;
   const rows = ruralProperties.map((property) => {
-    const requiredByProperty = propertyReserveRequired(property);
     return [
       `Matrícula ${property.registration}`,
       propertyOwnerLabel(property),
       property.reference || "Não informada",
       `${formatAreaM2(property.ruralArea)} / ${formatAreaHa(property.ruralArea)}`,
-      `${formatAreaM2(property.legalReserve)} / ${formatAreaHa(property.legalReserve)}`,
-      `${formatAreaM2(property.appArea)} / ${formatAreaHa(property.appArea)}`,
-      `${formatAreaM2(requiredByProperty)} / ${formatAreaHa(requiredByProperty)}`,
-      propertyReserveOk(property) ? "Conforme" : "Abaixo de 20%",
+      property.carNumber || "Nenhum CAR encontrado",
+      property.hasLegalReserveAverment ? `${formatAreaM2(property.legalReserveAvermentM2)} / ${formatAreaHa(property.legalReserveAvermentM2)}` : "Não averbada",
+      property.hasConstruction ? formatAreaM2(property.constructionArea) : "Não averbada",
     ];
   });
 
   return {
-    title: "Relatório Ambiental de Imóveis",
+    title: "Relatório Cadastral de Imóveis Rurais",
     module: "01.2.5 Imóveis",
-    subtitle: filters.summary || "Análise consolidada de área rural, reserva legal e APP.",
+    subtitle: filters.summary || "Análise consolidada de área conforme matrícula, CAR vinculado e averbações.",
     sections: [
       pdfTableSection(
-        "Imóveis rurais analisados",
-        ["Imóvel", "Proprietário", "Referência", "Área total", "Reserva legal", "APP", "Reserva exigida", "Situação"],
-        rows.length ? rows : [["Nenhum imóvel rural encontrado", "", "", "", "", "", "", ""]],
+        "Imóveis rurais cadastrados",
+        ["Imóvel", "Proprietário", "Referência", "Área matrícula", "CAR", "RL averbada", "Construção"],
+        rows.length ? rows : [["Nenhum imóvel rural encontrado", "", "", "", "", "", ""]],
         { rowEstimate: 42, headerEstimate: 82 },
       ),
-      pdfFieldsSection("Totalizador ambiental", [
+      pdfFieldsSection("Totalizador cadastral rural", [
         ["Quantidade de imóveis", ruralProperties.length],
         ["Área total somada", `${formatAreaM2(totals.area)} / ${formatAreaHa(totals.area)}`],
-        ["Reserva legal somada", `${formatAreaM2(totals.reserve)} / ${formatAreaHa(totals.reserve)}`],
-        ["APP somada", `${formatAreaM2(totals.app)} / ${formatAreaHa(totals.app)}`],
-        ["Reserva legal exigida 20%", `${formatAreaM2(required)} / ${formatAreaHa(required)}`],
-        ["Resultado consolidado", isOk ? "Conforme a exigência minima de 20%" : "Reserva legal consolidada abaixo de 20%"],
+        ["Reserva Legal averbada", `${formatAreaM2(totals.reserve)} / ${formatAreaHa(totals.reserve)}`],
+        ["Construção averbada", `${formatAreaM2(totals.construction)} / ${formatAreaHa(totals.construction)}`],
       ], { estimate: 160 }),
       pdfSection(
-        "Criterio tecnico aplicado",
-        `<p class="pdf-note">A APP foi demonstrada separadamente para indicar existência de área ambiental protegida. Ela está contida na reserva legal e não foi somada novamente ao calculo consolidado.</p>`,
+        "Critério aplicado",
+        `<p class="pdf-note">Reserva Legal e APP ambientais são controladas no ambiente CAR. Este relatório demonstra apenas as informações cadastrais da matrícula rural e suas averbações.</p>`,
         90,
       ),
     ],
@@ -9727,8 +9803,8 @@ function filterPropertiesForPdf(filters = {}) {
     if (filters.ownerIds?.length && !filters.ownerIds.includes(propertyOwnerLabel(property))) return false;
     if (filters.reportType === "environmental" && property.type !== "rural") return false;
     if (filters.propertyType && filters.propertyType !== "all" && property.type !== filters.propertyType) return false;
-    if (filters.reportType === "environmental" && filters.compliance === "ok" && !propertyReserveOk(property)) return false;
-    if (filters.reportType === "environmental" && filters.compliance === "warning" && propertyReserveOk(property)) return false;
+    if (filters.reportType === "environmental" && filters.compliance === "ok" && !property.hasLegalReserveAverment) return false;
+    if (filters.reportType === "environmental" && filters.compliance === "warning" && property.hasLegalReserveAverment) return false;
     if (filters.selectionMode === "selected" && selectedIds.length && !selectedIds.includes(String(property.id))) return false;
     if (filters.selectionMode === "selected" && !selectedIds.length) return false;
     return true;
@@ -9746,7 +9822,7 @@ function propertyPdfSummary(filters = basePropertyPdfFilterValues()) {
     ...filters,
     selectedPropertyIds: pdfFilterState.propertyIds,
   });
-  const type = filters.reportType === "environmental" ? "Ambiental" : "Relação de Imóveis";
+  const type = filters.reportType === "environmental" ? "Cadastral rural" : "Relação de Imóveis";
   const scope = filters.selectionMode === "selected" ? "imóveis selecionados" : "imóveis filtrados";
   return `${type}: ${filtered.length} ${scope}`;
 }
@@ -9777,7 +9853,7 @@ function updatePropertyPdfFilters() {
   if (help) {
     help.textContent =
       filters.reportType === "environmental"
-        ? "No relatório ambiental, o sistema totaliza área, reserva legal e APP, validando a exigência de 20%."
+        ? "No relatório cadastral rural, o sistema totaliza área da matrícula, CAR vinculado, Reserva Legal averbada e construção averbada."
         : "Na relacao de imóveis, o PDF monta fichas cadastrais completas dos imóveis filtrados.";
   }
   updatePropertyPdfSummaries();
@@ -10602,31 +10678,31 @@ function renderEnvironmentalReserveDashboard() {
   const totals = ruralProperties.reduce(
     (acc, property) => {
       acc.area += Number(property.ruralArea || 0);
-      acc.reserve += Number(property.legalReserve || 0);
+      acc.reserve += Number(property.legalReserveAvermentM2 || 0);
+      acc.construction += Number(property.hasConstruction ? property.constructionArea || 0 : 0);
       return acc;
     },
-    { area: 0, reserve: 0 },
+    { area: 0, reserve: 0, construction: 0 },
   );
-  const required = totals.area * 0.2;
   const reservePercent = totals.area ? Math.round((totals.reserve / totals.area) * 100) : 0;
   const reserveRatio = totals.area ? Math.min(100, (totals.reserve / totals.area) * 100) : 0;
-  const requiredRatio = totals.area ? Math.min(100, (required / totals.area) * 100) : 0;
+  const constructionRatio = totals.area ? Math.min(100, (totals.construction / totals.area) * 100) : 0;
 
   if (field("environmental-reserve-percent")) {
     field("environmental-reserve-percent").textContent = `${reservePercent}%`;
-    field("environmental-reserve-percent").className = `pill ${totals.reserve >= required ? "green" : "yellow"}`;
+    field("environmental-reserve-percent").className = "pill green";
   }
   if (field("environmental-reserve-properties")) field("environmental-reserve-properties").textContent = ruralProperties.length;
   if (field("environmental-reserve-total-area")) field("environmental-reserve-total-area").textContent = formatAreaM2(totals.area);
   if (field("environmental-reserve-total-area-reserved")) field("environmental-reserve-total-area-reserved").textContent = formatAreaM2(totals.reserve);
-  if (field("environmental-reserve-required-area")) field("environmental-reserve-required-area").textContent = formatAreaM2(required);
+  if (field("environmental-reserve-required-area")) field("environmental-reserve-required-area").textContent = formatAreaM2(totals.construction);
 
   const chart = field("environmental-reserve-chart");
   if (chart) {
     const bars = [
-      { label: "Área total", percent: totals.area ? 100 : 0, value: formatAreaM2(totals.area), tone: "total" },
-      { label: "Reserva legal", percent: reserveRatio, value: formatAreaM2(totals.reserve), tone: totals.reserve >= required ? "ok" : "warning" },
-      { label: "Mínimo 20%", percent: requiredRatio, value: formatAreaM2(required), tone: "required" },
+      { label: "Área matrícula", percent: totals.area ? 100 : 0, value: formatAreaM2(totals.area), tone: "total" },
+      { label: "RL averbada", percent: reserveRatio, value: formatAreaM2(totals.reserve), tone: "ok" },
+      { label: "Construção", percent: constructionRatio, value: formatAreaM2(totals.construction), tone: "required" },
     ];
     chart.innerHTML = bars
       .map((bar) => `
@@ -10642,18 +10718,17 @@ function renderEnvironmentalReserveDashboard() {
   }
 
   const rows = ruralProperties.map((property) => {
-    const requiredByProperty = propertyReserveRequired(property);
-    const reserve = Number(property.legalReserve || 0);
+    const reserve = Number(property.legalReserveAvermentM2 || 0);
     const percent = Number(property.ruralArea || 0) ? Math.round((reserve / Number(property.ruralArea || 0)) * 100) : 0;
     return [
       escapeHtml(`Matrícula ${property.registration || "Não informada"}`),
       escapeHtml(propertyOwnerLabel(property)),
       escapeHtml(formatAreaM2(property.ruralArea)),
       escapeHtml(`${formatAreaM2(reserve)} (${percent}%)`),
-      `<span class="pill ${reserve >= requiredByProperty ? "green" : "yellow"}">${reserve >= requiredByProperty ? "Conforme" : "Abaixo de 20%"}</span>`,
+      escapeHtml(property.hasConstruction ? formatAreaM2(property.constructionArea) : "Não averbada"),
     ];
   });
-  renderDashboardTable("environmental-reserve-table", ["Imóvel", "Proprietário", "Área total", "Reserva legal", "Status"], rows, "Nenhum imóvel rural cadastrado");
+  renderDashboardTable("environmental-reserve-table", ["Imóvel", "Proprietário", "Área matrícula", "RL averbada", "Construção"], rows, "Nenhum imóvel rural cadastrado");
 }
 
 function renderIptuDashboard() {
@@ -11028,8 +11103,11 @@ async function persistProperty(property, wasExisting) {
     urban_property_registration: property.type === "urban" ? property.municipalRegistration : null,
     urban_area_m2: property.type === "urban" ? Number(property.urbanArea || 0) : null,
     rural_area_m2: property.type === "rural" ? Number(property.ruralArea || 0) : null,
-    legal_reserve_m2: property.type === "rural" ? Number(property.legalReserve || 0) : null,
-    app_area_m2: property.type === "rural" ? Number(property.appArea || 0) : null,
+    legal_reserve_m2: null,
+    app_area_m2: null,
+    legal_reserve_averment_exists: property.type === "rural" ? Boolean(property.hasLegalReserveAverment) : false,
+    legal_reserve_averment_percent: property.type === "rural" && property.hasLegalReserveAverment ? Number(property.legalReserveAvermentPercent || 0) : null,
+    legal_reserve_averment_m2: property.type === "rural" && property.hasLegalReserveAverment ? Number(property.legalReserveAvermentM2 || 0) : null,
     use_type: property.type === "rural" ? property.ruralUse : null,
     has_construction: Boolean(property.hasConstruction),
     construction_area_m2: Number(property.constructionArea || 0),
@@ -11643,8 +11721,11 @@ async function loadSupabaseData() {
       cibItr: row.cib_itr_number || "",
       urbanArea: Number(row.urban_area_m2 || 0),
       ruralArea: Number(row.rural_area_m2 || 0),
-      legalReserve: Number(row.legal_reserve_m2 || 0),
-      appArea: Number(row.app_area_m2 || 0),
+      legalReserve: 0,
+      appArea: 0,
+      hasLegalReserveAverment: Boolean(row.legal_reserve_averment_exists),
+      legalReserveAvermentPercent: Number(row.legal_reserve_averment_percent || 0),
+      legalReserveAvermentM2: Number(row.legal_reserve_averment_m2 || 0),
       ruralUse: row.use_type || "",
       hasConstruction: Boolean(row.has_construction),
       constructionArea: Number(row.construction_area_m2 || 0),

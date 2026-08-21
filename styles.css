@@ -2591,6 +2591,45 @@ button {
   gap: 6px;
 }
 
+.property-car-status {
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0;
+  padding: 10px 12px;
+}
+
+.property-car-status.found {
+  background: #ecfdf3;
+  border-color: #a7f3d0;
+  color: var(--green-dark);
+  font-weight: 800;
+}
+
+.property-car-status.missing {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #c2410c;
+  font-weight: 800;
+}
+
+.property-averment-box {
+  background: #fbfcfd;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.property-averment-fields {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .dynamic-field-box {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -4572,6 +4611,7 @@ textarea {
 
   .metric-grid,
   .car-area-grid,
+  .property-averment-fields,
   .cards.three,
   .admin-shortcuts,
   .admin-layout,

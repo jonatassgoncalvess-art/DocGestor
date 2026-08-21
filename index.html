@@ -479,22 +479,22 @@
                 <div class="section-title">
                   <div>
                     <p class="eyebrow">01.2.5.3 Painel Imóveis</p>
-                    <h2>Indicadores ambientais dos imóveis rurais</h2>
+                    <h2>Indicadores cadastrais dos imóveis rurais</h2>
                   </div>
                 </div>
                 <section class="panel legal-compliance-panel">
                   <div class="panel-head">
-                    <h2>Reserva Legal dos imóveis rurais</h2>
+                    <h2>Áreas e averbações dos imóveis rurais</h2>
                     <span class="pill green" id="environmental-reserve-percent">0%</span>
                   </div>
-                  <p class="panel-note">Base: imóveis rurais cadastrados. O gráfico compara área total, reserva legal informada e mínimo legal de 20%.</p>
+                  <p class="panel-note">Base: matrículas rurais cadastradas. O painel consolida área conforme matrícula, Reserva Legal averbada e construção averbada.</p>
                   <div class="legal-compliance-layout">
                     <div class="compliance-chart-screen reserve-chart-screen" id="environmental-reserve-chart"></div>
                     <div class="legal-compliance-summary">
                       <article><span>Imóveis rurais</span><strong id="environmental-reserve-properties">0</strong></article>
-                      <article><span>Área total</span><strong id="environmental-reserve-total-area">0 m2</strong></article>
-                      <article><span>Reserva legal</span><strong id="environmental-reserve-total-area-reserved">0 m2</strong></article>
-                      <article><span>Mínimo exigido</span><strong id="environmental-reserve-required-area">0 m2</strong></article>
+                      <article><span>Área conforme matrículas</span><strong id="environmental-reserve-total-area">0 m2</strong></article>
+                      <article><span>Reserva Legal averbada</span><strong id="environmental-reserve-total-area-reserved">0 m2</strong></article>
+                      <article><span>Construção averbada</span><strong id="environmental-reserve-required-area">0 m2</strong></article>
                     </div>
                   </div>
                   <div class="table compact-table" id="environmental-reserve-table"></div>
@@ -2206,38 +2206,39 @@
               <option value="rural">Rural</option>
             </select>
           </label>
-          <label>Matrícula<input id="property-registration" /></label>
+          <label>Lote<input id="property-lot" /></label>
+          <label class="urban-field">Quadra<input id="property-block" /></label>
+          <label class="rural-field" hidden>Gleba<input id="property-glebe" /></label>
+          <label class="urban-area-field" hidden>m2 do imóvel<input id="property-urban-area" type="number" min="0" /></label>
+          <label class="rural-field" hidden>Área total da matrícula (m²)<input id="property-rural-area" type="number" min="0" /></label>
+          <label class="rural-field" hidden>Área total da matrícula (ha)<input id="property-hectares" type="number" min="0" step="0.0001" /></label>
+          <label>Matrícula<input id="property-registration" inputmode="numeric" /></label>
+          <label class="rural-field" hidden>CAR vinculado<input id="property-car-number" readonly placeholder="Informe a matrícula para consultar o CAR" /></label>
+          <p class="wide-field property-car-status rural-field" id="property-car-status" hidden>Nenhum CAR consultado.</p>
           <label>Referência de localização<input id="property-reference" /></label>
           <label>Endereço<input id="property-address" /></label>
           <label>Cidade<select id="property-city"></select></label>
           <label class="urban-field">Inscricao imobiliaria<input id="property-municipal-registration" /></label>
-          <label>Lote<input id="property-lot" /></label>
-          <label class="urban-field">Quadra<input id="property-block" /></label>
-          <label class="rural-field" hidden>Gleba<input id="property-glebe" /></label>
-          <label class="rural-field" hidden>Número do CAR<input id="property-car-number" /></label>
           <label class="rural-field" hidden>Número CCIR/INCRA<input id="property-ccir-incra" /></label>
-          <label class="rural-field" hidden>CIB/ITR<input id="property-cib-itr" inputmode="numeric" pattern="[0-9]*" /></label>
-          <label class="urban-area-field" hidden>m2 do imóvel<input id="property-urban-area" type="number" min="0" /></label>
-          <label class="rural-field" hidden>m2 total do imóvel<input id="property-rural-area" type="number" min="0" /></label>
-          <label class="rural-field" hidden>Ha<input id="property-hectares" type="number" min="0" disabled /></label>
-          <label class="rural-field" hidden>m2 de reserva legal<input id="property-legal-reserve" type="number" min="0" /></label>
-          <label class="rural-field" hidden>Ha de reserva legal<input id="property-legal-reserve-ha" type="number" min="0" step="0.0001" /></label>
-          <label class="rural-field" hidden>m2 de APP<input id="property-app-area" type="number" min="0" /></label>
-          <label class="rural-field" hidden>Ha de APP<input id="property-app-area-ha" type="number" min="0" step="0.0001" /></label>
+          <label class="rural-field" hidden>CIB/NIRF/ITR<input id="property-cib-itr" inputmode="numeric" pattern="[0-9]*" /></label>
           <label class="property-use-field" hidden>Uso da propriedade
             <select id="property-rural-use">
               <option>Lavoura</option>
               <option>Empreendimento</option>
             </select>
           </label>
-          <label class="construction-toggle"><input type="checkbox" id="property-has-construction" /> Construção</label>
-          <label id="construction-area-field" hidden>m2 total da construção<input id="property-construction-area" type="number" min="0" value="0" /></label>
+          <div class="wide-field rural-field property-averment-box" hidden>
+            <label class="inline-check"><input type="checkbox" id="property-has-legal-reserve-averment" /> Existe Averbação de Reserva Legal?</label>
+            <div class="property-averment-fields" id="property-legal-reserve-averment-fields" hidden>
+              <label>Percentual averbado (%)<input id="property-legal-reserve-averment-percent" type="number" min="0" max="100" step="0.01" /></label>
+              <label>Reserva Legal averbada (m²)<input id="property-legal-reserve-averment-m2" type="number" min="0" step="0.01" /></label>
+              <label>Reserva Legal averbada (ha)<input id="property-legal-reserve-averment-ha" type="number" min="0" step="0.0001" /></label>
+            </div>
+          </div>
+          <label class="construction-toggle"><input type="checkbox" id="property-has-construction" /> Construção averbada</label>
+          <label id="construction-area-field" hidden>m2 total da construção averbada<input id="property-construction-area" type="number" min="0" value="0" /></label>
         </form>
-        <div class="reserve-result rural-field" id="reserve-result" hidden>
-          <span>Cálculo automático da reserva legal</span>
-          <strong id="reserve-status">Reserva legal em conformidade</strong>
-          <small>APP informada apenas indica existencia de rio/corpo hidrico e ja esta contida na reserva legal.</small>
-        </div>
+        <div class="reserve-result rural-field" id="reserve-result" hidden></div>
         <div class="modal-actions">
           <button class="ghost" type="button" data-close-modal="property-modal">Cancelar</button>
           <button class="primary" type="button" id="property-save">Salvar imóvel</button>
@@ -2526,7 +2527,7 @@
         <form class="user-form">
           <label>Tipo de relatório
             <select id="property-pdf-report-type">
-              <option value="environmental">Ambiental</option>
+              <option value="environmental">Cadastral rural</option>
               <option value="relation">Relação de Imóveis</option>
             </select>
           </label>
@@ -2537,11 +2538,11 @@
               <option value="rural">Rurais</option>
             </select>
           </label>
-          <label id="property-pdf-compliance-field">Conformidade ambiental
+          <label id="property-pdf-compliance-field">Averbação de Reserva Legal
             <select id="property-pdf-compliance">
               <option value="all">Todos</option>
-              <option value="ok">Reserva legal em conformidade</option>
-              <option value="warning">Reserva legal abaixo de 20%</option>
+              <option value="ok">Com averbação</option>
+              <option value="warning">Sem averbação</option>
             </select>
           </label>
           <label>Selecao de imóveis
@@ -2565,8 +2566,8 @@
         </div>
         <div class="reserve-result">
           <span>Resumo do filtro</span>
-          <strong id="property-pdf-preview">Relatório ambiental de todos os imóveis rurais</strong>
-          <small id="property-pdf-help">No relatório ambiental, o sistema totaliza área, reserva legal e APP, validando a exigência de 20%.</small>
+          <strong id="property-pdf-preview">Relatório cadastral rural de todos os imóveis rurais</strong>
+          <small id="property-pdf-help">No relatório cadastral rural, o sistema totaliza área da matrícula, CAR vinculado, Reserva Legal averbada e construção averbada.</small>
         </div>
         <div class="modal-actions">
           <button class="ghost" data-close-modal="property-pdf-modal">Cancelar</button>
