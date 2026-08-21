@@ -2725,31 +2725,17 @@ button {
   width: 36px;
 }
 
-.globe-icon {
-  border: 1.8px solid currentColor;
-  border-radius: 999px;
+.map-pin-icon {
+  background:
+    radial-gradient(circle at 50% 42%, #ffffff 0 4px, transparent 4.5px),
+    conic-gradient(from -35deg, #1688f0 0 23%, #ffc328 23% 43%, #0ac978 43% 62%, #c5f533 62% 72%, #ffdc00 72% 83%, #ff1239 83% 100%);
+  border-radius: 50% 50% 50% 0;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .18);
   display: inline-block;
-  height: 16px;
+  height: 20px;
   position: relative;
-  width: 16px;
-}
-
-.globe-icon::before {
-  border-left: 1.3px solid currentColor;
-  border-right: 1.3px solid currentColor;
-  border-radius: 999px;
-  content: "";
-  inset: 2px 5px;
-  position: absolute;
-}
-
-.globe-icon::after {
-  border-top: 1.3px solid currentColor;
-  content: "";
-  left: 2px;
-  position: absolute;
-  right: 2px;
-  top: 7px;
+  transform: rotate(-45deg);
+  width: 20px;
 }
 
 .dynamic-field-box {

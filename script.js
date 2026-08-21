@@ -5781,14 +5781,10 @@ function renderCarRegistries() {
   carList.innerHTML = items.length
     ? items.map((registry) => `
       <article>
-        <strong>
-          <span class="car-regularity ${carRegularityStatus(registry).className}">${carRegularityStatus(registry).label}</span>
-          ${registry.documentRequirementEnabled ? `<span class="car-regularity requirement">Em exigência</span>` : ""}
-          CAR ${escapeHtml(registry.number)}
-        </strong>
+        <strong>CAR ${escapeHtml(registry.number)}</strong>
         <span>${escapeHtml(carRegistrySummary(registry))}</span>
         <div>
-          <button class="map-icon-button" type="button" data-car-action="map" data-car-id="${registry.id}" title="Abrir no Google Maps" aria-label="Abrir coordenadas do CAR no Google Maps"><span class="globe-icon" aria-hidden="true"></span></button>
+          <button class="map-icon-button" type="button" data-car-action="map" data-car-id="${registry.id}" title="Abrir no Google Maps" aria-label="Abrir coordenadas do CAR no Google Maps"><span class="map-pin-icon" aria-hidden="true"></span></button>
           <button type="button" data-car-action="report" data-car-id="${registry.id}">Relatório</button>
           <button type="button" data-car-action="edit" data-car-id="${registry.id}">Editar</button>
           <button type="button" data-car-action="delete" data-car-id="${registry.id}">Excluir</button>
@@ -5811,15 +5807,9 @@ function carRegularityStatus(registry) {
 }
 
 function carRegistrySummary(registry) {
-  const registrations = Array.isArray(registry.registrations) && registry.registrations.length
+  return Array.isArray(registry.registrations) && registry.registrations.length
     ? `Matrículas: ${registry.registrations.join(", ")}`
     : "Sem matrícula informada";
-  const totalArea = registry.totalArea ? ` - Área total: ${formatCarAreaValue(registry.totalArea, 2)} m² (${formatCarAreaValue(Number(registry.totalArea) / 10000, 4)} ha)` : "";
-  const legalReserve = registry.legalReserveArea ? ` - RL: ${formatCarAreaValue(registry.legalReserveArea, 2)} m²` : "";
-  const coordinates = registry.latitude || registry.longitude
-    ? ` - Coordenadas: ${registry.latitude || "lat. não informada"}, ${registry.longitude || "long. não informada"}`
-    : "";
-  return `${registrations}${totalArea}${legalReserve}${coordinates} - Situação: ${registry.status || "Ativo"}`;
 }
 
 function carDashboardSelectableItems() {
