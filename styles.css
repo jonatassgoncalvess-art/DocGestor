@@ -2408,6 +2408,32 @@ button {
   font-size: 14px;
 }
 
+.selection-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.selection-row {
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr auto;
+  padding: 10px 12px;
+}
+
+.selection-row strong,
+.selection-row span {
+  display: block;
+}
+
+.selection-row span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .dynamic-field-box {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -2758,6 +2784,11 @@ button {
 .wide-modal {
   max-width: 960px;
   width: min(960px, 100%);
+}
+
+.small-modal {
+  max-width: 520px;
+  width: min(520px, 100%);
 }
 
 .confirm-modal {

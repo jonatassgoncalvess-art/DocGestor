@@ -5366,7 +5366,6 @@ const CAR_AREA_FIELDS = [
   { key: "legalReserveArea", label: "Reserva Legal - RL" },
   { key: "appArea", label: "Área de Preservação Permanente - APP" },
   { key: "nativeVegetationArea", label: "Remanescentes de vegetação nativa" },
-  { key: "consolidatedArea", label: "Área rural consolidada" },
   { key: "fallowArea", label: "Área de pousio" },
   { key: "restrictedUseArea", label: "Áreas de uso restrito" },
   { key: "riversArea", label: "Rios e córregos" },
@@ -5381,6 +5380,10 @@ const CAR_AREA_FIELDS = [
 const CAR_ALWAYS_VISIBLE_AREA_KEYS = new Set(["totalArea", "legalReserveArea", "appArea"]);
 let hiddenCarAreaKeys = new Set();
 let currentCarAreaValues = {};
+
+function defaultHiddenCarAreaKeys() {
+  return new Set(CAR_AREA_FIELDS.filter((item) => !CAR_ALWAYS_VISIBLE_AREA_KEYS.has(item.key)).map((item) => item.key));
+}
 
 function nonNegativeCarNumber(id) {
   const input = field(id);
@@ -5410,6 +5413,12 @@ function carAreaPercentId(key) {
 
 function getCarAreaM2(key) {
   return normalizeCarAreaValue(field(carAreaInputId(key, "m2"))?.value);
+}
+
+function carAreaStoredM2(key) {
+  const visibleInput = field(carAreaInputId(key, "m2"));
+  if (visibleInput) return normalizeCarAreaValue(visibleInput.value);
+  return normalizeCarAreaValue(currentCarAreaValues[key]);
 }
 
 function syncVisibleCarAreaValues() {
@@ -5447,6 +5456,26 @@ function renderCarAreaFields() {
   updateCarAreaPercentages();
 }
 
+function renderCarHiddenAreaPicker() {
+  const list = field("car-hidden-area-list");
+  if (!list) return;
+  const hiddenItems = CAR_AREA_FIELDS.filter((item) => hiddenCarAreaKeys.has(item.key));
+  list.innerHTML = hiddenItems.length
+    ? hiddenItems.map((item) => `
+      <article class="selection-row">
+        <strong>${escapeHtml(item.label)}</strong>
+        <button class="ghost small" type="button" data-car-area-show="${item.key}">Exibir</button>
+      </article>
+    `).join("")
+    : `<article class="selection-row"><strong>Nenhum campo oculto</strong><span>Todos os campos opcionais estão visíveis.</span></article>`;
+}
+
+function openCarHiddenAreaPicker() {
+  syncVisibleCarAreaValues();
+  renderCarHiddenAreaPicker();
+  openModal("car-hidden-area-modal");
+}
+
 function setCarAreaField(key, valueM2) {
   const m2Input = field(carAreaInputId(key, "m2"));
   const haInput = field(carAreaInputId(key, "ha"));
@@ -5457,7 +5486,7 @@ function setCarAreaField(key, valueM2) {
 
 function clearCarAreaFields() {
   currentCarAreaValues = {};
-  hiddenCarAreaKeys = new Set();
+  hiddenCarAreaKeys = defaultHiddenCarAreaKeys();
   renderCarAreaFields();
   CAR_AREA_FIELDS.forEach((item) => setCarAreaField(item.key, ""));
   updateCarAreaPercentages();
@@ -5465,7 +5494,10 @@ function clearCarAreaFields() {
 
 function carAreaPayload() {
   syncVisibleCarAreaValues();
-  return Object.fromEntries(CAR_AREA_FIELDS.map((item) => [item.key, currentCarAreaValues[item.key] || ""]));
+  return {
+    ...Object.fromEntries(CAR_AREA_FIELDS.map((item) => [item.key, currentCarAreaValues[item.key] || ""])),
+    consolidatedArea: calculateCarConsolidatedArea(),
+  };
 }
 
 function updateCarAreaPercentages() {
@@ -5483,13 +5515,17 @@ function updateCarAreaPercentages() {
 function updateCarLegalReservePanel() {
   const panel = field("car-legal-reserve-panel");
   if (!panel) return;
-  const totalArea = getCarAreaM2("totalArea");
-  const legalReserve = getCarAreaM2("legalReserveArea");
+  const totalArea = carAreaStoredM2("totalArea");
+  const legalReserve = carAreaStoredM2("legalReserveArea");
+  const consolidatedArea = calculateCarConsolidatedArea();
+  const consolidatedText = totalArea
+    ? `Área rural consolidada estimada: ${formatCarAreaValue(consolidatedArea, 2)} m² (${formatCarAreaValue(consolidatedArea / 10000, 4)} ha).`
+    : "A área rural consolidada será calculada após informar a área total.";
   if (!totalArea || legalReserve === "") {
     panel.className = "car-rl-panel";
     panel.innerHTML = `
       <strong>Reserva Legal</strong>
-      <span>Informe a área total do imóvel e a área de RL para verificar os 20% exigidos.</span>
+      <span>Informe a área total do imóvel e a área de RL para verificar os 20% exigidos. ${consolidatedText}</span>
     `;
     return;
   }
@@ -5500,8 +5536,17 @@ function updateCarLegalReservePanel() {
   panel.className = `car-rl-panel ${complies ? "success" : "danger"}`;
   panel.innerHTML = `
     <strong>${complies ? "Reserva Legal conforme" : "Reserva Legal abaixo de 20%"}</strong>
-    <span>RL informada: ${formatCarAreaValue(legalReserve, 2)} m² (${formatCarAreaValue(percent, 2)}%). Mínimo de 20%: ${formatCarAreaValue(required, 2)} m² (${formatCarAreaValue(required / 10000, 4)} ha). ${complies ? `Saldo: ${formatCarAreaValue(difference, 2)} m².` : `Faltam ${formatCarAreaValue(Math.abs(difference), 2)} m².`}</span>
+    <span>RL informada: ${formatCarAreaValue(legalReserve, 2)} m² (${formatCarAreaValue(percent, 2)}%). Mínimo de 20%: ${formatCarAreaValue(required, 2)} m² (${formatCarAreaValue(required / 10000, 4)} ha). ${complies ? `Saldo: ${formatCarAreaValue(difference, 2)} m².` : `Faltam ${formatCarAreaValue(Math.abs(difference), 2)} m².`} ${consolidatedText}</span>
   `;
+}
+
+function calculateCarConsolidatedArea() {
+  const totalArea = carAreaStoredM2("totalArea");
+  if (!totalArea) return "";
+  const occupiedArea = CAR_AREA_FIELDS
+    .filter((item) => item.key !== "totalArea")
+    .reduce((sum, item) => sum + Number(carAreaStoredM2(item.key) || 0), 0);
+  return Math.max(0, Number(totalArea) - occupiedArea);
 }
 
 function handleCarAreaInput(event) {
@@ -5593,8 +5638,13 @@ function carRegistrationValues() {
     .filter(Boolean);
 }
 
+function carRegistrationFormRows() {
+  return [...document.querySelectorAll(".car-registration-input")]
+    .map((input) => input.value.replace(/\D/g, ""));
+}
+
 function addCarRegistrationInput() {
-  renderCarRegistrationInputs([...carRegistrationValues(), ""]);
+  renderCarRegistrationInputs([...carRegistrationFormRows(), ""]);
 }
 
 function fillCarForm(registry) {
@@ -5606,8 +5656,9 @@ function fillCarForm(registry) {
   field("car-latitude").value = registry.latitude || "";
   field("car-longitude").value = registry.longitude || "";
   renderCarRegistrationInputs(registry.registrations || [""]);
-  hiddenCarAreaKeys = new Set();
+  hiddenCarAreaKeys = defaultHiddenCarAreaKeys();
   currentCarAreaValues = Object.fromEntries(CAR_AREA_FIELDS.map((item) => [item.key, registry[item.key] || ""]));
+  currentCarAreaValues.consolidatedArea = registry.consolidatedArea || "";
   renderCarAreaFields();
   document.querySelectorAll('[name="car-app-rl-coverage"]').forEach((input) => {
     input.checked = input.value === registry.appRlCoverage;
@@ -5663,6 +5714,7 @@ async function saveCarRegistry() {
   closeModal("car-modal");
 }
 
+hiddenCarAreaKeys = defaultHiddenCarAreaKeys();
 renderCarAreaFields();
 document.querySelector("#car-new")?.addEventListener("click", newCarRegistry);
 document.querySelector("#car-save")?.addEventListener("click", saveCarRegistry);
@@ -5677,15 +5729,28 @@ field("car-area-grid")?.addEventListener("click", (event) => {
 });
 field("car-show-hidden-areas")?.addEventListener("click", () => {
   syncVisibleCarAreaValues();
+  openCarHiddenAreaPicker();
+});
+field("car-hidden-area-list")?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-car-area-show]");
+  if (!button) return;
+  syncVisibleCarAreaValues();
+  hiddenCarAreaKeys.delete(button.dataset.carAreaShow);
+  renderCarAreaFields();
+  renderCarHiddenAreaPicker();
+});
+field("car-show-all-hidden-areas")?.addEventListener("click", () => {
+  syncVisibleCarAreaValues();
   hiddenCarAreaKeys = new Set();
   renderCarAreaFields();
+  closeModal("car-hidden-area-modal");
 });
 field("car-search")?.addEventListener("input", renderCarRegistries);
 field("car-registration-list")?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-car-registration-remove]");
   if (!button) return;
   const index = Number(button.dataset.carRegistrationRemove);
-  const values = carRegistrationValues();
+  const values = carRegistrationFormRows();
   values.splice(index, 1);
   renderCarRegistrationInputs(values);
 });
