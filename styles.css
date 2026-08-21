@@ -1923,9 +1923,30 @@ button {
 }
 
 .user-form {
+  align-items: start;
   display: grid;
   grid-template-columns: repeat(2, minmax(180px, 1fr));
   gap: 12px;
+}
+
+.user-form > label {
+  align-self: start;
+  display: grid;
+  gap: 6px;
+  min-height: 67px;
+}
+
+#property-form {
+  align-items: start;
+  grid-auto-flow: row;
+}
+
+#property-form > label {
+  min-height: 67px;
+}
+
+#property-form .wide-field {
+  align-self: start;
 }
 
 .user-list {
@@ -2620,14 +2641,26 @@ button {
   border: 1px solid var(--line);
   border-radius: 12px;
   display: grid;
-  gap: 12px;
+  gap: 10px;
   padding: 14px;
+}
+
+.property-averment-box .inline-check {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .property-averment-fields {
   display: grid;
   gap: 12px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.property-averment-fields label {
+  display: grid;
+  gap: 6px;
+  min-height: 67px;
 }
 
 .dynamic-field-box {
@@ -2809,6 +2842,20 @@ button {
 .car-rl-panel strong,
 .car-analysis-block strong {
   color: var(--ink);
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  appearance: auto;
+  accent-color: var(--brand-red);
+  border-radius: 3px;
+  cursor: pointer;
+  flex: 0 0 auto;
+  height: 15px;
+  margin: 0;
+  min-height: 15px;
+  padding: 0;
+  width: 15px;
 }
 
 .car-rl-panel span,
@@ -4282,19 +4329,32 @@ label textarea {
   color: var(--ink);
 }
 
+label input[type="checkbox"],
+label input[type="radio"] {
+  width: 15px;
+}
+
+.inline-check,
 .checkbox-line {
   align-items: center;
   display: inline-flex;
+  flex-direction: row;
   gap: 8px;
   justify-content: flex-start;
+  line-height: 1.25;
+  min-height: 24px;
   width: fit-content;
+}
+
+.checkbox-line {
+  max-width: 100%;
 }
 
 .checkbox-line input[type="checkbox"] {
   flex: 0 0 auto;
-  height: 14px;
+  height: 15px;
   margin: 0;
-  width: 14px;
+  width: 15px;
 }
 
 textarea {
