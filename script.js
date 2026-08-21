@@ -5450,9 +5450,20 @@ function renderCarAreaFields() {
       <input id="${carAreaInputId(item.key, "ha")}" class="car-area-input" data-car-area-key="${item.key}" data-car-area-unit="ha" type="number" min="0" step="0.0001" />
       <output id="${carAreaPercentId(item.key)}" class="car-area-percent">0%</output>
       ${CAR_ALWAYS_VISIBLE_AREA_KEYS.has(item.key) ? `<span class="car-area-fixed"></span>` : `<button class="ghost small car-area-hide" type="button" data-car-area-hide="${item.key}">Ocultar</button>`}
+      ${item.key === "appArea" ? `
+        <div class="car-app-coverage-row">
+          <span>Quanto da APP está na Reserva Legal?</span>
+          <label><input name="car-app-rl-coverage" type="radio" value="nada" /> Nada</label>
+          <label><input name="car-app-rl-coverage" type="radio" value="parcial" /> Parcial</label>
+          <label><input name="car-app-rl-coverage" type="radio" value="integral" /> Integral</label>
+        </div>
+      ` : ""}
     `).join("")}
   `;
   visibleFields.forEach((item) => setCarAreaField(item.key, currentCarAreaValues[item.key] || ""));
+  document.querySelectorAll('[name="car-app-rl-coverage"]').forEach((input) => {
+    input.checked = input.value === (currentCarAreaValues.appRlCoverage || "");
+  });
   updateCarAreaPercentages();
 }
 
@@ -5518,14 +5529,17 @@ function updateCarLegalReservePanel() {
   const totalArea = carAreaStoredM2("totalArea");
   const legalReserve = carAreaStoredM2("legalReserveArea");
   const consolidatedArea = calculateCarConsolidatedArea();
-  const consolidatedText = totalArea
-    ? `Área rural consolidada estimada: ${formatCarAreaValue(consolidatedArea, 2)} m² (${formatCarAreaValue(consolidatedArea / 10000, 4)} ha).`
-    : "A área rural consolidada será calculada após informar a área total.";
+  const consolidatedBlock = totalArea
+    ? `<div class="car-analysis-block"><strong>Área rural consolidada estimada</strong><span>${formatCarAreaValue(consolidatedArea, 2) || "0"} m² (${formatCarAreaValue(consolidatedArea / 10000, 4) || "0"} ha).</span></div>`
+    : `<div class="car-analysis-block"><strong>Área rural consolidada estimada</strong><span>Será calculada após informar a área total.</span></div>`;
   if (!totalArea || legalReserve === "") {
     panel.className = "car-rl-panel";
     panel.innerHTML = `
-      <strong>Reserva Legal</strong>
-      <span>Informe a área total do imóvel e a área de RL para verificar os 20% exigidos. ${consolidatedText}</span>
+      <div class="car-analysis-block">
+        <strong>Reserva Legal</strong>
+        <span>Informe a área total do imóvel e a área de RL para verificar os 20% exigidos.</span>
+      </div>
+      ${consolidatedBlock}
     `;
     return;
   }
@@ -5533,18 +5547,26 @@ function updateCarLegalReservePanel() {
   const percent = (Number(legalReserve) / Number(totalArea)) * 100;
   const difference = Number(legalReserve) - required;
   const complies = difference >= -0.01;
+  const differenceText = complies
+    ? `Saldo: ${formatCarAreaValue(difference, 2) || "0"} m².`
+    : `Faltam ${formatCarAreaValue(Math.abs(difference), 2) || "0"} m².`;
   panel.className = `car-rl-panel ${complies ? "success" : "danger"}`;
   panel.innerHTML = `
-    <strong>${complies ? "Reserva Legal conforme" : "Reserva Legal abaixo de 20%"}</strong>
-    <span>RL informada: ${formatCarAreaValue(legalReserve, 2)} m² (${formatCarAreaValue(percent, 2)}%). Mínimo de 20%: ${formatCarAreaValue(required, 2)} m² (${formatCarAreaValue(required / 10000, 4)} ha). ${complies ? `Saldo: ${formatCarAreaValue(difference, 2)} m².` : `Faltam ${formatCarAreaValue(Math.abs(difference), 2)} m².`} ${consolidatedText}</span>
+    <div class="car-analysis-block">
+      <strong>${complies ? "Reserva Legal conforme" : "Reserva Legal abaixo de 20%"}</strong>
+      <span>RL informada: ${formatCarAreaValue(legalReserve, 2)} m² (${formatCarAreaValue(percent, 2)}%). Mínimo de 20%: ${formatCarAreaValue(required, 2)} m² (${formatCarAreaValue(required / 10000, 4)} ha). ${differenceText}</span>
+    </div>
+    ${consolidatedBlock}
   `;
 }
 
 function calculateCarConsolidatedArea() {
   const totalArea = carAreaStoredM2("totalArea");
   if (!totalArea) return "";
+  const appCoverage = document.querySelector('[name="car-app-rl-coverage"]:checked')?.value || currentCarAreaValues.appRlCoverage || "";
   const occupiedArea = CAR_AREA_FIELDS
     .filter((item) => item.key !== "totalArea")
+    .filter((item) => !(item.key === "appArea" && appCoverage === "integral"))
     .reduce((sum, item) => sum + Number(carAreaStoredM2(item.key) || 0), 0);
   return Math.max(0, Number(totalArea) - occupiedArea);
 }
@@ -5659,10 +5681,8 @@ function fillCarForm(registry) {
   hiddenCarAreaKeys = defaultHiddenCarAreaKeys();
   currentCarAreaValues = Object.fromEntries(CAR_AREA_FIELDS.map((item) => [item.key, registry[item.key] || ""]));
   currentCarAreaValues.consolidatedArea = registry.consolidatedArea || "";
+  currentCarAreaValues.appRlCoverage = registry.appRlCoverage || "";
   renderCarAreaFields();
-  document.querySelectorAll('[name="car-app-rl-coverage"]').forEach((input) => {
-    input.checked = input.value === registry.appRlCoverage;
-  });
   field("car-notes").value = registry.notes || "";
   updateCarAreaPercentages();
 }
@@ -5677,9 +5697,8 @@ function newCarRegistry() {
   field("car-longitude").value = "";
   renderCarRegistrationInputs([""]);
   clearCarAreaFields();
-  document.querySelectorAll('[name="car-app-rl-coverage"]').forEach((input) => {
-    input.checked = false;
-  });
+  currentCarAreaValues.appRlCoverage = "";
+  renderCarAreaFields();
   field("car-notes").value = "";
   document.querySelector("#car-modal-title").textContent = "Novo CAR";
   openModal("car-modal");
@@ -5698,7 +5717,7 @@ async function saveCarRegistry() {
     registrations: carRegistrationValues(),
     ...carAreaPayload(),
     legalReserveStatus: existing?.legalReserveStatus || "",
-    appRlCoverage: document.querySelector('[name="car-app-rl-coverage"]:checked')?.value || "",
+    appRlCoverage: currentCarAreaValues.appRlCoverage || "",
     notes: field("car-notes").value.trim(),
   };
   if (!payload.number) {
@@ -5720,6 +5739,12 @@ document.querySelector("#car-new")?.addEventListener("click", newCarRegistry);
 document.querySelector("#car-save")?.addEventListener("click", saveCarRegistry);
 document.querySelector("#car-registration-add")?.addEventListener("click", addCarRegistrationInput);
 field("car-area-grid")?.addEventListener("input", handleCarAreaInput);
+field("car-area-grid")?.addEventListener("change", (event) => {
+  const input = event.target.closest('[name="car-app-rl-coverage"]');
+  if (!input) return;
+  currentCarAreaValues.appRlCoverage = input.value;
+  updateCarAreaPercentages();
+});
 field("car-area-grid")?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-car-area-hide]");
   if (!button || button.disabled) return;

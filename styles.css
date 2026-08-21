@@ -2462,8 +2462,24 @@ button {
   gap: 8px;
 }
 
+#car-registration-list {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(178px, 1fr));
+}
+
+#car-registration-list .dynamic-field-row {
+  grid-template-columns: minmax(112px, 1fr) 34px;
+}
+
+#car-registration-list .dynamic-field-row:has(.car-registration-input:only-child),
+#car-registration-list .dynamic-field-row:not(:has(button)) {
+  grid-template-columns: minmax(112px, 1fr);
+}
+
 .short-number-input {
-  max-width: 140px;
+  max-width: 100%;
 }
 
 .car-area-box {
@@ -2537,6 +2553,33 @@ button {
   display: block;
 }
 
+.car-app-coverage-row {
+  align-items: center;
+  background: #f8fafc;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  grid-column: 1 / -1;
+  padding: 10px 12px;
+}
+
+.car-app-coverage-row span {
+  font-size: 13px;
+  font-weight: 800;
+  margin-right: 4px;
+}
+
+.car-app-coverage-row label {
+  align-items: center;
+  display: inline-flex;
+  flex-direction: row;
+  gap: 6px;
+  margin: 0;
+}
+
 .icon-only {
   min-height: 34px;
   min-width: 34px;
@@ -2550,13 +2593,30 @@ button {
   display: grid;
   gap: 4px;
   padding: 12px;
+  position: sticky;
+  bottom: -1px;
+  z-index: 3;
 }
 
-.car-rl-panel strong {
+.car-analysis-block {
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  display: grid;
+  gap: 4px;
+  padding: 2px 0 10px;
+}
+
+.car-analysis-block:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.car-rl-panel strong,
+.car-analysis-block strong {
   color: var(--ink);
 }
 
-.car-rl-panel span {
+.car-rl-panel span,
+.car-analysis-block span {
   color: var(--muted);
   font-size: 13px;
 }
