@@ -2089,6 +2089,16 @@
             <div class="car-area-grid" id="car-area-grid"></div>
           </div>
           <label class="wide-field">Observações<textarea id="car-notes" rows="4"></textarea></label>
+          <div class="wide-field car-requirement-box">
+            <label class="inline-check car-requirement-check">
+              <input id="car-requirement-enabled" type="checkbox" />
+              Em exigência de documentos?
+            </label>
+            <label id="car-requirement-count-field" hidden>Quantidade de documentos em exigência
+              <input id="car-requirement-count" type="number" min="0" step="1" placeholder="0" />
+            </label>
+            <div class="requirement-doc-list" id="car-requirement-list" hidden></div>
+          </div>
           <div class="wide-field car-rl-panel" id="car-legal-reserve-panel">
             <strong>Reserva Legal</strong>
             <span>Informe a área total do imóvel e a área de RL para verificar os 20% exigidos.</span>
@@ -2114,6 +2124,58 @@
         <div class="modal-actions">
           <button class="ghost" data-close-modal="car-hidden-area-modal">Cancelar</button>
           <button class="primary" id="car-show-all-hidden-areas" type="button">Exibir todos</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="car-pdf-modal" aria-hidden="true">
+      <section class="modal-panel wide-modal" role="dialog" aria-modal="true" aria-labelledby="car-pdf-title">
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">01.2.4 CAR</p>
+            <h2 id="car-pdf-title">Relatório de CAR</h2>
+          </div>
+          <button class="ghost small" data-close-modal="car-pdf-modal">Fechar</button>
+        </div>
+        <div class="pdf-filter-grid">
+          <article class="filter-card">
+            <span>CAR selecionados</span>
+            <strong id="car-pdf-selection-summary">Todos os CARs</strong>
+            <button type="button" class="ghost small" data-pdf-picker="car-registries">Selecionar</button>
+          </article>
+          <label>Regularidade
+            <select id="car-pdf-regularity">
+              <option value="all">Regulares e irregulares</option>
+              <option value="regular">Somente regulares</option>
+              <option value="irregular">Somente irregulares</option>
+            </select>
+          </label>
+          <label>Exigência
+            <select id="car-pdf-requirement">
+              <option value="all">Todos</option>
+              <option value="yes">Em exigência</option>
+              <option value="no">Sem exigência</option>
+            </select>
+          </label>
+          <label>APP
+            <select id="car-pdf-app">
+              <option value="all">Com ou sem APP</option>
+              <option value="with">Com APP</option>
+              <option value="without">Sem APP</option>
+            </select>
+          </label>
+          <label>Reserva Legal
+            <select id="car-pdf-rl">
+              <option value="all">Com ou sem RL</option>
+              <option value="with">Com RL</option>
+              <option value="without">Sem RL</option>
+            </select>
+          </label>
+          <p class="wide-field panel-note" id="car-pdf-preview">Relatório em formato de listagem, com filtros aplicados antes da pré-visualização.</p>
+        </div>
+        <div class="modal-actions">
+          <button class="ghost" data-close-modal="car-pdf-modal">Cancelar</button>
+          <button class="primary" id="car-pdf-generate" type="button">Gerar relatório</button>
         </div>
       </section>
     </div>

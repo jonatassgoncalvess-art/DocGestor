@@ -5624,6 +5624,7 @@ function carSearchText(registry) {
     registry.latitude,
     registry.longitude,
     ...(registry.registrations || []),
+    ...(registry.documentRequirementItems || []),
     registry.totalArea,
     registry.appRlCoverage,
   ].filter(Boolean).join(" "));
@@ -5643,9 +5644,14 @@ function renderCarRegistries() {
   carList.innerHTML = items.length
     ? items.map((registry) => `
       <article>
-        <strong><span class="car-regularity ${carRegularityStatus(registry).className}">${carRegularityStatus(registry).label}</span> CAR ${escapeHtml(registry.number)}</strong>
+        <strong>
+          <span class="car-regularity ${carRegularityStatus(registry).className}">${carRegularityStatus(registry).label}</span>
+          ${registry.documentRequirementEnabled ? `<span class="car-regularity requirement">Em exigência</span>` : ""}
+          CAR ${escapeHtml(registry.number)}
+        </strong>
         <span>${escapeHtml(carRegistrySummary(registry))}</span>
         <div>
+          <button type="button" data-car-action="report" data-car-id="${registry.id}">Relatório</button>
           <button type="button" data-car-action="edit" data-car-id="${registry.id}">Editar</button>
           <button type="button" data-car-action="delete" data-car-id="${registry.id}">Excluir</button>
         </div>
@@ -5748,6 +5754,60 @@ function polarToCartesian(cx, cy, radius, angleInDegrees) {
   };
 }
 
+function shadeColor(hex, percent) {
+  const clean = String(hex || "#64748b").replace("#", "");
+  const number = parseInt(clean.length === 3 ? clean.split("").map((char) => char + char).join("") : clean, 16);
+  const amount = Math.round(2.55 * percent);
+  const r = Math.max(0, Math.min(255, (number >> 16) + amount));
+  const g = Math.max(0, Math.min(255, ((number >> 8) & 0x00ff) + amount));
+  const b = Math.max(0, Math.min(255, (number & 0x0000ff) + amount));
+  return `#${(0x1000000 + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+}
+
+function carPieSvg(slices, areaTotal, options = {}) {
+  if (!slices.length) return `<div class="empty-chart">Nenhuma área informada</div>`;
+  const prefix = options.prefix || `carpie-${Date.now()}`;
+  const total = slices.reduce((sum, item) => sum + Number(item.value || 0), 0);
+  let cursor = 0;
+  const depthPaths = [];
+  const topPaths = [];
+  const defs = slices.map((item, index) => {
+    const color = item.color || "#64748b";
+    return `
+      <linearGradient id="${prefix}-grad-${index}" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="${shadeColor(color, 18)}" />
+        <stop offset="58%" stop-color="${color}" />
+        <stop offset="100%" stop-color="${shadeColor(color, -18)}" />
+      </linearGradient>
+    `;
+  }).join("");
+  slices.forEach((item, index) => {
+    const angle = (Number(item.value) / total) * 360;
+    const path = pieSlicePath(120, 110, 96, cursor, cursor + angle);
+    const title = `${item.label} - ${formatCarAreaValue(item.value, 2)} m²`;
+    depthPaths.push(`<path d="${path}" fill="${shadeColor(item.color, -28)}" opacity="0.72"></path>`);
+    topPaths.push(`<path d="${path}" fill="url(#${prefix}-grad-${index})" stroke="#ffffff" stroke-width="1.4"><title>${escapeHtml(title)}</title></path>`);
+    cursor += angle;
+  });
+  return `
+    <svg viewBox="0 0 240 238" role="img" aria-label="Gráfico de áreas do CAR" class="car-pie-svg">
+      <defs>
+        <filter id="${prefix}-shadow" x="-20%" y="-20%" width="140%" height="145%">
+          <feDropShadow dx="0" dy="16" stdDeviation="13" flood-color="#0f172a" flood-opacity="0.22" />
+        </filter>
+        ${defs}
+      </defs>
+      <ellipse cx="120" cy="214" rx="80" ry="15" fill="#0f172a" opacity="0.13"></ellipse>
+      <g transform="translate(0 12)" filter="url(#${prefix}-shadow)">${depthPaths.join("")}</g>
+      <g filter="url(#${prefix}-shadow)">${topPaths.join("")}</g>
+      <circle cx="120" cy="110" r="50" fill="#ffffff" opacity="0.96"></circle>
+      <circle cx="120" cy="110" r="50" fill="none" stroke="#eef2f7" stroke-width="1"></circle>
+      <text x="120" y="104" text-anchor="middle">Total</text>
+      <text x="120" y="126" text-anchor="middle">${formatCarAreaValue(Number(areaTotal || 0) / 10000, 2) || "0"} ha</text>
+    </svg>
+  `;
+}
+
 function renderCarDashboard() {
   const chart = field("car-dashboard-chart");
   const legend = field("car-dashboard-legend");
@@ -5772,21 +5832,7 @@ function renderCarDashboard() {
     return;
   }
   const total = slices.reduce((sum, item) => sum + Number(item.value || 0), 0);
-  let cursor = 0;
-  const paths = slices.map((item) => {
-    const angle = (Number(item.value) / total) * 360;
-    const path = pieSlicePath(110, 110, 96, cursor, cursor + angle);
-    cursor += angle;
-    return `<path d="${path}" fill="${item.color}"><title>${escapeHtml(item.label)} - ${formatCarAreaValue(item.value, 2)} m²</title></path>`;
-  }).join("");
-  chart.innerHTML = `
-    <svg viewBox="0 0 220 220" role="img" aria-label="Gráfico de áreas do CAR">
-      ${paths}
-      <circle cx="110" cy="110" r="48" fill="#fff"></circle>
-      <text x="110" y="104" text-anchor="middle">Total</text>
-      <text x="110" y="124" text-anchor="middle">${formatCarAreaValue(areaTotal / 10000, 2) || "0"} ha</text>
-    </svg>
-  `;
+  chart.innerHTML = carPieSvg(slices, areaTotal, { prefix: "car-dashboard-main" });
   legend.innerHTML = slices.map((item) => {
     const percent = total ? (Number(item.value) / total) * 100 : 0;
     return `
@@ -5797,6 +5843,38 @@ function renderCarDashboard() {
       </article>
     `;
   }).join("");
+}
+
+function renderCarRequirementFields(values = []) {
+  const enabled = Boolean(field("car-requirement-enabled")?.checked);
+  const countField = field("car-requirement-count-field");
+  const countInput = field("car-requirement-count");
+  const list = field("car-requirement-list");
+  if (countField) countField.hidden = !enabled;
+  if (!list) return;
+  const count = enabled ? Math.max(0, Math.floor(Number(countInput?.value || values.length || 0))) : 0;
+  if (countInput && enabled) countInput.value = count || "";
+  list.hidden = !enabled || count === 0;
+  list.innerHTML = Array.from({ length: count }, (_, index) => `
+    <label>Documento ${index + 1}
+      <input class="car-requirement-doc-input" value="${escapeHtml(values[index] || "")}" placeholder="Informe o documento em exigência" />
+    </label>
+  `).join("");
+}
+
+function carRequirementValues() {
+  return [...document.querySelectorAll(".car-requirement-doc-input")]
+    .map((input) => input.value.trim())
+    .filter(Boolean);
+}
+
+function fillCarRequirementFields(registry = {}) {
+  const enabled = field("car-requirement-enabled");
+  const count = field("car-requirement-count");
+  const items = Array.isArray(registry.documentRequirementItems) ? registry.documentRequirementItems : [];
+  if (enabled) enabled.checked = Boolean(registry.documentRequirementEnabled);
+  if (count) count.value = registry.documentRequirementCount || items.length || "";
+  renderCarRequirementFields(items);
 }
 
 function applyCarDashboardSearch() {
@@ -5850,6 +5928,7 @@ function fillCarForm(registry) {
   currentCarAreaValues.appRlCoverage = registry.appRlCoverage || "";
   renderCarAreaFields();
   field("car-notes").value = registry.notes || "";
+  fillCarRequirementFields(registry);
   updateCarAreaPercentages();
 }
 
@@ -5866,6 +5945,7 @@ function newCarRegistry() {
   currentCarAreaValues.appRlCoverage = "";
   renderCarAreaFields();
   field("car-notes").value = "";
+  fillCarRequirementFields({ documentRequirementEnabled: false, documentRequirementCount: 0, documentRequirementItems: [] });
   document.querySelector("#car-modal-title").textContent = "Novo CAR";
   openModal("car-modal");
 }
@@ -5885,6 +5965,9 @@ async function saveCarRegistry() {
     legalReserveStatus: existing?.legalReserveStatus || "",
     appRlCoverage: currentCarAreaValues.appRlCoverage || "",
     notes: field("car-notes").value.trim(),
+    documentRequirementEnabled: Boolean(field("car-requirement-enabled")?.checked),
+    documentRequirementCount: Boolean(field("car-requirement-enabled")?.checked) ? Math.max(0, Math.floor(Number(field("car-requirement-count")?.value || 0))) : 0,
+    documentRequirementItems: Boolean(field("car-requirement-enabled")?.checked) ? carRequirementValues() : [],
   };
   if (!payload.number) {
     alert("Informe o número do CAR.");
@@ -5904,6 +5987,8 @@ renderCarAreaFields();
 document.querySelector("#car-new")?.addEventListener("click", newCarRegistry);
 document.querySelector("#car-save")?.addEventListener("click", saveCarRegistry);
 document.querySelector("#car-registration-add")?.addEventListener("click", addCarRegistrationInput);
+field("car-requirement-enabled")?.addEventListener("change", () => renderCarRequirementFields(carRequirementValues()));
+field("car-requirement-count")?.addEventListener("input", () => renderCarRequirementFields(carRequirementValues()));
 field("car-dashboard-apply")?.addEventListener("click", applyCarDashboardSearch);
 field("car-dashboard-search")?.addEventListener("change", applyCarDashboardSearch);
 field("car-dashboard-search")?.addEventListener("keydown", (event) => {
@@ -5972,6 +6057,10 @@ carList?.addEventListener("click", (event) => {
     fillCarForm(registry);
     document.querySelector("#car-modal-title").textContent = "Editar CAR";
     openModal("car-modal");
+  }
+
+  if (button.dataset.carAction === "report") {
+    openPdfReport(buildCarIndividualReport(registry));
   }
 
   if (button.dataset.carAction === "delete") {
@@ -8956,6 +9045,21 @@ function pdfDocumentHtml(report) {
             line-height: 1.5;
             padding: 8px 9px;
           }
+          .pdf-car-chart {
+            align-items: center;
+            display: flex;
+            justify-content: center;
+            padding: 8mm 6mm;
+          }
+          .pdf-car-chart svg {
+            max-width: 112mm;
+          }
+          .pdf-car-chart text {
+            fill: #101820;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 13px;
+            font-weight: 800;
+          }
           .pdf-authorization-text {
             color: #101820;
             font-size: 13.5px;
@@ -9538,6 +9642,7 @@ const pdfFilterState = {
   propertyOwners: [],
   propertyIds: [],
   environmentalDocumentLicenses: [],
+  carRegistryIds: [],
   activePicker: null,
 };
 
@@ -9761,6 +9866,150 @@ function generateEnvironmentalDocumentFilteredPdf() {
   openPdfReport(buildEnvironmentalDocumentsReport(filters));
 }
 
+function baseCarPdfFilterValues() {
+  return {
+    selectedIds: pdfFilterState.carRegistryIds,
+    regularity: field("car-pdf-regularity")?.value || "all",
+    requirement: field("car-pdf-requirement")?.value || "all",
+    app: field("car-pdf-app")?.value || "all",
+    legalReserve: field("car-pdf-rl")?.value || "all",
+  };
+}
+
+function filterCarRegistriesForPdf(filters = {}) {
+  const selectedIds = filters.selectedIds || [];
+  return carRegistries.filter((registry) => {
+    if (selectedIds.length && !selectedIds.includes(String(registry.id))) return false;
+    const regularity = carRegularityStatus(registry).className;
+    if (filters.regularity === "regular" && regularity !== "regular") return false;
+    if (filters.regularity === "irregular" && regularity !== "irregular") return false;
+    if (filters.requirement === "yes" && !registry.documentRequirementEnabled) return false;
+    if (filters.requirement === "no" && registry.documentRequirementEnabled) return false;
+    const hasApp = Number(normalizeCarAreaValue(registry.appArea) || 0) > 0;
+    if (filters.app === "with" && !hasApp) return false;
+    if (filters.app === "without" && hasApp) return false;
+    const hasLegalReserve = Number(normalizeCarAreaValue(registry.legalReserveArea) || 0) > 0;
+    if (filters.legalReserve === "with" && !hasLegalReserve) return false;
+    if (filters.legalReserve === "without" && hasLegalReserve) return false;
+    return true;
+  });
+}
+
+function carPdfSummary(filters = baseCarPdfFilterValues()) {
+  const filtered = filterCarRegistriesForPdf(filters);
+  const selectedText = summarizeSelection(pdfFilterState.carRegistryIds.length, carRegistries.length, "Todos os CARs", "CAR(s)");
+  return `${filtered.length} CAR(s) no relatório. Seleção: ${selectedText}.`;
+}
+
+function updateCarPdfSummaries() {
+  const availableIds = carRegistries.map((registry) => String(registry.id));
+  pdfFilterState.carRegistryIds = pdfFilterState.carRegistryIds.filter((id) => availableIds.includes(id));
+  if (!pdfFilterState.carRegistryIds.length && availableIds.length) pdfFilterState.carRegistryIds = [...availableIds];
+  const summary = field("car-pdf-selection-summary");
+  const preview = field("car-pdf-preview");
+  if (summary) summary.textContent = summarizeSelection(pdfFilterState.carRegistryIds.length, carRegistries.length, "Todos os CARs", "CAR(s)");
+  if (preview) preview.textContent = carPdfSummary();
+}
+
+function openCarPdfFilters() {
+  pdfFilterState.carRegistryIds = carRegistries.map((registry) => String(registry.id));
+  updateCarPdfSummaries();
+  openModal("car-pdf-modal");
+}
+
+function carAreaLines(registry) {
+  const fields = CAR_AREA_FIELDS
+    .filter((item) => item.key !== "totalArea")
+    .map((item) => [item.label, registry[item.key]])
+    .filter(([, value]) => Number(normalizeCarAreaValue(value) || 0) > 0);
+  const consolidated = Number(normalizeCarAreaValue(registry.consolidatedArea) || calculateStoredCarConsolidatedArea(registry) || 0);
+  if (consolidated > 0) fields.push(["Área rural consolidada estimada", consolidated]);
+  return fields.map(([label, value]) => [
+    label,
+    `${formatCarAreaValue(value, 2)} m²`,
+    `${formatCarAreaValue(Number(value) / 10000, 4)} ha`,
+    `${formatCarAreaValue(Number(value) / Number(normalizeCarAreaValue(registry.totalArea) || 1) * 100, 2)}%`,
+  ]);
+}
+
+function buildCarListReport(filters = {}) {
+  const rows = filterCarRegistriesForPdf(filters).map((registry) => [
+    registry.number || "Não informado",
+    carRegularityStatus(registry).label,
+    registry.documentRequirementEnabled ? "Em exigência" : "Sem exigência",
+    (registry.registrations || []).join(", ") || "Não informado",
+    registry.totalArea ? `${formatCarAreaValue(registry.totalArea, 2)} m²` : "Não informado",
+    registry.legalReserveArea ? `${formatCarAreaValue(registry.legalReserveArea, 2)} m²` : "Não informado",
+    registry.appArea ? `${formatCarAreaValue(registry.appArea, 2)} m²` : "Não informado",
+  ]);
+  return {
+    title: "Relatório de CAR",
+    module: "01.2.4 CAR",
+    subtitle: carPdfSummary(filters),
+    orientation: "portrait",
+    sections: [
+      pdfTableSection(
+        "CAR cadastrados",
+        ["CAR", "Situação", "Exigência", "Matrículas", "Área total", "RL", "APP"],
+        rows.length ? rows : [["Nenhum CAR", "Não informado", "Não informado", "Não informado", "Não informado", "Não informado", "Não informado"]],
+        { rowEstimate: 34 },
+      ),
+    ],
+  };
+}
+
+function buildCarIndividualReport(registry) {
+  const requirementItems = Array.isArray(registry.documentRequirementItems) ? registry.documentRequirementItems : [];
+  const slices = carDashboardSlices([registry]);
+  const areaTotal = Number(normalizeCarAreaValue(registry.totalArea) || 0);
+  const chartHtml = `
+    <div class="pdf-car-chart">
+      ${carPieSvg(slices, areaTotal, { prefix: `car-report-${String(registry.id).replace(/[^a-z0-9]/gi, "")}` })}
+    </div>
+  `;
+  const sections = [
+    pdfFieldsSection("Dados do CAR", [
+      ["Número do CAR", registry.number],
+      ["Regularidade", carRegularityStatus(registry).label],
+      ["Situação cadastral", registry.status || "Ativo"],
+      ["Matrículas", (registry.registrations || []).join(", ")],
+      ["Latitude", registry.latitude],
+      ["Longitude", registry.longitude],
+      ["Exigência de documentos", registry.documentRequirementEnabled ? `${registry.documentRequirementCount || requirementItems.length || 0} documento(s)` : "Não"],
+      ["APP na Reserva Legal", registry.appRlCoverage ? registry.appRlCoverage : "Não informado"],
+    ], { estimate: 198 }),
+    pdfSection("Distribuição das áreas", chartHtml, 250, { className: "pdf-keep" }),
+    pdfTableSection("Áreas declaradas", ["Item", "m²", "ha", "%"], carAreaLines(registry), { rowEstimate: 30 }),
+  ];
+  if (registry.documentRequirementEnabled) {
+    sections.push(pdfTableSection(
+      "Documentos em exigência",
+      ["Documento", "Descrição"],
+      requirementItems.length
+        ? requirementItems.map((item, index) => [`Documento ${index + 1}`, item])
+        : [["Não informado", "Exigência marcada sem documentos detalhados"]],
+      { rowEstimate: 30 },
+    ));
+  }
+  if (registry.notes) {
+    sections.push(pdfSection("Observações", `<p class="pdf-note">${escapePdfText(registry.notes)}</p>`, 90));
+  }
+  return {
+    title: `Relatório individual do CAR ${registry.number || ""}`.trim(),
+    module: "01.2.4 CAR",
+    subtitle: "Relatório completo do Cadastro Ambiental Rural selecionado.",
+    orientation: "portrait",
+    sections,
+  };
+}
+
+function generateCarFilteredPdf() {
+  const filters = baseCarPdfFilterValues();
+  filters.summary = carPdfSummary(filters);
+  closeModal("car-pdf-modal");
+  openPdfReport(buildCarListReport(filters));
+}
+
 function pickerConfig(kind) {
   if (kind === "company-matrices") {
     return {
@@ -9834,6 +10083,22 @@ function pickerConfig(kind) {
       },
     };
   }
+  if (kind === "car-registries") {
+    return {
+      title: "Selecionar CAR",
+      context: "01.2.4 CAR",
+      options: carRegistries.map((registry) => ({
+        value: String(registry.id),
+        label: `CAR ${registry.number || "sem número"}`,
+        detail: (registry.registrations || []).length ? `Matrículas: ${(registry.registrations || []).join(", ")}` : "Sem matrícula informada",
+      })),
+      selected: pdfFilterState.carRegistryIds,
+      apply(values) {
+        pdfFilterState.carRegistryIds = values;
+        updateCarPdfSummaries();
+      },
+    };
+  }
   return null;
 }
 
@@ -9888,6 +10153,7 @@ const pdfReports = {
   environmentalDocuments: buildEnvironmentalDocumentsReport,
   checklistModels: buildChecklistModelsReport,
   environmentalModule: buildEnvironmentalContextReport,
+  carRegistries: buildCarListReport,
 };
 
 function addPdfButton(container, label, reportKey) {
@@ -9908,6 +10174,10 @@ function addPdfButton(container, label, reportKey) {
     }
     if (reportKey === "environmentalDocuments") {
       openEnvironmentalDocumentPdfFilters();
+      return;
+    }
+    if (reportKey === "carRegistries") {
+      openCarPdfFilters();
       return;
     }
     const builder = pdfReports[reportKey];
@@ -9931,6 +10201,8 @@ field("property-pdf-report-type")?.addEventListener("change", () => {
 });
 field("property-pdf-generate")?.addEventListener("click", generatePropertyFilteredPdf);
 field("environmental-document-pdf-generate")?.addEventListener("click", generateEnvironmentalDocumentFilteredPdf);
+["car-pdf-regularity", "car-pdf-requirement", "car-pdf-app", "car-pdf-rl"].forEach((id) => field(id)?.addEventListener("change", updateCarPdfSummaries));
+field("car-pdf-generate")?.addEventListener("click", generateCarFilteredPdf);
 document.querySelectorAll("[data-pdf-picker]").forEach((button) => {
   button.addEventListener("click", () => openPdfPicker(button.dataset.pdfPicker));
 });
@@ -9956,6 +10228,7 @@ function installPdfButtons() {
   addPdfButton(document.querySelector("#license-type-count")?.parentElement, "Baixar PDF", "licenseTypes");
   addPdfButton(document.querySelector("#environmental-document-count")?.parentElement, "Baixar PDF", "environmentalDocuments");
   addPdfButton(document.querySelector("#checklist-model-count")?.parentElement, "Baixar PDF", "checklistModels");
+  addPdfButton(document.querySelector("#car-count")?.parentElement, "Gerar relatório", "carRegistries");
 
   const environmentalHead = document.querySelector("#licencas .module-context");
   if (environmentalHead && !environmentalHead.querySelector('[data-pdf-report="environmentalModule"]')) {
@@ -10701,6 +10974,9 @@ async function persistCarRegistry(registry, wasExisting) {
     app_in_legal_reserve: registry.appRlCoverage || null,
     status: registry.status || "Ativo",
     notes: registry.notes || null,
+    document_requirement_enabled: Boolean(registry.documentRequirementEnabled),
+    document_requirement_count: Number(registry.documentRequirementCount || 0),
+    document_requirement_items: registry.documentRequirementItems || [],
   };
   try {
     let saved = null;
@@ -11401,6 +11677,9 @@ async function loadSupabaseData() {
     appRlCoverage: row.app_in_legal_reserve || "",
     status: row.status || "Ativo",
     notes: row.notes || "",
+    documentRequirementEnabled: Boolean(row.document_requirement_enabled),
+    documentRequirementCount: Number(row.document_requirement_count || 0),
+    documentRequirementItems: Array.isArray(row.document_requirement_items) ? row.document_requirement_items : [],
   }));
 
   enterprises = enterpriseRows.map((row) => ({

@@ -2455,6 +2455,11 @@ button {
   color: #b91c1c;
 }
 
+.car-regularity.requirement {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
 .car-dashboard-panel {
   display: grid;
   gap: 18px;
@@ -2476,22 +2481,36 @@ button {
 
 .car-pie-stage {
   align-items: center;
-  background: radial-gradient(circle at 50% 45%, #fff 0, #fff 42%, #f8fafc 43%, #eef2f7 100%);
-  border: 1px solid var(--line);
-  border-radius: 18px;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.96) 0 38%, rgba(241, 245, 249, 0.72) 39% 58%, rgba(209, 232, 220, 0.78) 100%),
+    linear-gradient(145deg, #ffffff, #edf3ef 48%, #e6ecef);
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  border-radius: 20px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 18px 38px rgba(15, 23, 42, 0.08);
   display: flex;
   justify-content: center;
   min-height: 360px;
   padding: 22px;
+  position: relative;
+  overflow: hidden;
+}
+
+.car-pie-stage::before {
+  background: linear-gradient(120deg, rgba(237, 16, 31, 0.12), transparent 36%, rgba(17, 130, 79, 0.14));
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
 }
 
 .car-pie-chart {
+  position: relative;
   width: min(340px, 100%);
+  z-index: 1;
 }
 
 .car-pie-chart svg {
   display: block;
-  filter: drop-shadow(0 16px 24px rgba(15, 23, 42, 0.12));
   width: 100%;
 }
 
@@ -2521,8 +2540,10 @@ button {
 
 .car-chart-legend article {
   align-items: center;
-  border: 1px solid var(--line);
+  background: linear-gradient(180deg, #ffffff, #fbfcfd);
+  border: 1px solid rgba(148, 163, 184, 0.32);
   border-radius: 12px;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.04);
   display: grid;
   gap: 4px 10px;
   grid-template-columns: 14px 1fr;
@@ -2541,9 +2562,33 @@ button {
 
 .legend-dot {
   border-radius: 50%;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 3px 8px rgba(15, 23, 42, 0.14);
   grid-row: 1 / span 2;
   height: 12px;
   width: 12px;
+}
+
+.car-requirement-box {
+  background: #fbfcfd;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.car-requirement-check {
+  justify-content: flex-start;
+}
+
+.requirement-doc-list {
+  display: grid;
+  gap: 8px;
+}
+
+.requirement-doc-list label {
+  display: grid;
+  gap: 6px;
 }
 
 .dynamic-field-box {

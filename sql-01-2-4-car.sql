@@ -43,6 +43,9 @@ create table if not exists public.car_registries (
   public_utility_description text,
   status text not null default 'Ativo',
   notes text,
+  document_requirement_enabled boolean not null default false,
+  document_requirement_count integer not null default 0,
+  document_requirement_items jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint car_registries_status_check check (status in ('Ativo', 'Pendente', 'Retificado', 'Cancelado')),
@@ -101,20 +104,35 @@ alter table public.car_registries
   add column if not exists public_utility_description text,
   add column if not exists status text not null default 'Ativo',
   add column if not exists notes text,
+  add column if not exists document_requirement_enabled boolean not null default false,
+  add column if not exists document_requirement_count integer not null default 0,
+  add column if not exists document_requirement_items jsonb not null default '[]'::jsonb,
   add column if not exists created_at timestamptz not null default now(),
   add column if not exists updated_at timestamptz not null default now();
 
 alter table public.car_registries
   alter column car_number set not null,
   alter column registrations set default '[]'::jsonb,
+  alter column document_requirement_enabled set default false,
+  alter column document_requirement_count set default 0,
+  alter column document_requirement_items set default '[]'::jsonb,
   alter column status set default 'Ativo';
 
 update public.car_registries
 set registrations = '[]'::jsonb
 where registrations is null;
 
+update public.car_registries
+set
+  document_requirement_enabled = coalesce(document_requirement_enabled, false),
+  document_requirement_count = coalesce(document_requirement_count, 0),
+  document_requirement_items = coalesce(document_requirement_items, '[]'::jsonb);
+
 alter table public.car_registries
-  alter column registrations set not null;
+  alter column registrations set not null,
+  alter column document_requirement_enabled set not null,
+  alter column document_requirement_count set not null,
+  alter column document_requirement_items set not null;
 
 do $$
 begin
@@ -171,6 +189,10 @@ begin
 
   if not exists (select 1 from pg_constraint where conname = 'car_registries_public_utility_non_negative') then
     alter table public.car_registries add constraint car_registries_public_utility_non_negative check (public_utility_area_m2 is null or public_utility_area_m2 >= 0);
+  end if;
+
+  if not exists (select 1 from pg_constraint where conname = 'car_registries_requirement_count_non_negative') then
+    alter table public.car_registries add constraint car_registries_requirement_count_non_negative check (document_requirement_count >= 0);
   end if;
 end;
 $$;
