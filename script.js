@@ -5730,7 +5730,8 @@ function parseMapCoordinate(value) {
     .replace(/,/g, ".")
     .replace(/[º˚]/g, "°")
     .toUpperCase();
-  const hemisphere = (normalized.match(/[NSEW]/) || [""])[0];
+  const rawHemisphere = (normalized.match(/[NSLOEW]/) || [""])[0];
+  const hemisphere = rawHemisphere === "O" ? "W" : rawHemisphere === "L" ? "E" : rawHemisphere;
   const parts = normalized.match(/-?\d+(?:\.\d+)?/g)?.map(Number) || [];
   if (!parts.length || parts.some((part) => Number.isNaN(part))) return null;
 
@@ -5756,7 +5757,7 @@ function carMapUrl(registry) {
 function openCarMap(registry) {
   const url = carMapUrl(registry);
   if (!url) {
-    alert("Informe latitude e longitude válidas. Exemplo: 26°04'00.1\"S e 53°43'07.5\"W.");
+    alert("Informe latitude e longitude válidas. Exemplo: 26°04'00.1\"S e 53°43'07.5\"O.");
     return;
   }
   window.open(url, "_blank", "noopener,noreferrer");
