@@ -2045,22 +2045,22 @@
             </div>
             <div class="dynamic-field-list" id="car-registration-list"></div>
           </div>
-          <label class="wide-field">Perímetro do imóvel<textarea id="car-perimeter-description" rows="3"></textarea></label>
-          <label>Área de Reserva Legal - RL (m²)<input id="car-legal-reserve-area" type="number" min="0" step="0.01" /></label>
-          <label>Situação da Reserva Legal<input id="car-legal-reserve-status" placeholder="Proposta, averbada ou aprovada" /></label>
-          <label class="wide-field">Áreas de Preservação Permanente - APP<textarea id="car-app-description" rows="3"></textarea></label>
-          <label class="wide-field">Remanescentes de vegetação nativa<textarea id="car-native-vegetation-description" rows="3"></textarea></label>
-          <label>Área Rural Consolidada (m²)<input id="car-consolidated-area" type="number" min="0" step="0.01" /></label>
-          <label>Área de Pousio (m²)<input id="car-fallow-area" type="number" min="0" step="0.01" /></label>
-          <label class="wide-field">Áreas de uso restrito<textarea id="car-restricted-use-description" rows="3"></textarea></label>
-          <label class="wide-field">Rios e córregos<textarea id="car-rivers-description" rows="3"></textarea></label>
-          <label class="wide-field">Nascentes e olhos d'água<textarea id="car-springs-description" rows="3"></textarea></label>
-          <label class="wide-field">Lagos e lagoas<textarea id="car-lakes-description" rows="3"></textarea></label>
-          <label class="wide-field">Banhados e veredas<textarea id="car-wetlands-description" rows="3"></textarea></label>
-          <label class="wide-field">Benfeitorias e sedes<textarea id="car-improvements-description" rows="3"></textarea></label>
-          <label class="wide-field">Estradas e caminhos<textarea id="car-roads-description" rows="3"></textarea></label>
-          <label class="wide-field">Servidão administrativa<textarea id="car-easement-description" rows="3"></textarea></label>
-          <label class="wide-field">Utilidade pública<textarea id="car-public-utility-description" rows="3"></textarea></label>
+          <div class="wide-field car-area-box">
+            <div class="car-area-head">
+              <strong>Áreas declaradas no CAR</strong>
+              <span>Informe em m² ou ha. O sistema converte automaticamente e calcula o percentual sobre a área total.</span>
+            </div>
+            <div class="car-area-grid" id="car-area-grid"></div>
+            <div class="car-rl-panel" id="car-legal-reserve-panel">
+              <strong>Reserva Legal</strong>
+              <span>Informe a área total do imóvel e a área de RL para verificar os 20% exigidos.</span>
+            </div>
+          </div>
+          <div class="wide-field check-panel">
+            <span>Quanto da APP está na Reserva Legal?</span>
+            <label><input name="car-app-rl-coverage" type="radio" value="integral" /> Integral</label>
+            <label><input name="car-app-rl-coverage" type="radio" value="parcial" /> Parcial</label>
+          </div>
           <label class="wide-field">Observações<textarea id="car-notes" rows="4"></textarea></label>
         </form>
         <div class="modal-actions">

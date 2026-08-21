@@ -2436,6 +2436,132 @@ button {
   gap: 8px;
 }
 
+.short-number-input {
+  max-width: 140px;
+}
+
+.car-area-box {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+}
+
+.car-area-head {
+  display: grid;
+  gap: 4px;
+}
+
+.car-area-head strong {
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.car-area-head span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.car-area-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(210px, 1.4fr) minmax(120px, .75fr) minmax(120px, .75fr) minmax(110px, .6fr);
+}
+
+.car-area-header {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.car-area-label {
+  align-self: center;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.car-area-input {
+  min-width: 0;
+}
+
+.car-area-percent {
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  display: flex;
+  font-size: 13px;
+  font-weight: 800;
+  justify-content: flex-end;
+  min-height: 40px;
+  padding: 0 10px;
+}
+
+.car-rl-panel {
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+}
+
+.car-rl-panel strong {
+  color: var(--ink);
+}
+
+.car-rl-panel span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.car-rl-panel.success {
+  background: #ecfdf3;
+  border-color: #a7f3d0;
+}
+
+.car-rl-panel.success strong {
+  color: var(--green-dark);
+}
+
+.car-rl-panel.danger {
+  background: #fff1f2;
+  border-color: #fecdd3;
+}
+
+.car-rl-panel.danger strong {
+  color: var(--red);
+}
+
+.check-panel {
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px;
+}
+
+.check-panel span {
+  color: var(--muted);
+  flex-basis: 100%;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.check-panel label {
+  align-items: center;
+  display: inline-flex;
+  flex-direction: row;
+  gap: 8px;
+  margin: 0;
+}
+
 .alert-history-summary {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -4179,6 +4305,7 @@ textarea {
   }
 
   .metric-grid,
+  .car-area-grid,
   .cards.three,
   .admin-shortcuts,
   .admin-layout,

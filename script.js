@@ -5361,12 +5361,140 @@ let carRegistries = [];
 let selectedCarRegistryId = 0;
 const carList = document.querySelector("#car-list");
 const carCount = document.querySelector("#car-count");
+const CAR_AREA_FIELDS = [
+  { key: "totalArea", label: "Área total do imóvel" },
+  { key: "legalReserveArea", label: "Reserva Legal - RL" },
+  { key: "appArea", label: "Área de Preservação Permanente - APP" },
+  { key: "nativeVegetationArea", label: "Remanescentes de vegetação nativa" },
+  { key: "consolidatedArea", label: "Área rural consolidada" },
+  { key: "fallowArea", label: "Área de pousio" },
+  { key: "restrictedUseArea", label: "Áreas de uso restrito" },
+  { key: "riversArea", label: "Rios e córregos" },
+  { key: "springsArea", label: "Nascentes e olhos d'água" },
+  { key: "lakesArea", label: "Lagos e lagoas" },
+  { key: "wetlandsArea", label: "Banhados e veredas" },
+  { key: "improvementsArea", label: "Benfeitorias e sedes" },
+  { key: "roadsArea", label: "Estradas e caminhos" },
+  { key: "easementArea", label: "Servidão administrativa" },
+  { key: "publicUtilityArea", label: "Utilidade pública" },
+];
 
 function nonNegativeCarNumber(id) {
   const input = field(id);
   const value = Math.max(0, Number(input?.value || 0));
   if (input && Number(input.value || 0) < 0) input.value = "0";
   return value || "";
+}
+
+function normalizeCarAreaValue(value) {
+  const number = Number(String(value ?? "").replace(",", "."));
+  return Number.isFinite(number) && number > 0 ? number : "";
+}
+
+function formatCarAreaValue(value, decimals = 2) {
+  const number = normalizeCarAreaValue(value);
+  if (number === "") return "";
+  return Number(number.toFixed(decimals)).toString();
+}
+
+function carAreaInputId(key, unit) {
+  return `car-area-${key}-${unit}`;
+}
+
+function carAreaPercentId(key) {
+  return `car-area-${key}-percent`;
+}
+
+function getCarAreaM2(key) {
+  return normalizeCarAreaValue(field(carAreaInputId(key, "m2"))?.value);
+}
+
+function renderCarAreaFields() {
+  const grid = field("car-area-grid");
+  if (!grid) return;
+  grid.innerHTML = `
+    <div class="car-area-header">Item</div>
+    <div class="car-area-header">m²</div>
+    <div class="car-area-header">ha</div>
+    <div class="car-area-header">% da área total</div>
+    ${CAR_AREA_FIELDS.map((item) => `
+      <label class="car-area-label" for="${carAreaInputId(item.key, "m2")}">${escapeHtml(item.label)}</label>
+      <input id="${carAreaInputId(item.key, "m2")}" class="car-area-input" data-car-area-key="${item.key}" data-car-area-unit="m2" type="number" min="0" step="0.01" />
+      <input id="${carAreaInputId(item.key, "ha")}" class="car-area-input" data-car-area-key="${item.key}" data-car-area-unit="ha" type="number" min="0" step="0.0001" />
+      <output id="${carAreaPercentId(item.key)}" class="car-area-percent">0%</output>
+    `).join("")}
+  `;
+}
+
+function setCarAreaField(key, valueM2) {
+  const m2Input = field(carAreaInputId(key, "m2"));
+  const haInput = field(carAreaInputId(key, "ha"));
+  const normalized = normalizeCarAreaValue(valueM2);
+  if (m2Input) m2Input.value = normalized === "" ? "" : formatCarAreaValue(normalized, 2);
+  if (haInput) haInput.value = normalized === "" ? "" : formatCarAreaValue(normalized / 10000, 4);
+}
+
+function clearCarAreaFields() {
+  CAR_AREA_FIELDS.forEach((item) => setCarAreaField(item.key, ""));
+  updateCarAreaPercentages();
+}
+
+function carAreaPayload() {
+  return Object.fromEntries(CAR_AREA_FIELDS.map((item) => [item.key, getCarAreaM2(item.key)]));
+}
+
+function updateCarAreaPercentages() {
+  const totalArea = getCarAreaM2("totalArea");
+  CAR_AREA_FIELDS.forEach((item) => {
+    const output = field(carAreaPercentId(item.key));
+    if (!output) return;
+    const value = getCarAreaM2(item.key);
+    const percent = totalArea && value !== "" ? (Number(value) / Number(totalArea)) * 100 : 0;
+    output.textContent = `${formatCarAreaValue(percent, 2) || "0"}%`;
+  });
+  updateCarLegalReservePanel();
+}
+
+function updateCarLegalReservePanel() {
+  const panel = field("car-legal-reserve-panel");
+  if (!panel) return;
+  const totalArea = getCarAreaM2("totalArea");
+  const legalReserve = getCarAreaM2("legalReserveArea");
+  if (!totalArea || legalReserve === "") {
+    panel.className = "car-rl-panel";
+    panel.innerHTML = `
+      <strong>Reserva Legal</strong>
+      <span>Informe a área total do imóvel e a área de RL para verificar os 20% exigidos.</span>
+    `;
+    return;
+  }
+  const required = Number(totalArea) * 0.2;
+  const percent = (Number(legalReserve) / Number(totalArea)) * 100;
+  const difference = Number(legalReserve) - required;
+  const complies = difference >= -0.01;
+  panel.className = `car-rl-panel ${complies ? "success" : "danger"}`;
+  panel.innerHTML = `
+    <strong>${complies ? "Reserva Legal conforme" : "Reserva Legal abaixo de 20%"}</strong>
+    <span>RL informada: ${formatCarAreaValue(legalReserve, 2)} m² (${formatCarAreaValue(percent, 2)}%). Mínimo de 20%: ${formatCarAreaValue(required, 2)} m² (${formatCarAreaValue(required / 10000, 4)} ha). ${complies ? `Saldo: ${formatCarAreaValue(difference, 2)} m².` : `Faltam ${formatCarAreaValue(Math.abs(difference), 2)} m².`}</span>
+  `;
+}
+
+function handleCarAreaInput(event) {
+  const input = event.target.closest("[data-car-area-key]");
+  if (!input) return;
+  if (Number(input.value || 0) < 0) input.value = "0";
+  const key = input.dataset.carAreaKey;
+  const unit = input.dataset.carAreaUnit;
+  const value = normalizeCarAreaValue(input.value);
+  const pair = field(carAreaInputId(key, unit === "m2" ? "ha" : "m2"));
+  if (pair) {
+    pair.value = value === ""
+      ? ""
+      : unit === "m2"
+        ? formatCarAreaValue(Number(value) / 10000, 4)
+        : formatCarAreaValue(Number(value) * 10000, 2);
+  }
+  updateCarAreaPercentages();
 }
 
 function carSearchText(registry) {
@@ -5377,11 +5505,8 @@ function carSearchText(registry) {
     registry.latitude,
     registry.longitude,
     ...(registry.registrations || []),
-    registry.perimeterDescription,
-    registry.legalReserveStatus,
-    registry.appDescription,
-    registry.nativeVegetationDescription,
-    registry.restrictedUseDescription,
+    registry.totalArea,
+    registry.appRlCoverage,
   ].filter(Boolean).join(" "));
 }
 
@@ -5414,10 +5539,12 @@ function carRegistrySummary(registry) {
   const registrations = Array.isArray(registry.registrations) && registry.registrations.length
     ? `Matrículas: ${registry.registrations.join(", ")}`
     : "Sem matrícula informada";
+  const totalArea = registry.totalArea ? ` - Área total: ${formatCarAreaValue(registry.totalArea, 2)} m² (${formatCarAreaValue(Number(registry.totalArea) / 10000, 4)} ha)` : "";
+  const legalReserve = registry.legalReserveArea ? ` - RL: ${formatCarAreaValue(registry.legalReserveArea, 2)} m²` : "";
   const coordinates = registry.latitude || registry.longitude
     ? ` - Coordenadas: ${registry.latitude || "lat. não informada"}, ${registry.longitude || "long. não informada"}`
     : "";
-  return `${registrations}${coordinates} - Situação: ${registry.status || "Ativo"}`;
+  return `${registrations}${totalArea}${legalReserve}${coordinates} - Situação: ${registry.status || "Ativo"}`;
 }
 
 function renderCarRegistrationInputs(values = [""]) {
@@ -5426,7 +5553,7 @@ function renderCarRegistrationInputs(values = [""]) {
   const safeValues = values.length ? values : [""];
   list.innerHTML = safeValues.map((value, index) => `
     <div class="dynamic-field-row">
-      <input class="car-registration-input" value="${escapeHtml(value)}" placeholder="Número da matrícula" />
+      <input class="car-registration-input short-number-input" value="${escapeHtml(value)}" placeholder="Matrícula" inputmode="numeric" pattern="[0-9]*" />
       <button class="ghost small" type="button" data-car-registration-remove="${index}" ${safeValues.length === 1 ? "disabled" : ""}>Remover</button>
     </div>
   `).join("");
@@ -5434,7 +5561,7 @@ function renderCarRegistrationInputs(values = [""]) {
 
 function carRegistrationValues() {
   return [...document.querySelectorAll(".car-registration-input")]
-    .map((input) => input.value.trim())
+    .map((input) => input.value.replace(/\D/g, ""))
     .filter(Boolean);
 }
 
@@ -5451,23 +5578,12 @@ function fillCarForm(registry) {
   field("car-latitude").value = registry.latitude || "";
   field("car-longitude").value = registry.longitude || "";
   renderCarRegistrationInputs(registry.registrations || [""]);
-  field("car-perimeter-description").value = registry.perimeterDescription || "";
-  field("car-legal-reserve-area").value = registry.legalReserveArea || "";
-  field("car-legal-reserve-status").value = registry.legalReserveStatus || "";
-  field("car-app-description").value = registry.appDescription || "";
-  field("car-native-vegetation-description").value = registry.nativeVegetationDescription || "";
-  field("car-consolidated-area").value = registry.consolidatedArea || "";
-  field("car-fallow-area").value = registry.fallowArea || "";
-  field("car-restricted-use-description").value = registry.restrictedUseDescription || "";
-  field("car-rivers-description").value = registry.riversDescription || "";
-  field("car-springs-description").value = registry.springsDescription || "";
-  field("car-lakes-description").value = registry.lakesDescription || "";
-  field("car-wetlands-description").value = registry.wetlandsDescription || "";
-  field("car-improvements-description").value = registry.improvementsDescription || "";
-  field("car-roads-description").value = registry.roadsDescription || "";
-  field("car-easement-description").value = registry.easementDescription || "";
-  field("car-public-utility-description").value = registry.publicUtilityDescription || "";
+  CAR_AREA_FIELDS.forEach((item) => setCarAreaField(item.key, registry[item.key] || ""));
+  document.querySelectorAll('[name="car-app-rl-coverage"]').forEach((input) => {
+    input.checked = input.value === registry.appRlCoverage;
+  });
   field("car-notes").value = registry.notes || "";
+  updateCarAreaPercentages();
 }
 
 function newCarRegistry() {
@@ -5479,22 +5595,10 @@ function newCarRegistry() {
   field("car-latitude").value = "";
   field("car-longitude").value = "";
   renderCarRegistrationInputs([""]);
-  field("car-perimeter-description").value = "";
-  field("car-legal-reserve-area").value = "";
-  field("car-legal-reserve-status").value = "";
-  field("car-app-description").value = "";
-  field("car-native-vegetation-description").value = "";
-  field("car-consolidated-area").value = "";
-  field("car-fallow-area").value = "";
-  field("car-restricted-use-description").value = "";
-  field("car-rivers-description").value = "";
-  field("car-springs-description").value = "";
-  field("car-lakes-description").value = "";
-  field("car-wetlands-description").value = "";
-  field("car-improvements-description").value = "";
-  field("car-roads-description").value = "";
-  field("car-easement-description").value = "";
-  field("car-public-utility-description").value = "";
+  clearCarAreaFields();
+  document.querySelectorAll('[name="car-app-rl-coverage"]').forEach((input) => {
+    input.checked = false;
+  });
   field("car-notes").value = "";
   document.querySelector("#car-modal-title").textContent = "Novo CAR";
   openModal("car-modal");
@@ -5511,22 +5615,9 @@ async function saveCarRegistry() {
     latitude: field("car-latitude").value,
     longitude: field("car-longitude").value,
     registrations: carRegistrationValues(),
-    perimeterDescription: field("car-perimeter-description").value.trim(),
-    legalReserveArea: nonNegativeCarNumber("car-legal-reserve-area"),
-    legalReserveStatus: field("car-legal-reserve-status").value.trim(),
-    appDescription: field("car-app-description").value.trim(),
-    nativeVegetationDescription: field("car-native-vegetation-description").value.trim(),
-    consolidatedArea: nonNegativeCarNumber("car-consolidated-area"),
-    fallowArea: nonNegativeCarNumber("car-fallow-area"),
-    restrictedUseDescription: field("car-restricted-use-description").value.trim(),
-    riversDescription: field("car-rivers-description").value.trim(),
-    springsDescription: field("car-springs-description").value.trim(),
-    lakesDescription: field("car-lakes-description").value.trim(),
-    wetlandsDescription: field("car-wetlands-description").value.trim(),
-    improvementsDescription: field("car-improvements-description").value.trim(),
-    roadsDescription: field("car-roads-description").value.trim(),
-    easementDescription: field("car-easement-description").value.trim(),
-    publicUtilityDescription: field("car-public-utility-description").value.trim(),
+    ...carAreaPayload(),
+    legalReserveStatus: existing?.legalReserveStatus || "",
+    appRlCoverage: document.querySelector('[name="car-app-rl-coverage"]:checked')?.value || "",
     notes: field("car-notes").value.trim(),
   };
   if (!payload.number) {
@@ -5542,9 +5633,11 @@ async function saveCarRegistry() {
   closeModal("car-modal");
 }
 
+renderCarAreaFields();
 document.querySelector("#car-new")?.addEventListener("click", newCarRegistry);
 document.querySelector("#car-save")?.addEventListener("click", saveCarRegistry);
 document.querySelector("#car-registration-add")?.addEventListener("click", addCarRegistrationInput);
+field("car-area-grid")?.addEventListener("input", handleCarAreaInput);
 field("car-search")?.addEventListener("input", renderCarRegistries);
 field("car-registration-list")?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-car-registration-remove]");
@@ -5553,6 +5646,10 @@ field("car-registration-list")?.addEventListener("click", (event) => {
   const values = carRegistrationValues();
   values.splice(index, 1);
   renderCarRegistrationInputs(values);
+});
+field("car-registration-list")?.addEventListener("input", (event) => {
+  const input = event.target.closest(".car-registration-input");
+  if (input) input.value = input.value.replace(/\D/g, "");
 });
 carList?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-car-action]");
@@ -10274,22 +10371,23 @@ async function persistCarRegistry(registry, wasExisting) {
     registrations: registry.registrations || [],
     latitude: registry.latitude || null,
     longitude: registry.longitude || null,
-    perimeter_description: registry.perimeterDescription || null,
+    total_area_m2: registry.totalArea === "" ? null : Number(registry.totalArea || 0),
     legal_reserve_area_m2: registry.legalReserveArea === "" ? null : Number(registry.legalReserveArea || 0),
     legal_reserve_status: registry.legalReserveStatus || null,
-    app_description: registry.appDescription || null,
-    native_vegetation_description: registry.nativeVegetationDescription || null,
+    app_area_m2: registry.appArea === "" ? null : Number(registry.appArea || 0),
+    native_vegetation_area_m2: registry.nativeVegetationArea === "" ? null : Number(registry.nativeVegetationArea || 0),
     consolidated_area_m2: registry.consolidatedArea === "" ? null : Number(registry.consolidatedArea || 0),
     fallow_area_m2: registry.fallowArea === "" ? null : Number(registry.fallowArea || 0),
-    restricted_use_description: registry.restrictedUseDescription || null,
-    rivers_description: registry.riversDescription || null,
-    springs_description: registry.springsDescription || null,
-    lakes_description: registry.lakesDescription || null,
-    wetlands_description: registry.wetlandsDescription || null,
-    improvements_description: registry.improvementsDescription || null,
-    roads_description: registry.roadsDescription || null,
-    easement_description: registry.easementDescription || null,
-    public_utility_description: registry.publicUtilityDescription || null,
+    restricted_use_area_m2: registry.restrictedUseArea === "" ? null : Number(registry.restrictedUseArea || 0),
+    rivers_area_m2: registry.riversArea === "" ? null : Number(registry.riversArea || 0),
+    springs_area_m2: registry.springsArea === "" ? null : Number(registry.springsArea || 0),
+    lakes_area_m2: registry.lakesArea === "" ? null : Number(registry.lakesArea || 0),
+    wetlands_area_m2: registry.wetlandsArea === "" ? null : Number(registry.wetlandsArea || 0),
+    improvements_area_m2: registry.improvementsArea === "" ? null : Number(registry.improvementsArea || 0),
+    roads_area_m2: registry.roadsArea === "" ? null : Number(registry.roadsArea || 0),
+    easement_area_m2: registry.easementArea === "" ? null : Number(registry.easementArea || 0),
+    public_utility_area_m2: registry.publicUtilityArea === "" ? null : Number(registry.publicUtilityArea || 0),
+    app_in_legal_reserve: registry.appRlCoverage || null,
     status: registry.status || "Ativo",
     notes: registry.notes || null,
   };
@@ -10973,22 +11071,23 @@ async function loadSupabaseData() {
     registrations: Array.isArray(row.registrations) ? row.registrations : [],
     latitude: row.latitude ?? "",
     longitude: row.longitude ?? "",
-    perimeterDescription: row.perimeter_description || "",
+    totalArea: row.total_area_m2 ?? "",
     legalReserveArea: row.legal_reserve_area_m2 ?? "",
     legalReserveStatus: row.legal_reserve_status || "",
-    appDescription: row.app_description || "",
-    nativeVegetationDescription: row.native_vegetation_description || "",
+    appArea: row.app_area_m2 ?? "",
+    nativeVegetationArea: row.native_vegetation_area_m2 ?? "",
     consolidatedArea: row.consolidated_area_m2 ?? "",
     fallowArea: row.fallow_area_m2 ?? "",
-    restrictedUseDescription: row.restricted_use_description || "",
-    riversDescription: row.rivers_description || "",
-    springsDescription: row.springs_description || "",
-    lakesDescription: row.lakes_description || "",
-    wetlandsDescription: row.wetlands_description || "",
-    improvementsDescription: row.improvements_description || "",
-    roadsDescription: row.roads_description || "",
-    easementDescription: row.easement_description || "",
-    publicUtilityDescription: row.public_utility_description || "",
+    restrictedUseArea: row.restricted_use_area_m2 ?? "",
+    riversArea: row.rivers_area_m2 ?? "",
+    springsArea: row.springs_area_m2 ?? "",
+    lakesArea: row.lakes_area_m2 ?? "",
+    wetlandsArea: row.wetlands_area_m2 ?? "",
+    improvementsArea: row.improvements_area_m2 ?? "",
+    roadsArea: row.roads_area_m2 ?? "",
+    easementArea: row.easement_area_m2 ?? "",
+    publicUtilityArea: row.public_utility_area_m2 ?? "",
+    appRlCoverage: row.app_in_legal_reserve || "",
     status: row.status || "Ativo",
     notes: row.notes || "",
   }));
