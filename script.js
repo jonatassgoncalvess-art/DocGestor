@@ -5388,13 +5388,14 @@ async function saveProperty() {
 
 document.querySelector("#property-new")?.addEventListener("click", newProperty);
 document.querySelector("#property-save")?.addEventListener("click", saveProperty);
-document.querySelector("#property-delete-confirm")?.addEventListener("click", () => {
+document.querySelector("#property-delete-confirm")?.addEventListener("click", async () => {
   const id = pendingPropertyDeleteId;
   const index = properties.findIndex((property) => sameId(property.id, pendingPropertyDeleteId));
+  const deleted = await persistDelete("properties", id, "imóvel");
+  if (looksLikeUuid(id) && !deleted) return;
   if (index >= 0) properties.splice(index, 1);
   pendingPropertyDeleteId = null;
   renderProperties();
-  persistDelete("properties", id, "imóvel");
   closeModal("property-delete-modal");
 });
 propertyOwnerType?.addEventListener("change", () => populatePropertyOwners());
@@ -10924,6 +10925,23 @@ async function persistDelete(table, id, label) {
 
 async function cleanupBeforeDelete(table, id) {
   const encodedId = encodeURIComponent(id);
+  if (table === "properties") {
+    const linkedEnterprises = await window.DocGestorDB
+      .list("enterprises", `select=id&property_id=eq.${encodedId}`)
+      .catch(() => []);
+    const linkedEnterpriseIds = (linkedEnterprises || [])
+      .map((enterprise) => enterprise.id)
+      .filter(looksLikeUuid);
+    await Promise.all(linkedEnterpriseIds.flatMap((enterpriseId) => {
+      const encodedEnterpriseId = encodeURIComponent(enterpriseId);
+      return [
+        window.DocGestorDB.removeWhere("enterprise_modules", `enterprise_id=eq.${encodedEnterpriseId}`).catch(() => null),
+        window.DocGestorDB.removeWhere("enterprise_properties", `enterprise_id=eq.${encodedEnterpriseId}`).catch(() => null),
+        window.DocGestorDB.removeWhere("activity_enterprises", `enterprise_id=eq.${encodedEnterpriseId}`).catch(() => null),
+      ];
+    }));
+    await window.DocGestorDB.removeWhere("enterprises", `property_id=eq.${encodedId}`).catch(() => null);
+  }
   const removalsByTable = {
     app_users: [
       ["user_permissions", `user_id=eq.${encodedId}`],
