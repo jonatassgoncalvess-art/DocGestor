@@ -10911,7 +10911,15 @@ async function persistDelete(table, id, label) {
   if (!window.DocGestorDB || !looksLikeUuid(id)) return;
   try {
     await cleanupBeforeDelete(table, id);
-    await window.DocGestorDB.remove(table, id);
+    const deletedRows = await window.DocGestorDB.remove(table, id);
+    const deleteReturnedNoRows = Array.isArray(deletedRows) && deletedRows.length === 0;
+    const stillExists = await window.DocGestorDB
+      .list(table, `select=id&id=eq.${encodeURIComponent(id)}`)
+      .then((rows) => Array.isArray(rows) && rows.length > 0)
+      .catch(() => deleteReturnedNoRows);
+    if (stillExists) {
+      throw new Error("O Supabase recebeu a solicitação, mas o registro permaneceu no banco. Verifique a política de exclusão da tabela.");
+    }
     return true;
   } catch (error) {
     console.warn(`Não foi possível excluir ${label} no Supabase.`, error.message);
