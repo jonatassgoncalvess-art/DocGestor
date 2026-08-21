@@ -16,10 +16,13 @@
   async function request(table, options = {}) {
     const response = await fetch(endpoint(table, options.query), {
       method: options.method || "GET",
+      cache: "no-store",
       headers: {
         apikey: config.publishableKey,
         Authorization: `Bearer ${config.publishableKey}`,
         "Content-Type": "application/json",
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
         Prefer: "return=representation",
         ...(options.headers || {}),
       },

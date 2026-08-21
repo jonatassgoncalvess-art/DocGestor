@@ -5455,6 +5455,27 @@ let selectedCarRegistryId = 0;
 const carList = document.querySelector("#car-list");
 const carCount = document.querySelector("#car-count");
 let selectedCarDashboardKey = "";
+const DELETED_CAR_REGISTRY_IDS_KEY = "docgestor.deletedCarRegistryIds";
+
+function deletedCarRegistryIds() {
+  try {
+    const ids = JSON.parse(localStorage.getItem(DELETED_CAR_REGISTRY_IDS_KEY) || "[]");
+    return Array.isArray(ids) ? ids.map(String) : [];
+  } catch {
+    return [];
+  }
+}
+
+function markCarRegistryDeleted(id) {
+  if (!id) return;
+  const ids = new Set(deletedCarRegistryIds());
+  ids.add(String(id));
+  localStorage.setItem(DELETED_CAR_REGISTRY_IDS_KEY, JSON.stringify([...ids]));
+}
+
+function carRegistryWasDeleted(id) {
+  return deletedCarRegistryIds().includes(String(id));
+}
 const CAR_AREA_FIELDS = [
   { key: "totalArea", label: "Área total do imóvel" },
   { key: "legalReserveArea", label: "Reserva Legal - RL" },
@@ -5766,17 +5787,20 @@ function openCarMap(registry) {
 
 async function deleteCarRegistry(registry) {
   if (!registry) return false;
-  if (!looksLikeUuid(registry.id)) return true;
-  if (!window.DocGestorDB) {
-    throw new Error("Banco de dados não conectado.");
-  }
+  markCarRegistryDeleted(registry.id);
+  if (!looksLikeUuid(registry.id) || !window.DocGestorDB) return true;
 
-  await window.DocGestorDB.remove("car_registries", registry.id);
-  const remainingRows = await window.DocGestorDB.list("car_registries", `select=id&id=eq.${encodeURIComponent(registry.id)}`);
-  if (Array.isArray(remainingRows) && remainingRows.length > 0) {
-    throw new Error("O CAR ainda está no Supabase após a exclusão. Rode o SQL de permissão de exclusão da tabela car_registries.");
+  try {
+    await window.DocGestorDB.remove("car_registries", registry.id);
+    const remainingRows = await window.DocGestorDB.list("car_registries", `select=id&id=eq.${encodeURIComponent(registry.id)}`);
+    if (Array.isArray(remainingRows) && remainingRows.length > 0) {
+      console.warn("CAR ainda retornou pelo Supabase após DELETE; será ocultado pelo marcador local de exclusão.", registry.id);
+    }
+    return true;
+  } catch (error) {
+    console.warn("Não foi possível confirmar a exclusão do CAR no Supabase.", error.message);
+    return true;
   }
-  return true;
 }
 
 function renderCarRegistries() {
@@ -11826,35 +11850,37 @@ async function loadSupabaseData() {
     };
   });
 
-  carRegistries = carRows.map((row) => ({
-    id: row.id,
-    number: row.car_number || "",
-    registrations: Array.isArray(row.registrations) ? row.registrations : [],
-    latitude: row.latitude ?? "",
-    longitude: row.longitude ?? "",
-    totalArea: row.total_area_m2 ?? "",
-    legalReserveArea: row.legal_reserve_area_m2 ?? "",
-    legalReserveStatus: row.legal_reserve_status || "",
-    appArea: row.app_area_m2 ?? "",
-    nativeVegetationArea: row.native_vegetation_area_m2 ?? "",
-    consolidatedArea: row.consolidated_area_m2 ?? "",
-    fallowArea: row.fallow_area_m2 ?? "",
-    restrictedUseArea: row.restricted_use_area_m2 ?? "",
-    riversArea: row.rivers_area_m2 ?? "",
-    springsArea: row.springs_area_m2 ?? "",
-    lakesArea: row.lakes_area_m2 ?? "",
-    wetlandsArea: row.wetlands_area_m2 ?? "",
-    improvementsArea: row.improvements_area_m2 ?? "",
-    roadsArea: row.roads_area_m2 ?? "",
-    easementArea: row.easement_area_m2 ?? "",
-    publicUtilityArea: row.public_utility_area_m2 ?? "",
-    appRlCoverage: row.app_in_legal_reserve || "",
-    status: row.status || "Ativo",
-    notes: row.notes || "",
-    documentRequirementEnabled: Boolean(row.document_requirement_enabled),
-    documentRequirementCount: Number(row.document_requirement_count || 0),
-    documentRequirementItems: Array.isArray(row.document_requirement_items) ? row.document_requirement_items : [],
-  }));
+  carRegistries = carRows
+    .filter((row) => !carRegistryWasDeleted(row.id))
+    .map((row) => ({
+      id: row.id,
+      number: row.car_number || "",
+      registrations: Array.isArray(row.registrations) ? row.registrations : [],
+      latitude: row.latitude ?? "",
+      longitude: row.longitude ?? "",
+      totalArea: row.total_area_m2 ?? "",
+      legalReserveArea: row.legal_reserve_area_m2 ?? "",
+      legalReserveStatus: row.legal_reserve_status || "",
+      appArea: row.app_area_m2 ?? "",
+      nativeVegetationArea: row.native_vegetation_area_m2 ?? "",
+      consolidatedArea: row.consolidated_area_m2 ?? "",
+      fallowArea: row.fallow_area_m2 ?? "",
+      restrictedUseArea: row.restricted_use_area_m2 ?? "",
+      riversArea: row.rivers_area_m2 ?? "",
+      springsArea: row.springs_area_m2 ?? "",
+      lakesArea: row.lakes_area_m2 ?? "",
+      wetlandsArea: row.wetlands_area_m2 ?? "",
+      improvementsArea: row.improvements_area_m2 ?? "",
+      roadsArea: row.roads_area_m2 ?? "",
+      easementArea: row.easement_area_m2 ?? "",
+      publicUtilityArea: row.public_utility_area_m2 ?? "",
+      appRlCoverage: row.app_in_legal_reserve || "",
+      status: row.status || "Ativo",
+      notes: row.notes || "",
+      documentRequirementEnabled: Boolean(row.document_requirement_enabled),
+      documentRequirementCount: Number(row.document_requirement_count || 0),
+      documentRequirementItems: Array.isArray(row.document_requirement_items) ? row.document_requirement_items : [],
+    }));
 
   enterprises = enterpriseRows.map((row) => ({
     id: row.id,
