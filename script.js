@@ -3413,9 +3413,9 @@ document.addEventListener("keydown", (event) => {
 document.querySelector("#system-message-ok")?.addEventListener("click", () => closeModal("system-message-modal"));
 document.querySelector("#generic-delete-confirm")?.addEventListener("click", async () => {
   const callback = genericDeleteCallback;
-  genericDeleteCallback = null;
   try {
     if (typeof callback === "function") await callback();
+    genericDeleteCallback = null;
     closeModal("generic-delete-modal");
   } catch (error) {
     console.warn("Não foi possível concluir a exclusão.", error.message);
@@ -5764,6 +5764,21 @@ function openCarMap(registry) {
   window.open(url, "_blank", "noopener,noreferrer");
 }
 
+async function deleteCarRegistry(registry) {
+  if (!registry) return false;
+  if (!looksLikeUuid(registry.id)) return true;
+  if (!window.DocGestorDB) {
+    throw new Error("Banco de dados não conectado.");
+  }
+
+  await window.DocGestorDB.remove("car_registries", registry.id);
+  const remainingRows = await window.DocGestorDB.list("car_registries", `select=id&id=eq.${encodeURIComponent(registry.id)}`);
+  if (Array.isArray(remainingRows) && remainingRows.length > 0) {
+    throw new Error("O CAR ainda está no Supabase após a exclusão. Rode o SQL de permissão de exclusão da tabela car_registries.");
+  }
+  return true;
+}
+
 function renderCarRegistries() {
   if (!carList || !carCount) return;
   const items = filteredCarRegistries();
@@ -6205,8 +6220,7 @@ carList?.addEventListener("click", (event) => {
 
   if (button.dataset.carAction === "delete") {
     confirmDelete(`Deseja realmente excluir o CAR ${registry.number}?`, async () => {
-      const deleted = await persistDelete("car_registries", registry.id, "CAR");
-      if (looksLikeUuid(registry.id) && !deleted) return;
+      await deleteCarRegistry(registry);
       const index = carRegistries.findIndex((item) => sameId(item.id, registry.id));
       if (index >= 0) carRegistries.splice(index, 1);
       renderCarRegistries();
@@ -10922,11 +10936,6 @@ async function persistDelete(table, id, label) {
     }
     return true;
   } catch (error) {
-    const backendDeleted = await persistDeleteViaBackend(table, id, label).catch((backendError) => {
-      console.warn(`Não foi possível excluir ${label} pelo backend.`, backendError.message);
-      return false;
-    });
-    if (backendDeleted) return true;
     console.warn(`Não foi possível excluir ${label} no Supabase.`, error.message);
     showSystemMessage(
       `Não foi possível excluir ${label} no banco de dados: ${error.message}`,
@@ -10934,20 +10943,6 @@ async function persistDelete(table, id, label) {
     );
     return false;
   }
-}
-
-async function persistDeleteViaBackend(table, id, label) {
-  if (!["car_registries", "properties", "enterprise_properties", "enterprises"].includes(table)) return false;
-  const response = await fetch("/api/excluir-registro", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ table, id }),
-  });
-  const result = await response.json().catch(() => ({}));
-  if (!response.ok || !result.success) {
-    throw new Error(result.error || `Falha ao excluir ${label} pelo backend`);
-  }
-  return true;
 }
 
 async function cleanupBeforeDelete(table, id) {
