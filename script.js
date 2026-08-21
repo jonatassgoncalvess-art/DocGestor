@@ -10922,6 +10922,11 @@ async function persistDelete(table, id, label) {
     }
     return true;
   } catch (error) {
+    const backendDeleted = await persistDeleteViaBackend(table, id, label).catch((backendError) => {
+      console.warn(`Não foi possível excluir ${label} pelo backend.`, backendError.message);
+      return false;
+    });
+    if (backendDeleted) return true;
     console.warn(`Não foi possível excluir ${label} no Supabase.`, error.message);
     showSystemMessage(
       `Não foi possível excluir ${label} no banco de dados: ${error.message}`,
@@ -10929,6 +10934,20 @@ async function persistDelete(table, id, label) {
     );
     return false;
   }
+}
+
+async function persistDeleteViaBackend(table, id, label) {
+  if (!["car_registries", "properties", "enterprise_properties", "enterprises"].includes(table)) return false;
+  const response = await fetch("/api/excluir-registro", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ table, id }),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || !result.success) {
+    throw new Error(result.error || `Falha ao excluir ${label} pelo backend`);
+  }
+  return true;
 }
 
 async function cleanupBeforeDelete(table, id) {
