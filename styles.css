@@ -2698,6 +2698,60 @@ button {
   min-height: 67px;
 }
 
+.coordinate-fields {
+  align-items: end;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+}
+
+.coordinate-fields label {
+  display: grid;
+  gap: 6px;
+  min-height: 67px;
+}
+
+.map-test-button {
+  min-height: 40px;
+  white-space: nowrap;
+}
+
+.map-icon-button {
+  align-items: center;
+  display: inline-flex;
+  justify-content: center;
+  min-width: 36px;
+  padding: 0;
+  width: 36px;
+}
+
+.globe-icon {
+  border: 1.8px solid currentColor;
+  border-radius: 999px;
+  display: inline-block;
+  height: 16px;
+  position: relative;
+  width: 16px;
+}
+
+.globe-icon::before {
+  border-left: 1.3px solid currentColor;
+  border-right: 1.3px solid currentColor;
+  border-radius: 999px;
+  content: "";
+  inset: 2px 5px;
+  position: absolute;
+}
+
+.globe-icon::after {
+  border-top: 1.3px solid currentColor;
+  content: "";
+  left: 2px;
+  position: absolute;
+  right: 2px;
+  top: 7px;
+}
+
 .dynamic-field-box {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -4709,6 +4763,7 @@ textarea {
 
   .metric-grid,
   .car-area-grid,
+  .coordinate-fields,
   .property-averment-fields,
   .cards.three,
   .admin-shortcuts,

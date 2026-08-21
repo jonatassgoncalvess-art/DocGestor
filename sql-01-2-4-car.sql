@@ -10,8 +10,8 @@ create table if not exists public.car_registries (
   organization_id uuid references public.organizations(id) on delete cascade,
   car_number text not null,
   registrations jsonb not null default '[]'::jsonb,
-  latitude numeric(10, 6),
-  longitude numeric(10, 6),
+  latitude text,
+  longitude text,
   total_area_m2 numeric(14, 2),
   perimeter_description text,
   legal_reserve_area_m2 numeric(14, 2),
@@ -71,8 +71,8 @@ alter table public.car_registries
   add column if not exists organization_id uuid references public.organizations(id) on delete cascade,
   add column if not exists car_number text,
   add column if not exists registrations jsonb not null default '[]'::jsonb,
-  add column if not exists latitude numeric(10, 6),
-  add column if not exists longitude numeric(10, 6),
+  add column if not exists latitude text,
+  add column if not exists longitude text,
   add column if not exists total_area_m2 numeric(14, 2),
   add column if not exists perimeter_description text,
   add column if not exists legal_reserve_area_m2 numeric(14, 2),
@@ -109,6 +109,10 @@ alter table public.car_registries
   add column if not exists document_requirement_items jsonb not null default '[]'::jsonb,
   add column if not exists created_at timestamptz not null default now(),
   add column if not exists updated_at timestamptz not null default now();
+
+alter table public.car_registries
+  alter column latitude type text using latitude::text,
+  alter column longitude type text using longitude::text;
 
 alter table public.car_registries
   alter column car_number set not null,

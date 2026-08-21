@@ -5723,6 +5723,45 @@ function filteredCarRegistries() {
     .sort((a, b) => String(a.number || "").localeCompare(String(b.number || ""), "pt-BR", { numeric: true }));
 }
 
+function parseMapCoordinate(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return null;
+  const normalized = raw
+    .replace(/,/g, ".")
+    .replace(/[º˚]/g, "°")
+    .toUpperCase();
+  const hemisphere = (normalized.match(/[NSEW]/) || [""])[0];
+  const parts = normalized.match(/-?\d+(?:\.\d+)?/g)?.map(Number) || [];
+  if (!parts.length || parts.some((part) => Number.isNaN(part))) return null;
+
+  const degrees = Math.abs(parts[0]);
+  const minutes = parts[1] || 0;
+  const seconds = parts[2] || 0;
+  if (minutes >= 60 || seconds >= 60) return null;
+
+  let sign = parts[0] < 0 ? -1 : 1;
+  if (hemisphere === "S" || hemisphere === "W") sign = -1;
+  if (hemisphere === "N" || hemisphere === "E") sign = 1;
+
+  return sign * (degrees + minutes / 60 + seconds / 3600);
+}
+
+function carMapUrl(registry) {
+  const latitude = parseMapCoordinate(registry?.latitude);
+  const longitude = parseMapCoordinate(registry?.longitude);
+  if (latitude === null || longitude === null) return "";
+  return `https://www.google.com/maps?q=${latitude.toFixed(8)},${longitude.toFixed(8)}`;
+}
+
+function openCarMap(registry) {
+  const url = carMapUrl(registry);
+  if (!url) {
+    alert("Informe latitude e longitude válidas. Exemplo: 26°04'00.1\"S e 53°43'07.5\"W.");
+    return;
+  }
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
 function renderCarRegistries() {
   if (!carList || !carCount) return;
   const items = filteredCarRegistries();
@@ -5737,6 +5776,7 @@ function renderCarRegistries() {
         </strong>
         <span>${escapeHtml(carRegistrySummary(registry))}</span>
         <div>
+          <button class="map-icon-button" type="button" data-car-action="map" data-car-id="${registry.id}" title="Abrir no Google Maps" aria-label="Abrir coordenadas do CAR no Google Maps"><span class="globe-icon" aria-hidden="true"></span></button>
           <button type="button" data-car-action="report" data-car-id="${registry.id}">Relatório</button>
           <button type="button" data-car-action="edit" data-car-id="${registry.id}">Editar</button>
           <button type="button" data-car-action="delete" data-car-id="${registry.id}">Excluir</button>
@@ -6123,6 +6163,12 @@ field("car-show-all-hidden-areas")?.addEventListener("click", () => {
   closeModal("car-hidden-area-modal");
 });
 field("car-search")?.addEventListener("input", renderCarRegistries);
+field("car-map-test")?.addEventListener("click", () => {
+  openCarMap({
+    latitude: field("car-latitude")?.value,
+    longitude: field("car-longitude")?.value,
+  });
+});
 field("car-registration-list")?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-car-registration-remove]");
   if (!button) return;
@@ -6149,6 +6195,10 @@ carList?.addEventListener("click", (event) => {
 
   if (button.dataset.carAction === "report") {
     openPdfReport(buildCarIndividualReport(registry));
+  }
+
+  if (button.dataset.carAction === "map") {
+    openCarMap(registry);
   }
 
   if (button.dataset.carAction === "delete") {

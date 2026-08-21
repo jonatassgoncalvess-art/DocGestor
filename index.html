@@ -2069,8 +2069,11 @@
               <option>Cancelado</option>
             </select>
           </label>
-          <label>Latitude<input id="car-latitude" type="number" step="0.000001" placeholder="-25.000000" /></label>
-          <label>Longitude<input id="car-longitude" type="number" step="0.000001" placeholder="-53.000000" /></label>
+          <div class="wide-field coordinate-fields">
+            <label>Latitude<input id="car-latitude" placeholder="26°04'00.1&quot;S" /></label>
+            <label>Longitude<input id="car-longitude" placeholder="53°43'07.5&quot;W" /></label>
+            <button class="ghost map-test-button" id="car-map-test" type="button">Testar no Google Maps</button>
+          </div>
           <div class="wide-field dynamic-field-box">
             <div class="dynamic-field-head">
               <span>Matrículas informadas no CAR</span>
