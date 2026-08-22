@@ -5118,7 +5118,7 @@ async function openPropertyKml(property) {
   }
   const fileName = safeKmlFileName(property.kmlFileName || `matricula-${property.registration || "imovel"}.kml`);
   if (!window.DocGestorDesktop?.openKmlFile) {
-    alert("Para executar o KML diretamente no Google Earth Pro, abra o DocGestor pelo aplicativo instalado no Windows.");
+    console.warn("Abertura direta de KML indisponível fora do aplicativo instalado do DocGestor.");
     return;
   }
   const result = await window.DocGestorDesktop.openKmlFile({
