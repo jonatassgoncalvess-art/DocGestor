@@ -1,4 +1,6 @@
 const path = require("path");
+const { spawn } = require("child_process");
+const fsSync = require("fs");
 const fs = require("fs/promises");
 const os = require("os");
 const { app, BrowserWindow, dialog, ipcMain, shell } = require("electron");
@@ -12,10 +14,34 @@ function safeKmlFileName(name) {
   return base.toLowerCase().endsWith(".kml") ? base : `${base}.kml`;
 }
 
+function googleEarthProCandidates() {
+  const programFiles = process.env.ProgramFiles || "C:\\Program Files";
+  const programFilesX86 = process.env["ProgramFiles(x86)"] || "C:\\Program Files (x86)";
+  const localAppData = process.env.LOCALAPPDATA || "";
+  return [
+    path.join(programFiles, "Google", "Google Earth Pro", "client", "googleearth.exe"),
+    path.join(programFilesX86, "Google", "Google Earth Pro", "client", "googleearth.exe"),
+    localAppData ? path.join(localAppData, "Google", "Google Earth Pro", "client", "googleearth.exe") : "",
+  ].filter(Boolean);
+}
+
+function findGoogleEarthPro() {
+  return googleEarthProCandidates().find((candidate) => fsSync.existsSync(candidate)) || "";
+}
+
 ipcMain.handle("docgestor:open-kml-file", async (_event, payload = {}) => {
   const content = String(payload.content || "");
   if (!content.trim()) {
     return { success: false, error: "Arquivo KML vazio." };
+  }
+
+  if (process.platform !== "win32") {
+    return { success: false, error: "A abertura direta do KML está configurada para Windows com Google Earth Pro instalado." };
+  }
+
+  const googleEarthPath = findGoogleEarthPro();
+  if (!googleEarthPath) {
+    return { success: false, error: "Google Earth Pro não encontrado neste computador. Instale o Google Earth Pro para abrir os arquivos KML pelo DocGestor." };
   }
 
   const tempDir = path.join(os.tmpdir(), "docgestor-kml");
@@ -25,10 +51,13 @@ ipcMain.handle("docgestor:open-kml-file", async (_event, payload = {}) => {
   try {
     await fs.mkdir(tempDir, { recursive: true });
     await fs.writeFile(filePath, content, "utf8");
-    const errorMessage = await shell.openPath(filePath);
-    return errorMessage
-      ? { success: false, error: errorMessage }
-      : { success: true, path: filePath };
+    const child = spawn(googleEarthPath, [filePath], {
+      detached: true,
+      stdio: "ignore",
+      windowsHide: false,
+    });
+    child.unref();
+    return { success: true, path: filePath, executable: googleEarthPath };
   } catch (error) {
     return { success: false, error: error.message };
   }

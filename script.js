@@ -5129,15 +5129,16 @@ async function openPropertyKml(property) {
     return;
   }
   const fileName = safeKmlFileName(property.kmlFileName || `matricula-${property.registration || "imovel"}.kml`);
-  if (window.DocGestorDesktop?.openKmlFile) {
-    const result = await window.DocGestorDesktop.openKmlFile({
-      fileName,
-      content: property.kmlContent,
-    });
-    if (result?.success) return;
-    alert(result?.error || "Não foi possível abrir o KML no computador. O arquivo será baixado.");
+  if (!window.DocGestorDesktop?.openKmlFile) {
+    alert("Para executar o KML diretamente no Google Earth Pro, abra o DocGestor pelo aplicativo instalado no Windows.");
+    return;
   }
-  downloadTextFile(fileName, property.kmlContent);
+  const result = await window.DocGestorDesktop.openKmlFile({
+    fileName,
+    content: property.kmlContent,
+  });
+  if (result?.success) return;
+  alert(result?.error || "Google Earth Pro não encontrado. Instale o Google Earth Pro para abrir este KML.");
 }
 
 function updatePropertyCarLink() {
@@ -5307,17 +5308,16 @@ function renderPropertyList(target, countTarget, items, options = {}) {
       const mapButton = property.type === "rural"
         ? `<button class="map-icon-button" type="button" data-property-action="map" data-property-id="${property.id}" title="${hasMap ? "Abrir CAR vinculado no Google Maps" : "CAR vinculado sem coordenadas válidas"}" aria-label="Abrir CAR vinculado no Google Maps" ${hasMap ? "" : "disabled"}><span class="map-pin-icon" aria-hidden="true"></span></button>`
         : "";
-      const kmlButton = property.kmlContent
-        ? `<button class="kml-icon-button" type="button" data-property-action="kml" data-property-id="${property.id}" title="Abrir KML no Google Earth Pro" aria-label="Abrir KML do imóvel no Google Earth Pro"><span class="earth-kml-icon" aria-hidden="true"></span></button>`
-        : "";
+      const hasKml = Boolean(property.kmlContent);
+      const kmlButton = `<button class="kml-icon-button" type="button" data-property-action="kml" data-property-id="${property.id}" title="${hasKml ? "Abrir KML no Google Earth Pro" : "Sem KML importado neste imóvel"}" aria-label="Abrir KML do imóvel no Google Earth Pro" ${hasKml ? "" : "disabled"}><span class="earth-kml-icon" aria-hidden="true"></span></button>`;
       return `
         <article>
           <strong>Matrícula ${escapeHtml(property.registration || "Não informada")}</strong>
           <span>${escapeHtml(propertyListSummary(property))}</span>
           ${options.actions ? `
             <div>
-              ${mapButton}
               ${kmlButton}
+              ${mapButton}
               <button type="button" data-property-action="report" data-property-id="${property.id}">Relatório</button>
               <button type="button" data-property-action="edit" data-property-id="${property.id}">Editar</button>
               <button type="button" data-property-action="delete" data-property-id="${property.id}">Excluir</button>

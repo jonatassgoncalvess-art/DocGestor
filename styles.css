@@ -2777,7 +2777,9 @@ button {
 }
 
 .map-icon-button:disabled,
-.map-icon-button:disabled:hover {
+.map-icon-button:disabled:hover,
+.kml-icon-button:disabled,
+.kml-icon-button:disabled:hover {
   background: #f4f6f8;
   border-color: #dfe5eb;
   cursor: not-allowed;
