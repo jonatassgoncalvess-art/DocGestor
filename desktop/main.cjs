@@ -2,7 +2,6 @@ const path = require("path");
 const { spawn } = require("child_process");
 const crypto = require("crypto");
 const fsSync = require("fs");
-const http = require("http");
 const { app, BrowserWindow, dialog, ipcMain, shell } = require("electron");
 
 const APP_URL = "https://doc-gestor.vercel.app";
@@ -29,48 +28,21 @@ function findGoogleEarthPro() {
   return googleEarthProCandidates().find((candidate) => fsSync.existsSync(candidate)) || "";
 }
 
-function createLocalKmlLink(content, fileName) {
-  const token = crypto.randomUUID();
-  const safeName = encodeURIComponent(safeKmlFileName(fileName));
-  const route = `/docgestor-kml/${token}/${safeName}`;
+function writeRuntimeKmlFile(content, fileName) {
+  const runtimeDir = path.join(app.getPath("temp"), "DocGestor", "kml-runtime");
+  fsSync.mkdirSync(runtimeDir, { recursive: true });
 
-  return new Promise((resolve, reject) => {
-    const server = http.createServer((request, response) => {
-      if (!request.url || !request.url.startsWith(route)) {
-        response.writeHead(404);
-        response.end();
-        return;
-      }
+  const safeName = safeKmlFileName(fileName);
+  const runtimeName = `${Date.now()}-${crypto.randomUUID()}-${safeName}`;
+  const runtimePath = path.join(runtimeDir, runtimeName);
+  fsSync.writeFileSync(runtimePath, content, "utf8");
 
-      response.writeHead(200, {
-        "Content-Type": "application/vnd.google-earth.kml+xml; charset=utf-8",
-        "Content-Disposition": `inline; filename="${safeKmlFileName(fileName)}"`,
-        "Cache-Control": "no-store",
-      });
-      response.end(content);
-    });
+  const cleanupTimer = setTimeout(() => {
+    fsSync.rm(runtimePath, { force: true }, () => {});
+  }, 30 * 60 * 1000);
+  cleanupTimer.unref?.();
 
-    server.once("error", reject);
-    server.listen(0, "127.0.0.1", () => {
-      const address = server.address();
-      const port = typeof address === "object" && address ? address.port : 0;
-      if (!port) {
-        server.close();
-        reject(new Error("Não foi possível criar link local do KML."));
-        return;
-      }
-
-      const closeTimer = setTimeout(() => server.close(), 180000);
-      closeTimer.unref?.();
-      resolve({
-        url: `http://127.0.0.1:${port}${route}`,
-        close() {
-          clearTimeout(closeTimer);
-          server.close();
-        },
-      });
-    });
-  });
+  return runtimePath;
 }
 
 ipcMain.handle("docgestor:open-kml-file", async (_event, payload = {}) => {
@@ -89,14 +61,14 @@ ipcMain.handle("docgestor:open-kml-file", async (_event, payload = {}) => {
   }
 
   try {
-    const kmlLink = await createLocalKmlLink(content, payload.fileName);
-    const child = spawn(googleEarthPath, [kmlLink.url], {
+    const runtimePath = writeRuntimeKmlFile(content, payload.fileName);
+    const child = spawn(googleEarthPath, [runtimePath], {
       detached: true,
       stdio: "ignore",
       windowsHide: false,
     });
     child.unref();
-    return { success: true, url: kmlLink.url, executable: googleEarthPath };
+    return { success: true, filePath: runtimePath, executable: googleEarthPath };
   } catch (error) {
     return { success: false, error: error.message };
   }
