@@ -2245,6 +2245,18 @@
           </div>
           <label class="construction-toggle"><input type="checkbox" id="property-has-construction" /> Construção averbada</label>
           <label id="construction-area-field" hidden>m2 total da construção averbada<input id="property-construction-area" type="number" min="0" value="0" /></label>
+
+          <div class="form-block-title">Georreferência</div>
+          <div class="wide-field kml-import-box">
+            <div>
+              <strong>Arquivo KML do imóvel</strong>
+              <span id="property-kml-status">Nenhum KML importado.</span>
+            </div>
+            <div class="kml-import-actions">
+              <label class="ghost small file-button">Importar KML<input id="property-kml-file" type="file" accept=".kml,application/vnd.google-earth.kml+xml" /></label>
+              <button class="ghost small" type="button" id="property-kml-clear">Remover KML</button>
+            </div>
+          </div>
         </form>
         <div class="reserve-result rural-field" id="reserve-result" hidden></div>
         <div class="modal-actions">

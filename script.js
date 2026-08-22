@@ -5047,6 +5047,7 @@ let properties = [];
 
 let selectedPropertyId = 0;
 let pendingPropertyDeleteId = null;
+let currentPropertyKml = { fileName: "", content: "", importedAt: "" };
 const propertyList = document.querySelector("#property-list");
 const propertyCount = document.querySelector("#property-count");
 const urbanPropertyList = document.querySelector("#urban-property-list");
@@ -5086,6 +5087,57 @@ function findCarByNumber(carNumber) {
 function linkedCarRegistryForProperty(property) {
   if (!property || property.type !== "rural") return null;
   return findCarByNumber(property.carNumber) || findCarByRegistration(property.registration);
+}
+
+function updatePropertyKmlStatus() {
+  const status = field("property-kml-status");
+  if (!status) return;
+  status.textContent = currentPropertyKml.content
+    ? `${currentPropertyKml.fileName || "arquivo.kml"} importado e pronto para salvar.`
+    : "Nenhum KML importado.";
+}
+
+function setPropertyKml(kml = {}) {
+  currentPropertyKml = {
+    fileName: kml.fileName || "",
+    content: kml.content || "",
+    importedAt: kml.importedAt || "",
+  };
+  updatePropertyKmlStatus();
+}
+
+function safeKmlFileName(name) {
+  const base = String(name || "imovel.kml").replace(/[<>:"/\\|?*\x00-\x1F]/g, "-").trim() || "imovel.kml";
+  return base.toLowerCase().endsWith(".kml") ? base : `${base}.kml`;
+}
+
+function downloadTextFile(fileName, content, mimeType = "application/vnd.google-earth.kml+xml") {
+  const blob = new Blob([content || ""], { type: `${mimeType};charset=utf-8` });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = safeKmlFileName(fileName);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 800);
+}
+
+async function openPropertyKml(property) {
+  if (!property?.kmlContent) {
+    alert("Este imóvel não possui KML importado.");
+    return;
+  }
+  const fileName = safeKmlFileName(property.kmlFileName || `matricula-${property.registration || "imovel"}.kml`);
+  if (window.DocGestorDesktop?.openKmlFile) {
+    const result = await window.DocGestorDesktop.openKmlFile({
+      fileName,
+      content: property.kmlContent,
+    });
+    if (result?.success) return;
+    alert(result?.error || "Não foi possível abrir o KML no computador. O arquivo será baixado.");
+  }
+  downloadTextFile(fileName, property.kmlContent);
 }
 
 function updatePropertyCarLink() {
@@ -5255,6 +5307,9 @@ function renderPropertyList(target, countTarget, items, options = {}) {
       const mapButton = property.type === "rural"
         ? `<button class="map-icon-button" type="button" data-property-action="map" data-property-id="${property.id}" title="${hasMap ? "Abrir CAR vinculado no Google Maps" : "CAR vinculado sem coordenadas válidas"}" aria-label="Abrir CAR vinculado no Google Maps" ${hasMap ? "" : "disabled"}><span class="map-pin-icon" aria-hidden="true"></span></button>`
         : "";
+      const kmlButton = property.kmlContent
+        ? `<button type="button" data-property-action="kml" data-property-id="${property.id}" title="Abrir KML do imóvel">KML</button>`
+        : "";
       return `
         <article>
           <strong>Matrícula ${escapeHtml(property.registration || "Não informada")}</strong>
@@ -5262,6 +5317,7 @@ function renderPropertyList(target, countTarget, items, options = {}) {
           ${options.actions ? `
             <div>
               ${mapButton}
+              ${kmlButton}
               <button type="button" data-property-action="report" data-property-id="${property.id}">Relatório</button>
               <button type="button" data-property-action="edit" data-property-id="${property.id}">Editar</button>
               <button type="button" data-property-action="delete" data-property-id="${property.id}">Excluir</button>
@@ -5311,6 +5367,13 @@ function fillPropertyForm(property) {
   field("property-legal-reserve-averment-ha").value = property.legalReserveAvermentM2 ? (Number(property.legalReserveAvermentM2) / 10000).toFixed(4) : "";
   field("property-has-construction").checked = property.hasConstruction;
   field("property-construction-area").value = property.constructionArea;
+  const kmlInput = field("property-kml-file");
+  if (kmlInput) kmlInput.value = "";
+  setPropertyKml({
+    fileName: property.kmlFileName,
+    content: property.kmlContent,
+    importedAt: property.kmlImportedAt,
+  });
   updatePropertyFields();
   updatePropertyCarLink();
 }
@@ -5344,6 +5407,9 @@ function newProperty() {
   field("property-rural-use").value = "Lavoura";
   field("property-has-construction").checked = false;
   field("property-construction-area").value = "";
+  const kmlInput = field("property-kml-file");
+  if (kmlInput) kmlInput.value = "";
+  setPropertyKml();
   document.querySelector("#property-modal-title").textContent = "Novo Imóvel";
   updatePropertyFields();
   openModal("property-modal");
@@ -5385,6 +5451,9 @@ async function saveProperty() {
     ruralUse: field("property-rural-use").value,
     hasConstruction: field("property-has-construction").checked,
     constructionArea: field("property-has-construction").checked ? nonNegativeFieldValue("property-construction-area") : 0,
+    kmlFileName: currentPropertyKml.fileName,
+    kmlContent: currentPropertyKml.content,
+    kmlImportedAt: currentPropertyKml.content ? (currentPropertyKml.importedAt || new Date().toISOString()) : "",
     status: "Ativo",
   };
 
@@ -5414,6 +5483,36 @@ propertyOwnerType?.addEventListener("change", () => populatePropertyOwners());
 propertyType?.addEventListener("change", updatePropertyFields);
 propertyRuralUse?.addEventListener("change", updatePropertyFields);
 propertyHasConstruction?.addEventListener("change", updatePropertyFields);
+field("property-kml-file")?.addEventListener("change", async (event) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  if (!file.name.toLowerCase().endsWith(".kml")) {
+    alert("Selecione um arquivo .KML válido.");
+    event.target.value = "";
+    return;
+  }
+  try {
+    const content = await file.text();
+    if (!content.trim()) {
+      alert("O arquivo KML está vazio.");
+      event.target.value = "";
+      return;
+    }
+    setPropertyKml({
+      fileName: safeKmlFileName(file.name),
+      content,
+      importedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    alert(`Não foi possível importar o KML: ${error.message}`);
+    event.target.value = "";
+  }
+});
+field("property-kml-clear")?.addEventListener("click", () => {
+  const kmlInput = field("property-kml-file");
+  if (kmlInput) kmlInput.value = "";
+  setPropertyKml();
+});
 field("property-registration")?.addEventListener("input", () => {
   const input = field("property-registration");
   if (propertyType?.value === "rural" && input) input.value = input.value.replace(/\D/g, "");
@@ -5460,6 +5559,10 @@ propertyList?.addEventListener("click", (event) => {
 
   if (button.dataset.propertyAction === "map") {
     openCarMap(linkedCarRegistryForProperty(property));
+  }
+
+  if (button.dataset.propertyAction === "kml") {
+    openPropertyKml(property);
   }
 
   if (button.dataset.propertyAction === "delete") {
@@ -9434,6 +9537,13 @@ function buildPropertyIndividualReport(property) {
       ["Exigência de documentos", linkedCar.documentRequirementEnabled ? "Sim" : ""],
     ]), { estimate: 156 }));
   }
+  if (property.kmlContent) {
+    sections.push(pdfFieldsSection("Georreferência", filledPdfFields([
+      ["Arquivo KML", property.kmlFileName],
+      ["Importado em", property.kmlImportedAt ? new Date(property.kmlImportedAt).toLocaleString("pt-BR") : ""],
+      ["Origem", "Arquivo .KML importado no cadastro do imóvel"],
+    ]), { estimate: 92 }));
+  }
   return {
     title: `Relatório individual do imóvel ${property.registration || ""}`.trim(),
     module: "01.2.5 Imóveis",
@@ -11276,24 +11386,49 @@ async function persistProperty(property, wasExisting) {
     use_type: property.type === "rural" ? property.ruralUse : null,
     has_construction: Boolean(property.hasConstruction),
     construction_area_m2: Number(property.constructionArea || 0),
+    kml_file_name: property.kmlFileName || null,
+    kml_content: property.kmlContent || null,
+    kml_imported_at: property.kmlContent ? (property.kmlImportedAt || new Date().toISOString()) : null,
     status: property.status,
   };
-  try {
+  const savePayload = async (record) => {
     let saved = null;
     if (wasExisting && looksLikeUuid(property.id)) {
-      [saved] = await window.DocGestorDB.update("properties", property.id, payload);
+      [saved] = await window.DocGestorDB.update("properties", property.id, record);
     } else {
-      [saved] = await window.DocGestorDB.create("properties", payload);
+      [saved] = await window.DocGestorDB.create("properties", record);
     }
+    return saved;
+  };
+  const applySavedProperty = (saved) => {
     if (saved?.id) {
       updateLocalId(properties, property.id, saved.id);
       property.id = saved.id;
       selectedPropertyId = saved.id;
     }
     return Boolean(saved?.id);
+  };
+  try {
+    return applySavedProperty(await savePayload(payload));
   } catch (error) {
+    const missingKmlColumn = /kml_/i.test(error.message || "");
+    if (missingKmlColumn && !property.kmlContent) {
+      const fallbackPayload = { ...payload };
+      delete fallbackPayload.kml_file_name;
+      delete fallbackPayload.kml_content;
+      delete fallbackPayload.kml_imported_at;
+      try {
+        return applySavedProperty(await savePayload(fallbackPayload));
+      } catch (fallbackError) {
+        console.warn("Não foi possível salvar o imóvel no Supabase.", fallbackError.message);
+        alert(`Não foi possível salvar o imóvel no banco: ${fallbackError.message}`);
+        return false;
+      }
+    }
     console.warn("Não foi possível salvar o imóvel no Supabase.", error.message);
-    alert(`Não foi possível salvar o imóvel no banco: ${error.message}`);
+    alert(missingKmlColumn
+      ? "Não foi possível salvar o KML no banco. Execute o SQL do ambiente 01.2.5 para criar as colunas de georreferência."
+      : `Não foi possível salvar o imóvel no banco: ${error.message}`);
     return false;
   }
 }
@@ -11894,6 +12029,9 @@ async function loadSupabaseData() {
       ruralUse: row.use_type || "",
       hasConstruction: Boolean(row.has_construction),
       constructionArea: Number(row.construction_area_m2 || 0),
+      kmlFileName: row.kml_file_name || "",
+      kmlContent: row.kml_content || "",
+      kmlImportedAt: row.kml_imported_at || "",
       status: row.status || "Ativo",
     };
   });

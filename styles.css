@@ -2698,6 +2698,47 @@ button {
   min-height: 67px;
 }
 
+.kml-import-box {
+  align-items: center;
+  background: #fbfcfd;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  min-height: auto;
+  padding: 12px;
+}
+
+.kml-import-box strong,
+.kml-import-box span {
+  display: block;
+}
+
+.kml-import-box span {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 3px;
+}
+
+.kml-import-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.file-button {
+  align-items: center;
+  cursor: pointer;
+  display: inline-flex;
+  justify-content: center;
+}
+
+.file-button input {
+  display: none;
+}
+
 .coordinate-fields {
   align-items: end;
   display: grid;
@@ -4801,6 +4842,12 @@ textarea {
 
   .permission-row small {
     grid-column: 3;
+  }
+
+  .kml-import-box,
+  .kml-import-actions {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .metric-grid,
