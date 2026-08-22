@@ -5308,7 +5308,7 @@ function renderPropertyList(target, countTarget, items, options = {}) {
         ? `<button class="map-icon-button" type="button" data-property-action="map" data-property-id="${property.id}" title="${hasMap ? "Abrir CAR vinculado no Google Maps" : "CAR vinculado sem coordenadas válidas"}" aria-label="Abrir CAR vinculado no Google Maps" ${hasMap ? "" : "disabled"}><span class="map-pin-icon" aria-hidden="true"></span></button>`
         : "";
       const kmlButton = property.kmlContent
-        ? `<button type="button" data-property-action="kml" data-property-id="${property.id}" title="Abrir KML do imóvel">KML</button>`
+        ? `<button class="kml-icon-button" type="button" data-property-action="kml" data-property-id="${property.id}" title="Abrir KML no Google Earth Pro" aria-label="Abrir KML do imóvel no Google Earth Pro"><span class="earth-kml-icon" aria-hidden="true"></span></button>`
         : "";
       return `
         <article>

@@ -2757,7 +2757,8 @@ button {
   white-space: nowrap;
 }
 
-.map-icon-button {
+.map-icon-button,
+.kml-icon-button {
   align-items: center;
   background: #fff;
   border-color: #dfe5eb;
@@ -2769,7 +2770,8 @@ button {
   width: 38px;
 }
 
-.map-icon-button:hover {
+.map-icon-button:hover,
+.kml-icon-button:hover {
   background: #fff1f2;
   border-color: var(--brand-red);
 }
@@ -2799,6 +2801,17 @@ button {
 
 .map-pin-icon::after {
   content: none;
+}
+
+.earth-kml-icon {
+  background-image: url("assets/google-earth-kml-icon.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  display: inline-block;
+  height: 24px;
+  opacity: .9;
+  width: 24px;
 }
 
 .dynamic-field-box {
