@@ -1,8 +1,8 @@
 const path = require("path");
 const { spawn } = require("child_process");
+const crypto = require("crypto");
 const fsSync = require("fs");
-const fs = require("fs/promises");
-const os = require("os");
+const http = require("http");
 const { app, BrowserWindow, dialog, ipcMain, shell } = require("electron");
 
 const APP_URL = "https://doc-gestor.vercel.app";
@@ -29,6 +29,50 @@ function findGoogleEarthPro() {
   return googleEarthProCandidates().find((candidate) => fsSync.existsSync(candidate)) || "";
 }
 
+function createLocalKmlLink(content, fileName) {
+  const token = crypto.randomUUID();
+  const safeName = encodeURIComponent(safeKmlFileName(fileName));
+  const route = `/docgestor-kml/${token}/${safeName}`;
+
+  return new Promise((resolve, reject) => {
+    const server = http.createServer((request, response) => {
+      if (!request.url || !request.url.startsWith(route)) {
+        response.writeHead(404);
+        response.end();
+        return;
+      }
+
+      response.writeHead(200, {
+        "Content-Type": "application/vnd.google-earth.kml+xml; charset=utf-8",
+        "Content-Disposition": `inline; filename="${safeKmlFileName(fileName)}"`,
+        "Cache-Control": "no-store",
+      });
+      response.end(content);
+    });
+
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address();
+      const port = typeof address === "object" && address ? address.port : 0;
+      if (!port) {
+        server.close();
+        reject(new Error("Não foi possível criar link local do KML."));
+        return;
+      }
+
+      const closeTimer = setTimeout(() => server.close(), 180000);
+      closeTimer.unref?.();
+      resolve({
+        url: `http://127.0.0.1:${port}${route}`,
+        close() {
+          clearTimeout(closeTimer);
+          server.close();
+        },
+      });
+    });
+  });
+}
+
 ipcMain.handle("docgestor:open-kml-file", async (_event, payload = {}) => {
   const content = String(payload.content || "");
   if (!content.trim()) {
@@ -44,20 +88,15 @@ ipcMain.handle("docgestor:open-kml-file", async (_event, payload = {}) => {
     return { success: false, error: "Google Earth Pro não encontrado neste computador. Instale o Google Earth Pro para abrir os arquivos KML pelo DocGestor." };
   }
 
-  const tempDir = path.join(os.tmpdir(), "docgestor-kml");
-  const fileName = `${Date.now()}-${safeKmlFileName(payload.fileName)}`;
-  const filePath = path.join(tempDir, fileName);
-
   try {
-    await fs.mkdir(tempDir, { recursive: true });
-    await fs.writeFile(filePath, content, "utf8");
-    const child = spawn(googleEarthPath, [filePath], {
+    const kmlLink = await createLocalKmlLink(content, payload.fileName);
+    const child = spawn(googleEarthPath, [kmlLink.url], {
       detached: true,
       stdio: "ignore",
       windowsHide: false,
     });
     child.unref();
-    return { success: true, path: filePath, executable: googleEarthPath };
+    return { success: true, url: kmlLink.url, executable: googleEarthPath };
   } catch (error) {
     return { success: false, error: error.message };
   }

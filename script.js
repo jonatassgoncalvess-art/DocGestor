@@ -5111,18 +5111,6 @@ function safeKmlFileName(name) {
   return base.toLowerCase().endsWith(".kml") ? base : `${base}.kml`;
 }
 
-function downloadTextFile(fileName, content, mimeType = "application/vnd.google-earth.kml+xml") {
-  const blob = new Blob([content || ""], { type: `${mimeType};charset=utf-8` });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = safeKmlFileName(fileName);
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 800);
-}
-
 async function openPropertyKml(property) {
   if (!property?.kmlContent) {
     alert("Este imóvel não possui KML importado.");
