@@ -5077,6 +5077,17 @@ function findCarByRegistration(registration) {
   return carRegistries.find((registry) => (registry.registrations || []).some((item) => String(item).replace(/\D/g, "") === normalized)) || null;
 }
 
+function findCarByNumber(carNumber) {
+  const normalized = normalizeSearchText(carNumber || "");
+  if (!normalized) return null;
+  return carRegistries.find((registry) => normalizeSearchText(registry.number || "") === normalized) || null;
+}
+
+function linkedCarRegistryForProperty(property) {
+  if (!property || property.type !== "rural") return null;
+  return findCarByNumber(property.carNumber) || findCarByRegistration(property.registration);
+}
+
 function updatePropertyCarLink() {
   const status = field("property-car-status");
   const carInput = field("property-car-number");
@@ -5204,15 +5215,8 @@ function updatePropertyFields() {
 }
 
 function propertyListSummary(property) {
-  const owner = property.owner || propertyOwnerLabel(property) || "Proprietário não informado";
-  const locationFields = property.type === "urban"
-    ? `Lote ${property.lot || "não informado"} - Quadra ${property.block || "não informada"}`
-    : `Lote ${property.lot || "não informado"} - Gleba ${property.glebe || "não informada"}`;
-  const ruralDocument = property.type === "rural" && property.cibItr ? ` - CIB/ITR: ${property.cibItr}` : "";
-  const ruralCar = property.type === "rural" ? ` - CAR: ${property.carNumber || "Nenhum CAR encontrado"}` : "";
-  const ruralArea = property.type === "rural" ? ` - Área matrícula: ${formatCarAreaValue(property.ruralArea, 2) || "0"} m²` : "";
-  const averment = property.type === "rural" && property.hasLegalReserveAverment ? ` - RL averbada: ${formatCarAreaValue(property.legalReserveAvermentM2, 2) || "0"} m²` : "";
-  return `Proprietário: ${owner} - ${locationFields}${ruralArea}${ruralCar}${ruralDocument}${averment} - Referência: ${property.reference || "Não informada"}`;
+  const location = property.address || property.city || "Não informada";
+  return `Localização: ${location} - Referência: ${property.reference || "Não informada"}`;
 }
 
 function propertySearchText(property) {
@@ -5220,6 +5224,7 @@ function propertySearchText(property) {
     property.registration,
     property.owner,
     propertyOwnerLabel(property),
+    property.address,
     property.lot,
     property.block,
     property.glebe,
@@ -5245,12 +5250,19 @@ function renderPropertyList(target, countTarget, items, options = {}) {
   target.innerHTML = items.length
     ? items
     .map((property) => {
+      const linkedCar = linkedCarRegistryForProperty(property);
+      const hasMap = Boolean(carMapUrl(linkedCar));
+      const mapButton = property.type === "rural"
+        ? `<button class="map-icon-button" type="button" data-property-action="map" data-property-id="${property.id}" title="${hasMap ? "Abrir CAR vinculado no Google Maps" : "CAR vinculado sem coordenadas válidas"}" aria-label="Abrir CAR vinculado no Google Maps" ${hasMap ? "" : "disabled"}><span class="map-pin-icon" aria-hidden="true"></span></button>`
+        : "";
       return `
         <article>
-          <strong>Matrícula ${property.registration}</strong>
-          <span>${propertyListSummary(property)}</span>
+          <strong>Matrícula ${escapeHtml(property.registration || "Não informada")}</strong>
+          <span>${escapeHtml(propertyListSummary(property))}</span>
           ${options.actions ? `
             <div>
+              ${mapButton}
+              <button type="button" data-property-action="report" data-property-id="${property.id}">Relatório</button>
               <button type="button" data-property-action="edit" data-property-id="${property.id}">Editar</button>
               <button type="button" data-property-action="delete" data-property-id="${property.id}">Excluir</button>
             </div>
@@ -5440,6 +5452,14 @@ propertyList?.addEventListener("click", (event) => {
     fillPropertyForm(property);
     document.querySelector("#property-modal-title").textContent = "Editar Imóvel";
     openModal("property-modal");
+  }
+
+  if (button.dataset.propertyAction === "report") {
+    openPdfReport(buildPropertyIndividualReport(property));
+  }
+
+  if (button.dataset.propertyAction === "map") {
+    openCarMap(linkedCarRegistryForProperty(property));
   }
 
   if (button.dataset.propertyAction === "delete") {
@@ -9360,6 +9380,67 @@ function propertyReserveRequired(property) {
 
 function propertyReserveOk(property) {
   return property.type !== "rural" || Number(property.legalReserveAvermentM2 || 0) >= propertyReserveRequired(property);
+}
+
+function filledPdfFields(fields) {
+  return fields.filter(([, value]) => {
+    if (value === null || value === undefined) return false;
+    const normalized = String(value).trim();
+    return normalized && normalized !== "0" && normalized !== "0 m2" && normalized !== "0,0000 Ha";
+  });
+}
+
+function buildPropertyIndividualReport(property) {
+  const isRural = property.type === "rural";
+  const linkedCar = linkedCarRegistryForProperty(property);
+  const location = property.address || property.city || "";
+  const propertyFields = filledPdfFields([
+    ["Matrícula", property.registration],
+    ["Tipo do imóvel", isRural ? "Rural" : "Urbano"],
+    ["Tipo da propriedade", property.ownerType === "pf" ? "Pessoa física" : "Pessoa jurídica"],
+    ["Proprietário", propertyOwnerLabel(property)],
+    ["Cidade", property.city],
+    ["Localização", location],
+    ["Referência", property.reference],
+    ["Lote", property.lot],
+    [isRural ? "Gleba" : "Quadra", isRural ? property.glebe : property.block],
+    [isRural ? "Número do CAR" : "Inscrição imobiliária", isRural ? property.carNumber : property.municipalRegistration],
+    ...(isRural ? [["Número CCIR/INCRA", property.ccirIncra]] : []),
+    ...(isRural ? [["CIB/NIRF/ITR", property.cibItr]] : []),
+    ...(isRural ? [["Uso da propriedade", property.ruralUse]] : []),
+    ["Status", property.status],
+  ]);
+  const areaFields = filledPdfFields([
+    ["Área total da matrícula", isRural && property.ruralArea ? `${formatAreaM2(property.ruralArea)} / ${formatAreaHa(property.ruralArea)}` : ""],
+    ["Área urbana", !isRural && property.urbanArea ? formatAreaM2(property.urbanArea) : ""],
+    ["Construção", property.hasConstruction && property.constructionArea ? formatAreaM2(property.constructionArea) : ""],
+    ["Averbação de Reserva Legal", isRural && property.hasLegalReserveAverment ? "Sim" : ""],
+    ["Reserva Legal averbada", isRural && property.hasLegalReserveAverment ? `${formatAreaM2(property.legalReserveAvermentM2)} / ${formatAreaHa(property.legalReserveAvermentM2)} (${property.legalReserveAvermentPercent || 0}%)` : ""],
+  ]);
+  const sections = [
+    pdfFieldsSection("Dados do imóvel", propertyFields.length ? propertyFields : [["Imóvel", "Sem dados preenchidos"]], { estimate: 210 }),
+  ];
+  if (areaFields.length) {
+    sections.push(pdfFieldsSection("Informações de área e averbações", areaFields, { estimate: 132 }));
+  }
+  if (linkedCar) {
+    sections.push(pdfFieldsSection("CAR vinculado", filledPdfFields([
+      ["Número do CAR", linkedCar.number],
+      ["Matrículas informadas no CAR", (linkedCar.registrations || []).join(", ")],
+      ["Regularidade da RL", carRegularityStatus(linkedCar).label],
+      ["Latitude", linkedCar.latitude],
+      ["Longitude", linkedCar.longitude],
+      ["APP na Reserva Legal", linkedCar.appRlCoverage],
+      ["Exigência de documentos", linkedCar.documentRequirementEnabled ? "Sim" : ""],
+    ]), { estimate: 156 }));
+  }
+  return {
+    title: `Relatório individual do imóvel ${property.registration || ""}`.trim(),
+    module: "01.2.5 Imóveis",
+    subtitle: "Pré-visualização dos dados preenchidos no cadastro do imóvel.",
+    orientation: "portrait",
+    sections,
+  };
 }
 
 function buildPartnersReport() {
