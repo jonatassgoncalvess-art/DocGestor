@@ -17,7 +17,7 @@ const SESSION_VIEW_KEY = "docgestor.sessionView";
 const SESSION_LICENSE_STATUS_KEY = "docgestor.licenseStatus";
 const SIDEBAR_COLLAPSED_KEY = "docgestor.sidebarCollapsed";
 const APP_VERSION_MANIFEST_URL = "downloads/app-version.json";
-const APP_INSTALLER_URL = "downloads/DocGestor-by-Carminatti-1.0.2-x64.exe";
+const APP_INSTALLER_URL = "downloads/DocGestor-by-Carminatti-1.0.3-x64.exe";
 let sidebarFlyoutTimer = null;
 
 const titles = {
